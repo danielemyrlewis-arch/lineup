@@ -51,7 +51,14 @@ const compiled = ts.transpileModule(componentSource, {
 const componentExports = {} as {
   FilmDetails: React.ComponentType<{ movie: Movie }>;
 };
-runInNewContext(compiled.outputText, { React, exports: componentExports });
+runInNewContext(compiled.outputText, {
+  React,
+  exports: componentExports,
+  require: (name: string) => {
+    assert.equal(name, "react");
+    return React;
+  },
+});
 const render = (m: Movie) =>
   renderToStaticMarkup(
     React.createElement(componentExports.FilmDetails, { movie: m }),
@@ -410,18 +417,21 @@ test("unknown new attributes cannot consume a question or eliminate films throug
   }
 });
 
-test("film details render title/year, up to three genres, director, top-billed actor/character and original overview", () => {
+test("film details render title/year, up to three genres, director, Cast and original overview", () => {
   const m = movie(1, {
     title: "Test film",
     releaseYear: 2001,
     genres: ["Science Fiction", "Thriller", "Drama", "Adventure"],
     director: "A Director",
-    topBilledLead: {
-      tmdbId: 1,
-      name: "A Performer",
-      character: "The Character",
-      gender: null,
-    },
+    castMembers: [
+      {
+        tmdbId: 1,
+        name: "A Performer",
+        character: "The Character",
+        profilePath: "/portrait.jpg",
+        order: 0,
+      },
+    ],
     overview: "The original TMDB overview.",
   });
   const html = render(m);
@@ -430,12 +440,15 @@ test("film details render title/year, up to three genres, director, top-billed a
     "2001",
     "Science Fiction • Thriller • Drama",
     "Directed by A Director",
-    "Starring A Performer",
+    "Cast",
+    "A Performer",
     "The Character",
     "The original TMDB overview.",
   ])
     assert.ok(html.includes(text), text);
   assert.ok(!html.includes("Adventure"));
+  assert.ok(!html.includes("Starring"));
+  assert.ok(html.includes("https://image.tmdb.org/t/p/w185/portrait.jpg"));
   assert.ok(html.includes('class="confirm-synopsis"'));
 });
 
@@ -447,12 +460,14 @@ test("film details omit missing synopsis/director/cast cleanly and handle charac
       cast: null,
       genres: null,
       topBilledLead: null,
+      castMembers: null,
     }),
   );
   for (const text of [
     "confirm-synopsis",
     "Directed by",
     "Starring",
+    'aria-label="Cast"',
     "No synopsis",
     "undefined",
     "null",
@@ -460,23 +475,111 @@ test("film details omit missing synopsis/director/cast cleanly and handle charac
     assert.ok(!empty.includes(text), text);
   const actor = render(
     movie(1, {
-      topBilledLead: {
-        tmdbId: null,
-        name: "A Performer",
-        character: null,
-        gender: null,
-      },
+      castMembers: [
+        {
+          tmdbId: null,
+          name: "A Performer",
+          character: null,
+          profilePath: null,
+          order: 0,
+        },
+      ],
     }),
   );
-  assert.ok(actor.includes("Starring A Performer"));
-  assert.ok(!actor.includes("Starring A Performer as "));
+  assert.ok(actor.includes("A Performer"));
+  assert.ok(!actor.includes("cast-character"));
+  assert.ok(!actor.includes("cast-portrait"));
   assert.ok(
     !render(movie(1, { overview: "   " })).includes('class="confirm-synopsis"'),
   );
+});
+
+test("detail credits use the first ten usable TMDB cast entries while question cast and lead stay unchanged", () => {
+  const credits = Array.from({ length: 14 }, (_, i) => ({
+    id: i + 100,
+    name: i === 2 ? "  " : `Actor ${i}`,
+    character: i === 4 ? " " : `Character ${i}`,
+    order: i,
+    profile_path: i === 3 ? "https://other.test/image.jpg" : "/face.jpg",
+    gender: 2,
+    biography: "Do not retain this",
+    known_for_department: "Acting",
+  }));
+  const m = normaliseMovie({
+    ...raw,
+    credits: { cast: credits.toReversed() },
+  })!;
+  assert.equal(m.castMembers?.length, 10);
+  assert.deepEqual(
+    m.castMembers?.map((c) => c.name),
+    [0, 1, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => `Actor ${i}`),
+  );
+  assert.equal(m.castMembers?.[2].profilePath, null);
+  assert.equal(m.castMembers?.[3].character, null);
+  assert.deepEqual(
+    Object.keys(m.castMembers![0]).sort(),
+    ["tmdbId", "name", "character", "profilePath", "order"].sort(),
+  );
+  assert.deepEqual(m.cast, ["Actor 0", "Actor 1", "Actor 3", "Actor 4"]);
+  assert.equal(m.topBilledLead?.name, "Actor 0");
+  const missing = normaliseMovie(raw)!;
+  assert.equal(missing.castMembers, null);
+  const tied = normaliseMovie({
+    ...raw,
+    credits: {
+      cast: [
+        { name: "Source first", order: 1 },
+        { name: "Source second", order: 1 },
+        { name: "Unknown order" },
+      ],
+    },
+  })!;
+  assert.deepEqual(
+    tied.castMembers?.map((c) => c.name),
+    ["Source first", "Source second", "Unknown order"],
+  );
+  assert.equal(tied.castMembers?.[2].order, null);
+});
+
+test("Cast renders at most ten names, no billing numbers and no placeholders for missing or invalid profiles", () => {
+  const html = render(
+    movie(1, {
+      castMembers: Array.from({ length: 12 }, (_, i) => ({
+        tmdbId: i + 1,
+        name: `Performer ${String.fromCharCode(65 + i)}`,
+        character: i ? null : "Cobb",
+        profilePath: i % 2 ? null : "//invalid.test/face.jpg",
+        order: i,
+      })),
+    }),
+  );
+  assert.equal((html.match(/class="cast-name"/g) ?? []).length, 10);
+  assert.ok(html.includes("Performer J"));
+  assert.ok(!html.includes("Performer K"));
+  for (const text of [
+    "<img",
+    "#1",
+    "#2",
+    "Billing",
+    "Top billed",
+    "Starring",
+    "silhouette",
+    "invalid.test",
+  ])
+    assert.ok(!html.includes(text), text);
+  assert.equal((html.match(/class="cast-character"/g) ?? []).length, 1);
+});
+
+test("bundled detail credits retain ordered names, roles and profiles without changing catalogue gameplay cast", () => {
+  assert.equal(base.castMembers?.length, 10);
+  assert.equal(base.castMembers?.[0].name, "Leonardo DiCaprio");
+  assert.equal(base.castMembers?.[1].name, "Joseph Gordon-Levitt");
+  assert.equal(base.castMembers?.[2].name, "Elliot Page");
+  assert.equal(base.castMembers?.[2].character, "Ariadne");
+  assert.ok(base.castMembers?.[0].profilePath?.startsWith("/"));
+  assert.equal(base.cast?.length, 3);
   assert.ok(
-    render(
-      movie(1, { topBilledLead: undefined, cast: ["Legacy top-billed name"] }),
-    ).includes("Legacy top-billed name"),
+    PRACTICE_CATALOGUE.every((m) => (m.castMembers?.length ?? 0) <= 10),
   );
 });
 

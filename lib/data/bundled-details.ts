@@ -19,5 +19,14 @@ export function withBundledDetails(movie: Movie): Movie {
       gender: null,
     };
   }
+  // Older bundled additions can still show known names without inventing roles/images.
+  if (merged.castMembers === undefined && merged.cast?.length)
+    merged.castMembers = merged.cast.slice(0, 10).map((name) => ({
+      tmdbId: null,
+      name,
+      character: null,
+      profilePath: null,
+      order: null,
+    }));
   return applyMovieEnrichment(merged);
 }

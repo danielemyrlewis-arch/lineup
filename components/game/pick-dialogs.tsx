@@ -17,20 +17,22 @@ export function PickDialog({
       title={`Lock in ${movie.title}?`}
       onClose={onClose}
       className="confirm-dialog"
+      closeLabel="Cancel"
     >
-      <div className="confirm-film">
-        <div className="confirm-poster">
-          <Poster movie={movie} eager />
+      <div className="confirm-content">
+        <div className="confirm-film">
+          <div className="confirm-poster">
+            <Poster movie={movie} eager />
+          </div>
+          <FilmDetails movie={movie} />
         </div>
-        <FilmDetails movie={movie} />
       </div>
-      <p className="confirm-note">This will be your final answer.</p>
-      <button type="button" className="primary-button" onClick={onLock}>
-        Lock it in
-      </button>
-      <button type="button" className="secondary-button" onClick={onClose}>
-        Cancel
-      </button>
+      <div className="confirm-actions">
+        <p className="confirm-note">This will be your final answer.</p>
+        <button type="button" className="primary-button" onClick={onLock}>
+          Lock it in
+        </button>
+      </div>
     </Dialog>
   );
 }

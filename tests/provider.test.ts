@@ -60,6 +60,7 @@ test("TMDB provider authenticates server requests, appends credits, normalises a
             order: 0,
             gender: 2,
             character: "The hero",
+            profile_path: "/lead.jpg",
           },
         ],
       },
@@ -73,6 +74,15 @@ test("TMDB provider authenticates server requests, appends credits, normalises a
   assert.equal(refreshed.director, "Director");
   assert.equal(refreshed.belongsToCollection, false);
   assert.deepEqual(refreshed.cast, ["Lead"]);
+  assert.deepEqual(refreshed.castMembers, [
+    {
+      tmdbId: 1234,
+      name: "Lead",
+      character: "The hero",
+      profilePath: "/lead.jpg",
+      order: 0,
+    },
+  ]);
   assert.equal(refreshed.overview, "Original overview from TMDB.");
   assert.deepEqual(refreshed.productionCompanies, [
     { id: 420, name: "Marvel Studios" },

@@ -6,11 +6,13 @@ export function Dialog({
   children,
   onClose,
   className = "",
+  closeLabel,
 }: {
   title: string;
   children: ReactNode;
   onClose: () => void;
   className?: string;
+  closeLabel?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -52,11 +54,11 @@ export function Dialog({
     >
       <button
         type="button"
-        className="icon-button dialog-close"
-        aria-label={`Close ${title}`}
+        className={closeLabel ? "dialog-back" : "icon-button dialog-close"}
+        aria-label={closeLabel ?? `Close ${title}`}
         onClick={onClose}
       >
-        <X size={19} />
+        {closeLabel ?? <X size={19} />}
       </button>
       {children}
     </dialog>

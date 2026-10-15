@@ -786,7 +786,37 @@ button svg {
   background: var(--elevated);
 }
 .confirm-dialog {
+  width: 520px;
+  padding: 0;
   text-align: left;
+  scroll-padding-block: 60px 120px;
+}
+.dialog-back {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  padding: 16px 24px;
+  text-align: left;
+  color: var(--secondary);
+  background: var(--surface);
+  font-size: 13px;
+}
+.dialog-back:hover {
+  color: var(--text);
+}
+.confirm-content {
+  padding: 4px 24px 28px;
+}
+.confirm-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: 14px 24px max(20px, env(safe-area-inset-bottom));
+  background: var(--surface);
+  border-top: 1px solid var(--border);
 }
 .confirm-film {
   display: grid;
@@ -836,7 +866,51 @@ button svg {
 .confirm-note {
   color: var(--secondary);
   font-size: 13px;
-  margin: 16px 0 14px;
+  margin: 0 0 10px;
+}
+.film-cast {
+  grid-column: 1 / -1;
+  margin-top: 8px;
+}
+.film-cast h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.film-cast-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 24px;
+  padding: 0;
+  margin: 0;
+}
+.film-cast-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 48px;
+  overflow-wrap: anywhere;
+}
+.cast-portrait {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center 25%;
+}
+.cast-name {
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 500;
+}
+.cast-character {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--secondary);
+  margin-top: 3px;
 }
 .result-dialog {
   text-align: center;
@@ -1338,6 +1412,13 @@ button svg {
   }
   .confirm-dialog h2 {
     font-size: 21px;
+  }
+  .confirm-dialog {
+    padding: 0;
+  }
+  .film-cast-list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
   }
   .confirm-synopsis {
     -webkit-line-clamp: 3;

@@ -10,6 +10,14 @@ export interface TopBilledLead {
   /** TMDB performer gender, never inferred from the character or name. */
   gender: LeadGender | null;
 }
+export interface CastMember {
+  tmdbId: number | null;
+  name: string;
+  character: string | null;
+  profilePath: string | null;
+  /** TMDB credit order; retained for preparation, never displayed. */
+  order: number | null;
+}
 export interface MovieEnrichment {
   hasMainAnimalCharacter?: boolean | null;
   isMusical?: boolean | null;
@@ -26,6 +34,8 @@ export interface Movie {
   runtime: number | null;
   director: string | null;
   cast: string[] | null;
+  /** First ten usable credits for the detail sheet; question cast stays unchanged. */
+  castMembers?: CastMember[] | null;
   overview?: string | null;
   productionCompanies?: ProductionCompany[] | null;
   /** Lowest-billed-order principal performer; not a claim about an ensemble's protagonist. */

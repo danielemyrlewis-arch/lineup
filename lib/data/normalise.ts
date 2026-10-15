@@ -1,4 +1,9 @@
-import type { Movie, ProductionCompany, TopBilledLead } from "../game/types.ts";
+import type {
+  CastMember,
+  Movie,
+  ProductionCompany,
+  TopBilledLead,
+} from "../game/types.ts";
 import { applyMovieEnrichment } from "./enrichment.ts";
 const record = (v: unknown): Record<string, unknown> | null =>
   typeof v === "object" && v !== null && !Array.isArray(v)
@@ -53,12 +58,34 @@ export function normaliseMovie(raw: unknown): Movie | null {
   const billed = list(credits?.cast)
     ?.map(record)
     .filter((c): c is Record<string, unknown> => c !== null)
-    .sort((a, b) => castOrder(a.order) - castOrder(b.order))
-    .slice(0, 5);
-  const cast = billed?.flatMap((c) => {
+    .sort((a, b) => castOrder(a.order) - castOrder(b.order));
+  const cast = billed?.slice(0, 5).flatMap((c) => {
     const name = string(c.name);
     return name ? [name] : [];
   });
+  const castMembers = billed
+    ?.flatMap((c): CastMember[] => {
+      const name = string(c.name);
+      if (!name) return [];
+      const id = number(c.id),
+        profile = string(c.profile_path);
+      return [
+        {
+          tmdbId: id && Number.isSafeInteger(id) ? id : null,
+          name,
+          character: string(c.character),
+          profilePath:
+            profile && /^\/[a-zA-Z0-9_-]+\.(jpg|png|webp)$/.test(profile)
+              ? profile
+              : null,
+          order:
+            castOrder(c.order) === Number.MAX_SAFE_INTEGER
+              ? null
+              : Number(c.order),
+        },
+      ];
+    })
+    .slice(0, 10);
   const countries = strings(m.production_countries, "iso_3166_1")?.filter(
     (country) => /^[A-Z]{2}$/.test(country),
   );
@@ -92,6 +119,7 @@ export function normaliseMovie(raw: unknown): Movie | null {
     runtime: number(m.runtime),
     director: string(director?.name),
     cast: cast?.length ? cast : null,
+    castMembers: castMembers?.length ? castMembers : null,
     overview: string(m.overview)?.slice(0, 1000) ?? null,
     productionCompanies: normaliseCompanies(m.production_companies),
     topBilledLead,
