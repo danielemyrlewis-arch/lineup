@@ -21,7 +21,7 @@
     "paths": {
       "@/*": ["./*"]
     },
-    "types": ["node", "@cloudflare/workers-types"],
+    "types": ["node"],
     "allowImportingTsExtensions": true
   },
   "include": [
@@ -32,5 +32,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "examples"]
+  "exclude": ["node_modules"]
 }

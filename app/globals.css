@@ -1,13 +1,5 @@
 @import "tailwindcss";
 
-@font-face {
-  font-family: "Libre Franklin";
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-  src: url("/fonts/libre-franklin-latin.woff2") format("woff2");
-}
-
 :root {
   --bg: #0d0d0d;
   --surface: #171717;
@@ -16,7 +8,7 @@
   --secondary: #9a9a95;
   --border: #2a2a2a;
   --accent: #5b6cff;
-  --font: "Libre Franklin", Arial, sans-serif;
+  --font: var(--font-libre-franklin), Arial, sans-serif;
 }
 
 * {
@@ -89,6 +81,14 @@ button svg {
   max-width: 1440px;
   margin: auto;
   padding: 0 56px;
+}
+.game-loading {
+  min-height: 360px;
+  display: grid;
+  place-content: center;
+  gap: 16px;
+  text-align: center;
+  color: var(--secondary);
 }
 .site-header {
   display: flex;

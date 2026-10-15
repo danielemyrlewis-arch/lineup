@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import { useEffect, useReducer, useRef, useState } from "react";
 import { X } from "lucide-react";
 import type { Movie, Puzzle, Question } from "@/lib/game/types";
@@ -18,9 +17,17 @@ import { QuestionPanel } from "./question-panel";
 import { HelpDialog, AboutDialog, StatsDialog } from "./info-dialogs";
 import { PickDialog, RestartDialog } from "./pick-dialogs";
 import { ResultDialog } from "./result-dialog";
+import { GameShell } from "./game-shell";
+import { createPracticePuzzle } from "@/lib/game/practice-selection";
 
 type Sheet = "help" | "about" | "stats" | "restart" | "result" | null;
-export function Game({ initialPuzzle }: { initialPuzzle: Puzzle }) {
+export function Game({
+  initialPuzzle,
+  catalogue,
+}: {
+  initialPuzzle: Puzzle;
+  catalogue: Movie[];
+}) {
   const [state, dispatch] = useReducer(
     gameReducer,
     initialPuzzle,
@@ -89,16 +96,13 @@ export function Game({ initialPuzzle }: { initialPuzzle: Puzzle }) {
     setNewLoading(true);
     setError("");
     try {
-      const r = await fetch("/api/lineup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(practiceHistory.current),
-        cache: "no-store",
-        signal: AbortSignal.timeout(45000),
-      });
-      if (!r.ok)
-        throw new Error("The next lineup couldn’t load. Please try again.");
-      const puzzle: Puzzle = await r.json();
+      const seed = crypto.getRandomValues(new Uint32Array(1))[0];
+      const puzzle = createPracticePuzzle(
+        catalogue,
+        seed,
+        "demo",
+        practiceHistory.current,
+      );
       const fresh = initialState(puzzle);
       practiceHistory.current = rememberPracticePuzzle(
         practiceHistory.current,
@@ -120,9 +124,7 @@ export function Game({ initialPuzzle }: { initialPuzzle: Puzzle }) {
           : "smooth",
       });
     } catch {
-      setError(
-        "The next lineup couldn’t load. Check your connection and try again.",
-      );
+      setError("The next lineup couldn’t be prepared. Please try again.");
     } finally {
       setNewLoading(false);
     }
@@ -150,93 +152,58 @@ export function Game({ initialPuzzle }: { initialPuzzle: Puzzle }) {
   };
   const stats = sheet === "stats" ? readStats() : null;
   return (
-    <div className="app-shell">
-      <a className="skip-link" href="#lineup">
-        Skip to the film lineup
-      </a>
-      <header className="site-header">
-        <div className="header-brand">
-          <Link className="brand" href="/" aria-label="LINEUP home">
-            <span>LINEUP</span>
-            <span className="brand-line" aria-hidden="true" />
-          </Link>
-          <span className="brand-tagline">Find the film.</span>
-        </div>
-        <nav aria-label="Main">
-          <span className="practice-tab">Practice</span>
-          <button type="button" className="header-help" onClick={openHelp}>
-            How to play
-          </button>
-        </nav>
-      </header>
-      <main>
-        <section className="hero">
-          <h1>
-            24 films.
-            <br />
-            <span>One answer.</span>
-          </h1>
-          <p>Ask up to five questions. Find the film.</p>
-        </section>
-        <section className="game-toolbar" aria-label="Game controls">
-          <h2>Practice</h2>
-          <button
-            type="button"
-            className="text-button"
-            onClick={() =>
-              state.status === "playing" ? setSheet("restart") : newLineup()
-            }
-            disabled={newLoading || busy}
-          >
-            {newLoading ? "Loading…" : "New lineup"}
-          </button>
-        </section>
-        <section
-          id="lineup"
-          ref={scrollRef}
-          className="game-layout"
-          aria-label="Practice game"
+    <GameShell
+      onHelp={openHelp}
+      onStats={() => setSheet("stats")}
+      onAbout={() => setSheet("about")}
+    >
+      <section className="game-toolbar" aria-label="Game controls">
+        <h2>Practice</h2>
+        <button
+          type="button"
+          className="text-button"
+          onClick={() =>
+            state.status === "playing" ? setSheet("restart") : newLineup()
+          }
+          disabled={newLoading || busy}
         >
-          <QuestionPanel
-            key={`questions-${state.puzzle.id}`}
-            state={state}
-            busy={busy}
-            onAsk={ask}
-          />
-          <MovieBoard
-            key={`board-${state.puzzle.id}`}
-            movies={state.puzzle.movies}
-            activeIds={state.activeIds}
-            departingIds={departing}
-            onSelect={(m) => {
-              if (!busy) setSelected(m);
-            }}
-            finished={state.status !== "playing"}
-            selectedId={selected?.id}
-          />
-        </section>
-        <div className="board-bottom">
-          {state.status !== "playing" && (
-            <button className="text-button" onClick={() => setSheet("result")}>
-              View your result
-            </button>
-          )}
-          <a href="#lineup" className="text-button">
-            Back to the lineup ↑
-          </a>
-        </div>
-      </main>
-      <footer className="site-footer">
-        <p>For the love of film.</p>
-        <div className="footer-links">
-          <button type="button" onClick={() => setSheet("stats")}>
-            Practice stats
+          {newLoading ? "Loading…" : "New lineup"}
+        </button>
+      </section>
+      <section
+        id="lineup"
+        ref={scrollRef}
+        className="game-layout"
+        aria-label="Practice game"
+      >
+        <QuestionPanel
+          key={`questions-${state.puzzle.id}`}
+          state={state}
+          busy={busy}
+          onAsk={ask}
+        />
+        <MovieBoard
+          key={`board-${state.puzzle.id}`}
+          movies={state.puzzle.movies}
+          activeIds={state.activeIds}
+          departingIds={departing}
+          onSelect={(m) => {
+            if (!busy) setSelected(m);
+          }}
+          finished={state.status !== "playing"}
+          selectedId={selected?.id}
+        />
+      </section>
+      <div className="board-bottom">
+        {state.status !== "playing" && (
+          <button className="text-button" onClick={() => setSheet("result")}>
+            View your result
           </button>
-          <button type="button" onClick={() => setSheet("about")}>
-            About & credits
-          </button>
-        </div>
-      </footer>
+        )}
+        <a href="#lineup" className="text-button">
+          Back to the lineup ↑
+        </a>
+      </div>
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {state.history.length
           ? `${state.history.at(-1)!.question.label} ${state.history.at(-1)!.answer ? "Yes" : "No"}. ${state.activeIds.length} films still in. ${5 - state.history.length} questions left.`
@@ -282,6 +249,6 @@ export function Game({ initialPuzzle }: { initialPuzzle: Puzzle }) {
           onClose={() => setSheet(null)}
         />
       )}
-    </div>
+    </GameShell>
   );
 }

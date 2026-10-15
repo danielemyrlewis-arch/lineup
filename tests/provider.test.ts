@@ -1,125 +1,30 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { DemoProvider, TMDBProvider } from "../lib/data/provider.ts";
+import { DemoProvider, getCatalogue } from "../lib/data/provider.ts";
 
-test("demo provider runs without any external requests or credentials", async () => {
-  const movies = await new DemoProvider().catalogue();
-  assert.ok(movies.length >= 1000);
+test("static provider returns the existing complete catalogue without network requests", async (t) => {
+  const fetch = t.mock.method(globalThis, "fetch", () => {
+    throw new Error("No runtime API may be called");
+  });
+  const a = await getCatalogue(),
+    b = await getCatalogue();
+  assert.equal(a.source, "demo");
+  assert.equal(a.movies, b.movies);
+  assert.equal(a.movies, await new DemoProvider().catalogue());
+  assert.ok(a.movies.length >= 1000);
+  assert.equal(fetch.mock.callCount(), 0);
+});
+
+test("static catalogue preserves gameplay, details, studio, lead, cast and enrichment metadata", async () => {
+  const { movies } = await getCatalogue();
   assert.ok(
     movies.every(
       (m) => m.posterPath && m.genres?.length && m.runtime && m.releaseYear,
     ),
   );
-});
-test("TMDB provider authenticates server requests, appends credits, normalises and bounds concurrency", async () => {
-  let running = 0,
-    maximum = 0,
-    details = 0;
-  const discovery: URL[] = [];
-  const fetcher: typeof fetch = async (input, init) => {
-    const url = new URL(String(input));
-    assert.equal(
-      (init?.headers as Record<string, string>).Authorization,
-      "Bearer fake-test-token",
-    );
-    assert.equal(url.origin, "https://api.themoviedb.org");
-    if (url.pathname.endsWith("/discover/movie")) {
-      discovery.push(url);
-      return Response.json({
-        results: Array.from({ length: 20 }, (_, i) => ({
-          id: i + 1 + (discovery.length - 1) * 10,
-        })),
-      });
-    }
-    assert.equal(url.searchParams.get("append_to_response"), "credits");
-    running++;
-    maximum = Math.max(maximum, running);
-    details++;
-    await new Promise((resolve) => setTimeout(resolve, 1));
-    running--;
-    const id = Number(url.pathname.split("/").at(-1));
-    return Response.json({
-      id,
-      title: `Film ${id}`,
-      release_date: "2001-01-01",
-      poster_path: "/poster.jpg",
-      vote_count: 4000,
-      runtime: 110,
-      overview: "Original overview from TMDB.",
-      production_companies: [{ id: 420, name: "Marvel Studios" }],
-      genres: [{ name: "Drama" }],
-      belongs_to_collection: null,
-      original_language: "en",
-      production_countries: [{ iso_3166_1: "US" }],
-      credits: {
-        crew: [{ name: "Director", job: "Director" }],
-        cast: [
-          {
-            id: 1234,
-            name: "Lead",
-            order: 0,
-            gender: 2,
-            character: "The hero",
-            profile_path: "/lead.jpg",
-          },
-        ],
-      },
-    });
-  };
-  const movies = await new TMDBProvider("fake-test-token", fetcher).catalogue();
-  assert.ok(movies.length >= 1000);
-  assert.equal(details, 30);
-  assert.ok(maximum <= 6);
-  const refreshed = movies.find((m) => m.tmdbId === 1)!;
-  assert.equal(refreshed.director, "Director");
-  assert.equal(refreshed.belongsToCollection, false);
-  assert.deepEqual(refreshed.cast, ["Lead"]);
-  assert.deepEqual(refreshed.castMembers, [
-    {
-      tmdbId: 1234,
-      name: "Lead",
-      character: "The hero",
-      profilePath: "/lead.jpg",
-      order: 0,
-    },
-  ]);
-  assert.equal(refreshed.overview, "Original overview from TMDB.");
-  assert.deepEqual(refreshed.productionCompanies, [
-    { id: 420, name: "Marvel Studios" },
-  ]);
-  assert.deepEqual(refreshed.topBilledLead, {
-    tmdbId: 1234,
-    name: "Lead",
-    gender: "male",
-    character: "The hero",
-  });
-  assert.equal(discovery.length, 16);
-  assert.ok(
-    discovery.some(
-      (url) => url.searchParams.get("with_original_language") === "ja",
-    ),
-  );
-  assert.ok(
-    discovery.some(
-      (url) =>
-        url.searchParams.get("primary_release_date.gte") === "1930-01-01",
-    ),
-  );
-  assert.ok(
-    discovery.every((url) => url.searchParams.get("with_runtime.gte") === "60"),
-  );
-});
-test("TMDB provider rejects insufficient/malformed results for safe demo fallback", async () => {
-  const malformed: typeof fetch = async () =>
-    Response.json({ unexpected: "response" });
-  await assert.rejects(
-    new TMDBProvider("fake", malformed).catalogue(),
-    /Insufficient/,
-  );
-  const unavailable: typeof fetch = async () =>
-    new Response("", { status: 503 });
-  await assert.rejects(
-    new TMDBProvider("fake", unavailable).catalogue(),
-    /Insufficient/,
-  );
+  const m = movies.find((m) => m.tmdbId === 27205)!;
+  assert.ok(m.director && m.cast?.length && m.overview);
+  assert.ok(m.productionCompanies?.length && m.topBilledLead);
+  assert.equal(m.castMembers?.length, 10);
+  assert.equal(m.enrichment?.isMusical, false);
 });

@@ -1,7 +1,6 @@
 import type { Puzzle } from "./types.ts";
 
 export const PRACTICE_HISTORY_KEY = "lineup:practice-films:v1";
-export const PRACTICE_HISTORY_COOKIE = "lineup-practice-films";
 export const HISTORY_BOARDS = 10;
 export const STRONG_COOLDOWN_BOARDS = 5;
 export interface PracticeHistory {
@@ -21,7 +20,7 @@ const validId = (id: unknown): id is number =>
   id > 0 &&
   id <= 2147483647;
 
-/** Treat both browser storage and request bodies as untrusted, bounded inputs. */
+/** Treat browser storage as untrusted, bounded input. */
 export function sanitisePracticeHistory(value: unknown): PracticeHistory {
   if (!value || typeof value !== "object") return emptyPracticeHistory();
   const raw = value as Partial<PracticeHistory>;
@@ -70,7 +69,7 @@ export function readPracticeHistory(storage?: StorageLike): PracticeHistory {
     return emptyPracticeHistory();
   }
 }
-/** A compact mirror lets SSR honour local recency on refresh, without replacing a visible board. */
+/** Legacy compact-history format kept readable for catalogue tooling/tests. No cookies are written. */
 export function encodePracticeHistory(history: PracticeHistory): string {
   const h = sanitisePracticeHistory(history);
   return (
@@ -103,8 +102,5 @@ export function writePracticeHistory(
     );
   } catch {
     /* The in-memory history still works when storage is unavailable. */
-  }
-  if (typeof document !== "undefined") {
-    document.cookie = `${PRACTICE_HISTORY_COOKIE}=${encodePracticeHistory(safe)}; Path=/; Max-Age=7776000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
   }
 }

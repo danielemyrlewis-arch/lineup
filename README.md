@@ -1,184 +1,131 @@
 # LINEUP
 
-**Find the film.** A complete, mobile-first movie deduction game. Twenty-four recognisable films, up to five controlled yes/no questions, and one final pick. Practice Mode is playable without credentials.
+**Find the film.** 24 films, up to five yes/no questions, one final pick.
 
-## Run locally
+## PUBLIC BETA — GITHUB PAGES
 
-Requires **Node.js 22.13+** (Node 24 recommended) and npm.
+LINEUP is a fully static Next.js export. GitHub Pages serves HTML, CSS, JavaScript and the bundled film catalogue. All lineup generation, questions, eliminations, results and Practice storage run in the browser. Production has no server, account, database, environment secrets, API routes or live TMDB metadata requests.
+
+### Run locally
+
+Use Node.js 24 and npm:
 
 ```sh
-npm ci
-cp .env.example .env.local
+npm install
 npm run dev
 ```
 
-Open **http://127.0.0.1:5173**. Leave the token blank to play the **1,206-film fallback catalogue**. Fonts and the original 40 posters are local; additional posters use responsive TMDB CDN images without an API token. Practice selects 24 films with recency and diversity weighting. No account is needed. A refresh starts a new game while retaining recent-film memory; unfinished game state is not persisted.
+Open http://localhost:3000. No `.env` file is needed. Development uses Next's local development server; production does not.
 
-### Add TMDB
+### Create the public repository and deploy
 
-Put a TMDB **API Read Access Token** in the project root's ignored `.env.local`:
+1. Create an **empty public repository** on GitHub, for example `lineup`. Do not initialise a README there.
+2. Extract the supplied clean source archive into a new folder. It contains no `.git`, credentials, previous hosting configuration or local runtime state. Initialise a fresh public history from that folder:
 
-```dotenv
-TMDB_API_TOKEN=your_api_read_access_token
+   ```sh
+   git init -b main
+   git add .
+   git commit -m "Prepare LINEUP static public beta"
+   git remote add origin https://github.com/USERNAME/REPOSITORY.git
+   git push -u origin main
+   ```
+
+   Replace `USERNAME` and `REPOSITORY` with your GitHub account and repository. Use this clean source rather than pushing the old hosting repository's history.
+
+3. In the new GitHub repository, choose **Settings → Pages → Build and deployment → Source → GitHub Actions**.
+4. Open **Actions → Deploy LINEUP to GitHub Pages → Run workflow**, selecting `main`. If the first push ran before Pages was enabled, rerun the workflow after step 3.
+5. Once the deployment succeeds, open the URL shown by the `github-pages` environment. A project repository normally uses `https://USERNAME.github.io/REPOSITORY/`. A repository named `USERNAME.github.io`, or a configured custom domain, can use the domain root.
+6. Every subsequent push to `main` automatically tests, builds and deploys. Manual workflow dispatch is also supported.
+
+The workflow uses current official `actions/checkout`, `setup-node`, `configure-pages`, `upload-pages-artifact` and `deploy-pages`. It runs `npm ci`, public-source auditing, lint, type checking and tests before uploading **only `out/`**. GitHub provides its normal temporary workflow token/OIDC; no custom credentials or application secrets need configuring. The build job reads Pages metadata; deployment permissions are scoped to the deployment job.
+
+### Static production build
+
+```sh
+npm run build
 ```
 
-Get the token from your [TMDB API account settings](https://www.themoviedb.org/settings/api). Restart the dev server after changing it. Use the read access bearer token, rather than the legacy API key. Never prefix it with `NEXT_PUBLIC_` or `VITE_`, and never commit it. `.env.example` contains the required name only.
+This runs `next build --webpack` with `output: "export"`, then verifies the exported assets. The output is **`out/`**. Do not run `next start`; there is no production application server.
 
-For the hosted Site, configure `TMDB_API_TOKEN` as a **server runtime secret** in Sites. For Vercel, set it in project environment variables and redeploy. No real token was supplied with this build; live TMDB requests are implemented and tested with mocked responses, while the deployed game runs in demo mode.
+For a project repository subpath, the one build-time setting is:
 
-The server always starts with the full bundled catalogue. With a token, TMDB discovery covers eight release-period buckets, animation/horror/comedy, and Japanese/Korean/French/Spanish/Hindi films. Pages rotate daily and candidates interleave across buckets. Each refresh hydrates up to 30 films with appended credits, at most six concurrent requests and 46 upstream calls total, then merges valid records into the seed catalogue by TMDB ID. The resulting catalogue is cached for 24 hours per server instance. A 15-second overall deadline and five-second request deadlines bound upstream delays. Missing/invalid tokens or upstream failure keep the full fallback available; failures retry after a fixed one-minute backoff. This deliberately avoids fetching 1,000 detail records during a cold page load. Serverless instances refill independently; live additions are cache-local, not a durable catalogue sync.
+```sh
+PAGES_BASE_PATH=/lineup npm run build
+```
 
-### Check and build
+`PAGES_BASE_PATH` must be empty or `/REPOSITORY`. GitHub Actions supplies the actual Pages `base_path` automatically, so changing the repository name or using a root/custom-domain site does not require source edits. Rebuild when changing the published path. This value is compiled into the assets; there are no runtime environment variables. Next's base path covers scripts, CSS and internal links; local posters, favicon and the TMDB logo use the matching prefix. The local Libre Franklin font is bundled by `next/font/local`. Native poster/headshot images and unoptimised local images need no image server.
+
+### Test the export with a basic static server
+
+For a root build:
+
+```sh
+npm run build
+python3 -m http.server 4173 --bind 127.0.0.1 --directory out
+```
+
+Open http://127.0.0.1:4173/. Next/Node does not need to be running.
+
+To test the same repository subpath used by Pages:
+
+```sh
+PAGES_BASE_PATH=/lineup npm run build
+mkdir -p /tmp/lineup-pages-preview
+ln -s "$PWD/out" /tmp/lineup-pages-preview/lineup
+python3 -m http.server 4173 --bind 127.0.0.1 --directory /tmp/lineup-pages-preview
+```
+
+Open http://127.0.0.1:4173/lineup/. Use an empty preview folder, or remove a previous preview symlink before recreating it. The symlink is a local preview convenience; the uploaded Pages artifact contains ordinary files.
+
+Checks:
 
 ```sh
 npm run lint
 npm run typecheck
 npm test
 npm run simulate:practice -- 20
+npm run audit:public
 npm run build
-npm start
 ```
 
-The default build produces the Sites-compatible Cloudflare Worker using Vinext. `npm start` serves the resulting Worker locally through Wrangler (normally http://127.0.0.1:8787). Use a runtime `.dev.vars` containing `TMDB_API_TOKEN` if testing secrets with Wrangler directly.
+`postbuild` verifies HTML/CSS asset paths, `.nojekyll`, a small export size and the absence of old backend references in the JavaScript. There are no nested routes or rewrite rules: the game and every sheet/result live on the home page, so refreshing the project URL works directly.
 
-### Standard Next.js / Vercel
+Preparation checks passed with a clean `npm ci`, lint, type checking, all 57 tests and a 20-lineup simulation. Root and `/lineup/` exports each contain 81 files/about 4.45 MB. Browser checks against Python's static server covered new lineups, questions, film details, posters, fonts, attribution, results, replay, refresh cooldown and persisted statistics. The preview log contained only successful static GET requests and no API requests. The GitHub deployment workflow itself still needs to run in your chosen repository.
 
-The application uses the Next.js App Router, React, TypeScript, Tailwind CSS 4 and small purpose-built components. The default Sites runtime uses the supplied Vinext adapter because Sites hosts Workers. A standard Next.js deployment is also supported. Its production command uses the supported Webpack build path to avoid local Turbopack sandbox restrictions:
+## Static catalogue and future updates
+
+The catalogue actually present in this checkout contains **1,206 films**: a 1,200-film historical TMDB-derived snapshot merged with the original 40 curated films by TMDB ID. This conversion keeps the existing film data and selection/diversity rules unchanged.
+
+- `lib/data/catalogue-snapshot.ts`: compact factual gameplay data: ID, title/year, poster reference, genres, runtime, director, question cast, collection, language/countries, votes and popularity.
+- `lib/data/details-snapshot.ts`: original overviews, production companies, lead metadata and up to ten cast names/roles/profile paths/order. It retains 11,937 compact cast credits rather than full TMDB responses.
+- `lib/data/demo.ts`: the original modern additions and 40 local poster overrides.
+- `lib/data/enrichment.ts`: reviewed musical/animal true/false/unknown flags, keyed by TMDB ID.
+- `lib/data/studios.ts`: exact studio IDs and explicit rebrand aliases, without ownership inference.
+- `lib/data/catalogue.ts` and `bundled-details.ts`: merge these static sources.
+
+The browser loads the catalogue as one cacheable static JavaScript chunk. Every initial, refreshed or new lineup is generated locally with a fresh random seed and existing recency history. No request-time data generation occurs. Images can still load from TMDB's public image CDN: those are image assets, not metadata/API calls. Only the existing 40 small poster files are local; no mass poster download was added. Missing/failed artwork retains its existing fallback behaviour.
+
+The snapshot is historical (through 2017 plus curated newer additions), not a live movie chart. To refresh it later, obtain the source CSVs separately and run the offline generators, review the output, then test/build and push the changed snapshots:
 
 ```sh
-npm run dev:next
-# http://localhost:3000
-npm run build:next
-npm run start:next
+python3 scripts/build-demo-catalogue.py /path/to/movies_complete.csv
+python3 scripts/build-details-snapshot.py /path/to/movies_metadata.csv /path/to/credits.csv
 ```
 
-For Vercel select **Next.js**, set the build command to `npm run build:next`, and leave the output directory at the framework default. Both deployment builds are checked as part of this delivery. The Sites adapter is beta; the standard Next.js path avoids depending on it for a Vercel launch.
+Neither generator runs in the application, production build or deployment workflow. Their pinned sources are recorded in the scripts: [gameplay snapshot](https://github.com/TjanMichela/Movie-Data-Analysis/blob/84d01fcfb0b89f12ce445740fddac37270e4a042/movies_complete.csv), [details and credits](https://github.com/tima-chan/TheMovieDataBase/tree/77aaa72bff5e687ad496f5a579217b312352977e). The source repository MIT notice is in `public/licenses/catalogue-source.txt`. Raw CSVs are not included in public source. To expand coverage, adjust the generator's selected-film cap and regenerate details for the resulting IDs; the game architecture does not change.
 
-## Project structure
+Unknown studio, lead or curated values stay unknown. Questions require reliable YES and NO values for every active film and retain the existing balance ranking. Musical classification is reviewed rather than inferred from TMDB's Music tag. Lead gender describes the lowest-order principal performer; display cast expansion does not alter question cast or that definition. Original TMDB overviews stay plain text and clamped; detail-sheet cast stays capped at ten with optional headshots, one scroll surface, top Cancel and sticky Lock it in.
 
-```text
-app/
-  page.tsx                Server-rendered initial puzzle
-  api/lineup/route.ts      Fresh practice puzzle endpoint; never caches a mystery
-  globals.css             Responsive editorial design and reduced-motion styles
-components/game/
-  game.tsx                Game orchestration and practice lifecycle
-  result-dialog.tsx       Win/loss screen and sharing controls
-  info-dialogs.tsx         Help, attribution and local statistics
-  pick-dialogs.tsx         Final-pick and fresh-lineup confirmation
-  film-details.tsx        Title, genres, clamped synopsis and ten-person Cast
-  question-panel.tsx      Controlled autocomplete, suggestions and clue history
-  movie-board.tsx         Posters, FLIP reflow and collapsible eliminated films
-  poster.tsx              Sized/lazy artwork with accessible fallback
-  dialog.tsx              Native modal focus trapping and focus return
-lib/
-  data/catalogue.ts       1,206-film server-side Practice seed catalogue
-  data/catalogue-snapshot.ts Compact generated TMDB metadata snapshot
-  data/demo.ts            Original 40 curated films and local artwork overrides
-  data/details-snapshot.ts Original TMDB overviews, studios and principal credits
-  data/bundled-details.ts Merge fallback details without overriding live unknowns
-  data/enrichment.ts      Extensible reviewed true/false/unknown attributes
-  data/studios.ts         Recognisable studio allow-list and explicit aliases
-  data/normalise.ts       Defensive TMDB → internal Movie normalisation
-  data/provider.ts        Replaceable demo/TMDB providers; server only
-  game/types.ts           Movie, puzzle, question and state contracts
-  game/engine.ts          Unchanged seeded Daily path and pure game reducer
-  game/practice-selection.ts Weighted Practice generation and question checks
-  game/practice-eligibility.ts Recognition and feature-film filters
-  game/practice-history.ts Bounded local recency and SSR cookie mirror
-  game/questions.ts       Definitions, evaluation, validation, search and ranking
-  game/copy.ts            Central result copy
-  game/share.ts           Spoiler-free Web Share / clipboard fallback
-  game/persistence.ts     Lightweight local practice stats
-public/
-  posters/                Small demo poster assets (342px)
-  fonts/                  Locally hosted open-source typography
-  tmdb.svg                TMDB attribution logo
-  licenses/               Font licenses and asset credits
-tests/                   Core game and provider tests
-.openai/hosting.json       Sites identity and deployment bindings; no secrets
-```
+## Browser storage and static-hosting limitations
 
-## Rules and design decisions
+Existing localStorage keys for recently shown films, mystery cooldown, help preference and Practice statistics are unchanged. History remains bounded to ten boards/240 film IDs and ten mysteries; new lineups and refreshes respect the same cooldown/diversity logic. Storage failures fall back to in-memory history. No cookies or server sessions are needed. Refresh starts a fresh game while retaining local history; unfinished games are not persisted, as before.
 
-- Only recognised questions are submitted. Release date, genre, runtime, collection, director, cast, language and country questions are supported alongside the added studio, lead-performer and reviewed curated questions; release dates include before/after thresholds and relevant decades.
-- A question is available only if every active film has the needed data, at least one answers yes and one no. Unknown metadata is never guessed or treated as a negative answer.
-- Suggestions rank primarily by balance, prefer a variety of categories, and avoid offering equivalent or inverse splits. Split counts are not shown to players.
-- The pure reducer validates canonical questions, refuses duplicates and sixth questions, preserves the mystery, and accepts one active-film guess. Before/after and over/under comparisons are strict: “after 2000” excludes 2000.
-- Films first desaturate in place, then reflow using FLIP animation. Eliminated films remain inspectable in a separate section that collapses when several are out. Reduced-motion users get a near-instant transition.
-- Posters have fixed aspect ratios, title truncation, lazy loading, major cast limits and modest image sizes. Live artwork uses responsive TMDB sizes.
-- Native `<dialog>` provides keyboard focus containment, Escape dismissal, background inertness and focus return. Autocomplete supports arrows, Enter, Escape and Cmd/Ctrl+K. The game announces clues and counts through a live region.
-- The demo metadata is a curated snapshot, including collection membership as a simple franchise proxy. It is not a real-time claim about collections. Some films have multiple directors; V1 normalises the first credited director as requested by the singular `director` model. A future catalogue can use `directors[]`.
-- Practice stats are stored only on this browser and are explicitly labelled that way. No account, daily puzzle, payment, advertising, award questions, arbitrary AI answers, or multiplayer has been implemented.
-- Practice mysteries live in client memory so the game works without sessions. This is suitable for free practice, not an anti-cheat boundary. A scored Daily Mode should keep its mystery and answer evaluation on the server.
+Browser storage belongs to an origin: moving from a previous host to `USERNAME.github.io` starts separate local statistics/history. There is no automatic cross-domain migration or account sync. Metadata changes require a new build/deployment. The first load downloads the bundled catalogue; remote posters/headshots still need an internet connection. JavaScript is required to play. This free Practice beta keeps its answer and metadata in client memory, as before.
 
-## Practice selection
+## Public source and attribution
 
-The fallback combines **1,200 TMDB-derived snapshot records** with the original curated films, deduplicated by TMDB ID, giving **1,206 eligible films**. It retains compact gameplay facts (about 288 KB) plus selected film details (about 1.46 MB of generated source), including at most ten compact cast credits per film. The full catalogue stays on the server; only 24 films reach the browser. The historical snapshot covers films through 2017, with newer films supplied by the original curated additions and optional live TMDB enrichment. It is a broad fallback, not a current movie chart.
+`.env`, `.env.local`, `.dev.vars`, keys, dependency/build folders and local editor/hosting caches are ignored. `.env.example` contains only an optional public build-time path. `npm run audit:public` reports credential/private-metadata locations without printing their values. The one-time `node scripts/audit-public-source.mjs --history` check also scans historical source blobs; the clean release archive deliberately omits all Git history and local state.
 
-Snapshot provenance: [movies_complete.csv at pinned commit 84d01fc](https://github.com/TjanMichela/Movie-Data-Analysis/blob/84d01fcfb0b89f12ce445740fddac37270e4a042/movies_complete.csv). The source repository’s MIT notice is preserved in `public/licenses/catalogue-source.txt`; TMDB metadata and artwork remain subject to TMDB’s terms. Rebuild with `python3 scripts/build-demo-catalogue.py /path/to/movies_complete.csv`. Original curated values and local poster paths override matching snapshot records while retaining collection hints. On 15 October 2026 all **1,166 additional poster URLs** returned HTTP 200; original artwork remains local.
+LINEUP retains its editorial black/cobalt identity and locally hosted **Libre Franklin** under the SIL Open Font License (`public/licenses/Libre-Franklin-OFL.txt`). Film metadata/artwork remain credited to [TMDB](https://www.themoviedb.org). About & credits retains the TMDB logo and notice: **This product uses the TMDB API but is not endorsed or certified by TMDB.** Static metadata was originally obtained from TMDB; the published beta makes no live metadata API requests.
 
-Every candidate needs a valid TMDB ID, title, poster path, released year, genres and a 60–360 minute feature runtime. Adult/video/planned records, explicit TV Movie records, future/invalid dates and shorts are rejected. Preferred minimum vote counts are age-sensitive:
-
-| Release year | Preferred | First widening | Final widening |
-| ------------ | --------: | -------------: | -------------: |
-| Before 1980  |       250 |            200 |            150 |
-| 1980–1999    |       600 |            400 |            250 |
-| 2000 onward  |     1,200 |            800 |            500 |
-
-Non-English thresholds are 65% of these figures, floored at 150 votes. Marginal records also need popularity ≥0.5; films with at least twice the applicable vote threshold do not need that popularity floor. This preserves older/high-vote classics even when current popularity is low. Widening happens only when fewer than 24 candidates are fresh enough, with no arbitrary low-vote filler. Optional metadata gaps reduce selection weight; the fallback has all eight original gameplay categories populated. New studio/lead fields and curated flags retain explicit unknown states where coverage is incomplete.
-
-`localStorage` key `lineup:practice-films:v1` stores the newest ten displayed boards (**at most 240 IDs**) and ten separate mystery IDs. Abandoned boards count as shown. Recording is idempotent, malformed input is sanitised, and unavailable/full storage falls back to in-memory history. A compact same-site cookie mirrors only the IDs so server-rendered refreshes also respect cooldown; it contains no account or result data. New-lineup requests send the bounded local history in a POST body. Daily puzzles and practice result statistics use their existing separate paths.
-
-Films from the previous five boards are excluded whenever at least 24 suitable fresh candidates exist. Films from boards six through ten have **0.035×** normal weight. Small pools relax exclusion with **0.002×** weight for the most recent five boards. Recent mystery answers get an additional **0.005×** appearance penalty and are excluded from answer selection for ten games. Titles naturally re-enter once they leave history.
-
-Weighted sampling reduces overrepresentation of decades, genres, animation/live action, collection membership, director/cast, original language and countries. There are no fixed genre or decade slots. Collection IDs/names, plus broad MCU/Middle-earth/Wizarding World groups, normally allow one franchise representative. Normalised same-title remakes cannot share a board when alternatives exist. Small homogeneous pools relax those preferences instead of failing.
-
-Each proposed board is checked with the **unchanged `validQuestions`**. Acceptance targets at least six distinct splits with four or more films on each side, four valid categories and three categories with balanced splits. Up to five weighted attempts choose a healthy board or the best available board if a limited pool cannot meet that target. This changes selection, never question evaluation, ranking or suggestions.
-
-For optional development diagnostics, run `LINEUP_DEBUG=1 npm run dev`. Server logs show eligible pool size, recency exclusions/penalties, selected IDs, decade/genre distributions and question quality. There is no production debug UI or API field. `npm run simulate:practice -- 20` provides a reproducible sequential-lineup report and asserts cooldown, metadata and franchise invariants.
-
-## Additional questions and selected-film details
-
-Production companies are normalised as `{ id, name }` records. Only the 14 configured production brands in `lib/data/studios.ts` generate questions. Matching uses exact TMDB IDs or explicit historical names; it never uses substring matches or infers credits from corporate ownership. Disney Pictures, Pixar and Marvel remain separate. DreamWorks Pictures and DreamWorks Animation are also separate. The 20th Century Fox/Studios and known legacy company entries are explicitly mapped. An absent, empty or malformed company list is unknown. A NO requires a populated list of other production credits. Questions still require all active films to have reliable values and a non-constant YES/NO split.
-
-`topBilledLead` is the principal cast entry with the smallest valid TMDB `order`, using source order for ties; unnamed first credits remain unknown. The performer name, character and gender come from that same entry, not from another actor, a character name or a guessed protagonist. TMDB gender 0/missing/unrecognised means unknown, 1 means female, 2 male, and 3 nonbinary. Known nonbinary performers answer NO to both male/female questions. This is an operational definition for ensembles, animation and cross-gender roles, and the help dialog explains it. It describes the performer, not the character. Any unknown lead gender suppresses these questions for the current active set.
-
-The original TMDB overviews, production-company IDs/names and top-billed credits for **1,200 fallback films** are extracted from the [matching historical TMDB dataset](https://github.com/tima-chan/TheMovieDataBase/tree/77aaa72bff5e687ad496f5a579217b312352977e). Gender is known for **1,171** of those credits. These are historical facts, not a real-time catalogue; a documented [TMDB person correction](https://www.themoviedb.org/person/27578-elliot-page) updates a known stale name/gender entry. Rebuild with `python3 scripts/build-details-snapshot.py /path/to/movies_metadata.csv /path/to/credits.csv`. Raw 190 MB credits are never shipped. TMDB remains the source; live details use their own current response and **never** fill missing fields with historical gender/company values. Newly added films without full fallback details show only what is known.
-
-Curated booleans live in `Movie.enrichment`, with reviewed records keyed by TMDB ID in `lib/data/enrichment.ts`. `true`, `false` and absent/`null` are distinct. A generic descriptor list provides the question/aliases; future attributes can extend the interface, reviewed map and descriptors without new predicate cases. Only `hasMainAnimalCharacter` and `isMusical` are implemented now. Animal classifications cover obvious central literal/anthropomorphised animals (including dinosaurs); uncertain toys, spirits and fantasy creatures remain unreviewed. Synopses, genres, keywords and runtime AI do not classify animal characters.
-
-**Music is separate from musical.** TMDB’s Music genre identifies review candidates, not a guaranteed narrative musical. `isMusical` is an explicit reviewed value: La La Land, The Lion King and known narrative musicals are YES; Whiplash, Amadeus and Straight Outta Compton are NO. Ambiguous performance films/biopics and unreviewed titles remain unknown. Reviewed musicals can override missing Music tags, including familiar animation. There is no default NO from an absent Music tag. Because coverage is deliberately partial, musical/animal questions may become available only after narrowing to reviewed films. Unknowns never silently become NO. New curated questions use the same valid-split, balance-ranking and inverse-partition rules as every other question.
-
-Autocomplete includes studio/brand aliases, woman/female, man/male, animal, musical/singing/song/songs/musical film, before 1970 and short decade forms such as 60s. Gender words match whole words so male does not accidentally match female. Release questions now include the 1970 threshold; older decades are generated from films actually present. New categories are appended to existing tie-break priorities, without boosting them above better splits.
-
-Selecting a film shows its poster, title, year, up to three genres, director, original TMDB overview and a **Cast** section. The detail list retains only actor TMDB ID, name, character, profile path and cast order from the already appended/cached credits. It sorts by TMDB order (stable source order for ties/missing order), skips unnamed entries and retains/renders at most ten usable credits. Ordering numbers never reach the visible UI. Actor and character use separate lines; missing characters disappear. Valid TMDB profiles use small lazy-loaded circular images from the image CDN; missing, invalid or failed images become text-only entries without placeholders. The original five-name question cast and lead-gender definition are unchanged. Historical fallback credits supply 11,937 detail entries; newer bundled films without those credits retain their known names without invented roles or photos.
-
-The entire detail dialog is one scrolling surface, capped to the viewport, with a sticky Cancel control at the top and a sticky Lock it in footer. The footer remains in normal document flow and the content has bottom spacing so the final cast member can scroll fully above it. Cast itself has no nested scrollbar. Desktop uses two cast columns in a 520px modal; mobile uses one. Synopsis input stays bounded to 1,000 characters and clamped to three mobile/four desktop lines. Opening a card makes **no detail, credits or person requests**: data is prepared in the existing catalogue/cache path and only the selected 24 records reach the browser. Headshots request image assets only. Lock-in, five-question rules, elimination, result/share screens, recency and diversity algorithms are unchanged.
-
-## Tests
-
-The 57 tests cover the existing game/rule cases plus Practice uniqueness, five-/ten-board recency, mystery cooldown, franchise/remake grouping, smaller/homogeneous pools, gradual widening, malformed metadata, bounded local history and cookies, question quality, broad TMDB discovery and bounded metadata fetching. They use Node's built-in test runner without a state or testing framework dependency. Added tests cover company mapping/ownership isolation, lead definition/unknown gender, 1970/older decades, curated tri-state musical/animal flags, aliases and ranking, actual rendered film detail sections, missing sections and synopsis escaping. Cast checks cover ordering, ten usable entries, unchanged question data, compact retained fields, names/characters, profile validation, no placeholders/numbers, fallback credits and unchanged provider request counts. Browser review covers mobile/desktop sheets, full-list scrolling, sticky controls, missing/failed photos, shorter casts, Escape dismissal, search, elimination, final picks and results.
-
-## TMDB attribution and artwork
-
-This product uses the TMDB API but is not endorsed or certified by TMDB.
-
-The About & Credits dialog includes this notice, a TMDB logo and a link to TMDB. Demo film posters were downloaded at 342px from TMDB's image CDN. Film artwork belongs to its respective rights holders. TMDB images and metadata are used for the initial free, non-commercial prototype.
-
-**Before public launch the developer must ensure all current TMDB branding, logo, attribution, API-use and licensing requirements are satisfied.** Review the [TMDB API FAQ](https://developer.themoviedb.org/docs/faq), [logos and attribution](https://www.themoviedb.org/about/logos-attribution), and your account's API terms. The initial hosted Site remains owner-private. This project does not claim ownership of posters or metadata.
-
-API implementation follows TMDB's [append-to-response](https://developer.themoviedb.org/docs/append-to-response) and [image URL](https://developer.themoviedb.org/docs/image-basics) documentation. Secrets remain server-side.
-
-## Sensible Phase 2
-
-1. Store versioned daily puzzle records (24 movie IDs/order, immutable metadata snapshot, mystery ID and date/time-zone policy), with server-side question/guess validation and one scored attempt per day.
-2. Add optional accounts and sync local statistics after completion, with streaks and win distributions.
-3. Refresh the historical catalogue snapshot, allow multiple directors and version collection semantics so old daily answers stay stable.
-4. Add reproducible daily sharing, production monitoring and real-device assistive-technology checks.
-
-These are extension points, not partially built features. `Puzzle` already has a mode, stable seed, ID and creation timestamp; the engine is independent of data providers and presentation.
-
-## Visual identity
-
-Libre Franklin is the only interface font, hosted locally under the SIL Open Font License. The editorial design uses neutral black/grey surfaces with a restrained cobalt accent (#5B6CFF). Controls use sentence casing; poster artwork provides the visual variety. The previous condensed typography and decorative investigation labels have been removed.
+Deployment references: [Next.js static export](https://nextjs.org/docs/app/guides/static-exports), [Next.js base paths](https://nextjs.org/docs/app/api-reference/config/next-config-js/basePath), [GitHub Pages custom workflows](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).

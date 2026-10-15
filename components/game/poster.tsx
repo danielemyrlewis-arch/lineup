@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { Movie } from "@/lib/game/types";
+import { publicAsset } from "@/lib/assets";
 export function Poster({
   movie,
   eager = false,
@@ -10,7 +11,7 @@ export function Poster({
 }) {
   const [failed, setFailed] = useState(false);
   const src =
-    movie.localPoster ??
+    (movie.localPoster ? publicAsset(movie.localPoster) : null) ??
     (movie.posterPath
       ? `https://image.tmdb.org/t/p/w342${movie.posterPath}`
       : null);

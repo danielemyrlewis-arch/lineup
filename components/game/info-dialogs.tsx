@@ -1,6 +1,7 @@
 "use client";
 import { Dialog } from "./dialog";
 import Image from "next/image";
+import { publicAsset } from "@/lib/assets";
 import type { PracticeStats } from "@/lib/game/persistence";
 export function HelpDialog({ onClose }: { onClose: () => void }) {
   return (
@@ -59,7 +60,7 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
       >
         <Image
           unoptimized
-          src="/tmdb.svg"
+          src={publicAsset("/tmdb.svg")}
           alt="The Movie Database"
           width="100"
           height="72"
