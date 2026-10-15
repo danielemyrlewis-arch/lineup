@@ -52,14 +52,14 @@ export function QuestionPanel({
   };
   return (
     <aside className="question-column">
-      <div className={`question-panel ${finalPick ? "final-pick-panel" : ""}`}>
+      <div className="question-panel">
         <div className="question-budget">
           <p>
             <strong>
               {left} question{left !== 1 ? "s" : ""} left
             </strong>
           </p>
-          <div className="question-pips" aria-hidden="true">
+          <div className="question-progress" aria-hidden="true">
             {Array.from({ length: QUESTION_LIMIT }, (_, i) => (
               <span key={i} className={i < left ? "available" : "used"} />
             ))}
@@ -207,7 +207,6 @@ export function QuestionPanel({
                   onClick={() => ask(q)}
                 >
                   <span>{q.shortLabel}</span>
-                  <ArrowRight size={15} />
                 </button>
               ))}
             </div>
@@ -230,38 +229,32 @@ export function QuestionPanel({
           </div>
         )}
       </div>
-      <div className="history-panel">
-        <button
-          type="button"
-          className="history-toggle"
-          onClick={() => setHistoryOpen((v) => !v)}
-          aria-expanded={historyOpen}
-          aria-controls="question-history"
-        >
-          <span>
-            Asked <span className="history-count">{state.history.length}</span>
-          </span>
-          <ChevronDown size={15} className={historyOpen ? "rotated" : ""} />
-        </button>
-        {historyOpen && (
-          <div id="question-history">
-            {state.history.length ? (
-              <ol>
-                {state.history.map((h) => (
-                  <li key={h.question.id}>
-                    <span>{h.question.shortLabel}</span>
-                    <strong className={h.answer ? "yes-text" : "no-text"}>
-                      {h.answer ? "Yes" : "No"}
-                    </strong>
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <p className="empty-history">Your questions will appear here.</p>
-            )}
-          </div>
-        )}
-      </div>
+      {state.history.length > 0 && (
+        <div className="history-panel">
+          <button
+            type="button"
+            className="history-toggle"
+            onClick={() => setHistoryOpen((v) => !v)}
+            aria-expanded={historyOpen}
+            aria-controls="question-history"
+          >
+            <span>Asked</span>
+            <ChevronDown size={15} className={historyOpen ? "rotated" : ""} />
+          </button>
+          {historyOpen && (
+            <ol id="question-history">
+              {state.history.map((h) => (
+                <li key={h.question.id}>
+                  <span>{h.question.shortLabel}</span>
+                  <strong className={h.answer ? "yes-text" : "no-text"}>
+                    {h.answer ? "Yes" : "No"}
+                  </strong>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      )}
     </aside>
   );
 }

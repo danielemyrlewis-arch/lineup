@@ -47,12 +47,20 @@ export function ResultDialog({
       <p className="result-questions">
         {state.history.length} question{state.history.length !== 1 ? "s" : ""}
       </p>
-      <p
+      <ol
         className="deduction-path"
         aria-label={`Deduction path: ${deductionPath(state).join(", then ")}`}
       >
-        {deductionPath(state).join(" → ")}
-      </p>
+        {deductionPath(state).map((count, i, path) => (
+          <li
+            key={i}
+            className={i === path.length - 1 ? "path-final" : undefined}
+          >
+            {i > 0 && <span className="path-connector" aria-hidden="true" />}
+            <span className="path-count">{count}</span>
+          </li>
+        ))}
+      </ol>
       {error && (
         <p className="error-text" role="alert">
           {error}

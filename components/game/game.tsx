@@ -137,7 +137,8 @@ export function Game({ initialPuzzle }: { initialPuzzle: Puzzle }) {
       <header className="site-header">
         <div className="header-brand">
           <Link className="brand" href="/" aria-label="LINEUP home">
-            LINEUP
+            <span>LINEUP</span>
+            <span className="brand-line" aria-hidden="true" />
           </Link>
           <span className="brand-tagline">Find the film.</span>
         </div>
