@@ -2,7 +2,7 @@ import type { GameState } from "./types.ts";
 import { deductionPath } from "./engine.ts";
 export function shareText(state: GameState): string {
   const n = state.history.length;
-  return `LINEUP · Find the film.\n${state.status === "won" ? `Found in ${n} question${n === 1 ? "" : "s"} 🎯` : "Case unsolved."}\n${deductionPath(state).join(" → ")} → ${state.status === "won" ? "🎯" : "✕"}\nPractice mode`;
+  return `LINEUP · Find the film.\n${state.status === "won" ? `Found in ${n} question${n === 1 ? "" : "s"}` : "Not this time."}\n${deductionPath(state).join(" → ")}\nPractice mode`;
 }
 export async function shareResult(
   state: GameState,

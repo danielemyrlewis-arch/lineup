@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { ScanLine } from "lucide-react";
 import type { Movie } from "@/lib/game/types";
 export function Poster({
   movie,
@@ -37,7 +36,6 @@ export function Poster({
         />
       ) : (
         <div className="poster-fallback">
-          <ScanLine size={27} />
           <span>{movie.title}</span>
           <small>Artwork unavailable</small>
         </div>

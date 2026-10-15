@@ -1,16 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  ArrowDown,
-  ArrowRight,
-  ChevronDown,
-  Clock3,
-  Command,
-  Crosshair,
-  Search,
-  Sparkles,
-  X,
-} from "lucide-react";
+import { ArrowRight, ChevronDown, Search, X } from "lucide-react";
 import {
   searchQuestions,
   suggestedQuestions,
@@ -63,26 +53,20 @@ export function QuestionPanel({
   return (
     <aside className="question-column">
       <div className={`question-panel ${finalPick ? "final-pick-panel" : ""}`}>
-        <div className="panel-eyebrow">
-          <span className="mini-crosshair">
-            <Crosshair size={15} />
-          </span>{" "}
-          YOUR INVESTIGATION <span className="panel-number">01—05</span>
-        </div>
         <div className="question-budget">
+          <p>
+            <strong>
+              {left} question{left !== 1 ? "s" : ""} left
+            </strong>
+          </p>
           <div className="question-pips" aria-hidden="true">
             {Array.from({ length: QUESTION_LIMIT }, (_, i) => (
               <span key={i} className={i < left ? "available" : "used"} />
             ))}
           </div>
-          <p>
-            <strong>{left}</strong> question{left !== 1 ? "s" : ""} left
-          </p>
         </div>
-        <div className="panel-rule" />
         {finalPick ? (
           <div className="final-pick">
-            <Crosshair size={30} />
             <h3>
               {state.activeIds.length === 1
                 ? "One film standing."
@@ -90,17 +74,15 @@ export function QuestionPanel({
             </h3>
             <p>
               {state.activeIds.length === 1
-                ? "The clues have done their work. Lock it in."
-                : "The questions are in. Trust your instinct and choose a film."}
+                ? "There’s one film left. Ready to lock it in?"
+                : "You’ve used all five questions. Choose one of the remaining films."}
             </p>
-            <a href="#lineup">
-              Choose your film <ArrowDown size={16} />
-            </a>
+            <a href="#lineup">Choose your film</a>
           </div>
         ) : (
           <>
             <label className="ask-label" htmlFor="question-search">
-              Follow a hunch.
+              Ask anything that helps narrow it down
             </label>
             <div
               className="search-root"
@@ -155,8 +137,9 @@ export function QuestionPanel({
                     }
                   }}
                 />
-                {query ? (
+                {query && (
                   <button
+                    type="button"
                     className="clear-search"
                     aria-label="Clear search"
                     onClick={() => {
@@ -165,20 +148,14 @@ export function QuestionPanel({
                       input.current?.focus();
                     }}
                   >
-                    <X size={14} />
+                    <X size={16} />
                   </button>
-                ) : (
-                  <span className="search-shortcut">
-                    <Command size={10} />
-                    <span>K</span>
-                  </span>
                 )}
               </div>
               {open && (
                 <div className="search-popover">
                   <div className="search-popover-label">
-                    {query ? "MATCHING QUESTIONS" : "USEFUL QUESTIONS"}
-                    <span>{matches.length}</span>
+                    {query ? "Matching questions" : "Questions"}
                   </div>
                   <div
                     id="question-options"
@@ -217,17 +194,10 @@ export function QuestionPanel({
                       </div>
                     )}
                   </div>
-                  <div className="search-popover-footer">
-                    ↑ ↓ to explore <span>↵ to ask</span>
-                  </div>
                 </div>
               )}
             </div>
-            <p className="search-help">Try a genre, a year, or an actor.</p>
-            <div className="suggestion-label">
-              <Sparkles size={12} />
-              <span>A GOOD PLACE TO START</span>
-            </div>
+            <p className="suggestion-label">Suggested</p>
             <div className="suggestions">
               {suggestions.map((q) => (
                 <button
@@ -250,10 +220,9 @@ export function QuestionPanel({
             role="status"
           >
             <div>
-              <span className="answer-label">LATEST CLUE</span>
               <p>{latest.question.label}</p>
             </div>
-            <strong>{latest.answer ? "YES" : "NO"}</strong>
+            <strong>{latest.answer ? "Yes" : "No"}</strong>
             <small>
               {latest.eliminatedIds.length} film
               {latest.eliminatedIds.length !== 1 ? "s" : ""} eliminated
@@ -270,8 +239,7 @@ export function QuestionPanel({
           aria-controls="question-history"
         >
           <span>
-            <Clock3 size={15} /> Your clues{" "}
-            <small>{String(state.history.length).padStart(2, "0")}</small>
+            Asked <span className="history-count">{state.history.length}</span>
           </span>
           <ChevronDown size={15} className={historyOpen ? "rotated" : ""} />
         </button>
@@ -279,34 +247,21 @@ export function QuestionPanel({
           <div id="question-history">
             {state.history.length ? (
               <ol>
-                {state.history.map((h, i) => (
+                {state.history.map((h) => (
                   <li key={h.question.id}>
-                    <span className="history-number">0{i + 1}</span>
                     <span>{h.question.shortLabel}</span>
                     <strong className={h.answer ? "yes-text" : "no-text"}>
-                      {h.answer ? "YES" : "NO"}
+                      {h.answer ? "Yes" : "No"}
                     </strong>
                   </li>
                 ))}
               </ol>
             ) : (
-              <p className="empty-history">
-                Every answer leaves a clue.
-                <br />
-                Yours will appear here.
-              </p>
+              <p className="empty-history">Your questions will appear here.</p>
             )}
           </div>
         )}
       </div>
-      <p className="instinct-note">
-        <Crosshair size={16} />
-        <span>
-          Have a feeling? Select a poster
-          <br />
-          to lock in your film at any time.
-        </span>
-      </p>
     </aside>
   );
 }

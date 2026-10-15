@@ -3,11 +3,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "LINEUP — Find the film.",
   description:
-    "24 films. Five questions. One answer. Follow the clues and find the mystery film in LINEUP, a free movie deduction game.",
+    "24 films. Five questions. One answer. Narrow the lineup and find the film in LINEUP, a free movie deduction game.",
   icons: { icon: "/favicon.svg" },
 };
 export const viewport: Viewport = {
-  themeColor: "#111211",
+  themeColor: "#0D0D0D",
   width: "device-width",
   initialScale: 1,
 };

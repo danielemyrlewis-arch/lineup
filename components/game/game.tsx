@@ -1,15 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useReducer, useRef, useState } from "react";
-import {
-  ArrowDown,
-  ArrowUpRight,
-  CircleHelp,
-  Crosshair,
-  Grid3X3,
-  RotateCcw,
-  X,
-} from "lucide-react";
+import { X } from "lucide-react";
 import type { Movie, Puzzle, Question } from "@/lib/game/types";
 import { gameReducer, initialState } from "@/lib/game/engine";
 import { recordResult, readStats } from "@/lib/game/persistence";
@@ -122,7 +114,7 @@ export function Game({ initialPuzzle }: { initialPuzzle: Puzzle }) {
         result === "copied"
           ? "Result copied. No spoilers."
           : result === "shared"
-            ? "Your case, shared."
+            ? "Result shared."
             : "",
       );
     } catch {
@@ -143,68 +135,30 @@ export function Game({ initialPuzzle }: { initialPuzzle: Puzzle }) {
         Skip to the film lineup
       </a>
       <header className="site-header">
-        <Link className="brand" href="/" aria-label="LINEUP home">
-          LINEUP
-          <span className="brand-dot" />
-        </Link>
-        <span className="brand-tagline">Find the film.</span>
+        <div className="header-brand">
+          <Link className="brand" href="/" aria-label="LINEUP home">
+            LINEUP
+          </Link>
+          <span className="brand-tagline">Find the film.</span>
+        </div>
         <nav aria-label="Main">
-          <span className="practice-tab">
-            <span />
-            PRACTICE
-          </span>
-          <button
-            type="button"
-            className="header-help"
-            aria-label="How to play"
-            onClick={openHelp}
-          >
-            <CircleHelp size={16} />
-            <span>How to play</span>
+          <span className="practice-tab">Practice</span>
+          <button type="button" className="header-help" onClick={openHelp}>
+            How to play
           </button>
         </nav>
       </header>
       <main>
         <section className="hero">
-          <div className="hero-copy">
-            <div className="eyebrow">
-              <span className="orange-line" /> THE MOVIE DEDUCTION GAME
-            </div>
-            <h1>
-              24 films.
-              <br />
-              <span>One answer.</span>
-            </h1>
-            <p>Ask the right questions. Find the one.</p>
-          </div>
-          <div className="hero-side">
-            <span className="case-label">
-              <span className="tiny-live-dot" /> A NEW CASE. EVERY TIME.
-            </span>
-            <div className="hero-steps">
-              <span>
-                <b>01</b> Ask
-              </span>
-              <i />
-              <span>
-                <b>02</b> Eliminate
-              </span>
-              <i />
-              <span>
-                <b>03</b> Lock in
-              </span>
-            </div>
-            <p>Five questions. Make them count.</p>
-          </div>
+          <h1>
+            24 films.
+            <br />
+            <span>One answer.</span>
+          </h1>
+          <p>Ask up to five questions. Find the film.</p>
         </section>
-        <section className="game-toolbar">
-          <div>
-            <span className="case-icon">
-              <Grid3X3 size={14} />
-            </span>
-            <span>PRACTICE LINEUP</span>
-            <span className="unlimited-label">UNLIMITED POSSIBILITIES</span>
-          </div>
+        <section className="game-toolbar" aria-label="Game controls">
+          <h2>Practice</h2>
           <button
             type="button"
             className="text-button"
@@ -213,7 +167,6 @@ export function Game({ initialPuzzle }: { initialPuzzle: Puzzle }) {
             }
             disabled={newLoading || busy}
           >
-            <RotateCcw size={13} />
             {newLoading ? "Loading…" : "New lineup"}
           </button>
         </section>
@@ -238,38 +191,29 @@ export function Game({ initialPuzzle }: { initialPuzzle: Puzzle }) {
               if (!busy) setSelected(m);
             }}
             finished={state.status !== "playing"}
+            selectedId={selected?.id}
           />
         </section>
         <div className="board-bottom">
-          <span>
-            <Crosshair size={14} /> One film. Hiding in plain sight.
-          </span>
           {state.status !== "playing" && (
             <button className="text-button" onClick={() => setSheet("result")}>
-              View your result <ArrowUpRight size={15} />
+              View your result
             </button>
           )}
           <a href="#lineup" className="text-button">
-            Back to the lineup <ArrowDown size={13} className="point-up" />
+            Back to the lineup ↑
           </a>
         </div>
       </main>
       <footer className="site-footer">
-        <div className="footer-signature">
-          <span className="footer-brand">
-            LINEUP
-            <span />
-          </span>
-          <p>A little logic. A little movie magic.</p>
-        </div>
+        <p>For the love of film.</p>
         <div className="footer-links">
           <button type="button" onClick={() => setSheet("stats")}>
-            Your practice stats
+            Practice stats
           </button>
           <button type="button" onClick={() => setSheet("about")}>
-            About & credits <ArrowUpRight size={12} />
+            About & credits
           </button>
-          <span>FOR THE LOVE OF FILM.</span>
         </div>
       </footer>
       <div className="sr-only" aria-live="polite" aria-atomic="true">

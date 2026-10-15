@@ -1,6 +1,6 @@
 "use client";
 import { useLayoutEffect, useRef, useState } from "react";
-import { ArrowUpRight, ChevronDown, Crosshair, X } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import type { Movie } from "@/lib/game/types";
 import { Poster } from "./poster";
 export function MovieBoard({
@@ -9,12 +9,14 @@ export function MovieBoard({
   departingIds,
   onSelect,
   finished,
+  selectedId,
 }: {
   movies: Movie[];
   activeIds: string[];
   departingIds: string[];
   onSelect: (m: Movie) => void;
   finished: boolean;
+  selectedId?: string;
 }) {
   const [expanded, setExpanded] = useState<boolean | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -57,17 +59,11 @@ export function MovieBoard({
     <section className="board" aria-label="Film lineup">
       <div className="board-heading">
         <h2>
-          <span className="live-dot" />
-          <strong>{activeIds.length}</strong> STILL IN
+          <strong>{activeIds.length}</strong> still in
         </h2>
-        <span className="board-hint">
-          <Crosshair size={13} /> SELECT A FILM TO LOCK IT IN
-        </span>
+        <span className="board-hint">Select a film to lock it in</span>
       </div>
-      <div
-        className={`movie-grid ${displayed.length <= 6 ? "finalists" : ""}`}
-        ref={gridRef}
-      >
+      <div className="movie-grid" ref={gridRef}>
         {displayed.map((movie, i) => {
           const departing = departingIds.includes(movie.id);
           return (
@@ -75,28 +71,22 @@ export function MovieBoard({
               type="button"
               key={movie.id}
               data-movie={movie.id}
-              className={`movie-card ${departing ? "departing" : ""}`}
+              className={`movie-card ${departing ? "departing" : ""} ${selectedId === movie.id ? "selected" : ""}`}
               disabled={departing || finished}
               aria-label={
                 departing
                   ? `${movie.title}, eliminated`
                   : `Choose ${movie.title}, ${movie.releaseYear ?? "year unknown"}`
               }
+              aria-haspopup="dialog"
               onClick={() => onSelect(movie)}
             >
               <div className="poster-frame">
                 <Poster movie={movie} eager={i < 6} />
-                <span className="card-index">
-                  {String(movies.indexOf(movie) + 1).padStart(2, "0")}
-                </span>
-                <span className="card-select">
-                  <span>LOCK IN</span>
-                  <ArrowUpRight size={19} />
-                </span>
                 {departing && (
                   <span className="eliminated-mark">
                     <X size={26} />
-                    <span>ELIMINATED</span>
+                    <span>Eliminated</span>
                   </span>
                 )}
               </div>
@@ -119,7 +109,7 @@ export function MovieBoard({
           >
             <span>
               <X size={14} />
-              <strong>{eliminated.length}</strong> ELIMINATED
+              <strong>{eliminated.length}</strong> Eliminated
             </span>
             <span>
               {isExpanded ? "Hide films" : "Show films"}
@@ -134,7 +124,7 @@ export function MovieBoard({
                     <Poster movie={movie} />
                     <span className="eliminated-mark">
                       <X size={22} />
-                      <span>ELIMINATED</span>
+                      <span>Eliminated</span>
                     </span>
                   </div>
                   <div className="movie-details">

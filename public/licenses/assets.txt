@@ -1,6 +1,6 @@
 LINEUP asset credits
 
-Barlow Condensed and DM Sans: Google Fonts, SIL Open Font License 1.1.
+Libre Franklin: Google Fonts, SIL Open Font License 1.1.
 Font files are distributed locally without modification.
 
 Movie poster artwork: TMDB image CDN, at 342px. Rights belong to the respective film rights holders.

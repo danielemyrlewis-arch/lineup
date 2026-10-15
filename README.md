@@ -59,7 +59,7 @@ For Vercel select **Next.js**, set the build command to `npm run build:next`, an
 app/
   page.tsx                Server-rendered initial puzzle
   api/lineup/route.ts      Fresh practice puzzle endpoint; never caches a mystery
-  globals.css             Responsive cinematic design and reduced-motion styles
+  globals.css             Responsive editorial design and reduced-motion styles
 components/game/
   game.tsx                Game orchestration and practice lifecycle
   result-dialog.tsx       Win/loss screen and sharing controls
@@ -123,3 +123,7 @@ API implementation follows TMDB's [append-to-response](https://developer.themovi
 4. Add reproducible daily sharing, production monitoring and real-device assistive-technology checks.
 
 These are extension points, not partially built features. `Puzzle` already has a mode, stable seed, ID and creation timestamp; the engine is independent of data providers and presentation.
+
+## Visual identity
+
+Libre Franklin is the only interface font, hosted locally under the SIL Open Font License. The editorial design uses neutral black/grey surfaces with a restrained cobalt accent (#5B6CFF). Controls use sentence casing; poster artwork provides the visual variety. The previous condensed typography and decorative investigation labels have been removed.
