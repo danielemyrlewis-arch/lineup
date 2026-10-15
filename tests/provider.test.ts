@@ -4,13 +4,18 @@ import { DemoProvider, TMDBProvider } from "../lib/data/provider.ts";
 
 test("demo provider runs without any external requests or credentials", async () => {
   const movies = await new DemoProvider().catalogue();
-  assert.equal(movies.length, 40);
-  assert.ok(movies.every((m) => m.localPoster && m.posterPath));
+  assert.ok(movies.length >= 1000);
+  assert.ok(
+    movies.every(
+      (m) => m.posterPath && m.genres?.length && m.runtime && m.releaseYear,
+    ),
+  );
 });
 test("TMDB provider authenticates server requests, appends credits, normalises and bounds concurrency", async () => {
   let running = 0,
     maximum = 0,
     details = 0;
+  const discovery: URL[] = [];
   const fetcher: typeof fetch = async (input, init) => {
     const url = new URL(String(input));
     assert.equal(
@@ -18,10 +23,14 @@ test("TMDB provider authenticates server requests, appends credits, normalises a
       "Bearer fake-test-token",
     );
     assert.equal(url.origin, "https://api.themoviedb.org");
-    if (url.pathname.endsWith("/discover/movie"))
+    if (url.pathname.endsWith("/discover/movie")) {
+      discovery.push(url);
       return Response.json({
-        results: Array.from({ length: 30 }, (_, i) => ({ id: i + 1 })),
+        results: Array.from({ length: 20 }, (_, i) => ({
+          id: i + 1 + (discovery.length - 1) * 10,
+        })),
       });
+    }
     assert.equal(url.searchParams.get("append_to_response"), "credits");
     running++;
     maximum = Math.max(maximum, running);
@@ -47,12 +56,28 @@ test("TMDB provider authenticates server requests, appends credits, normalises a
     });
   };
   const movies = await new TMDBProvider("fake-test-token", fetcher).catalogue();
-  assert.equal(movies.length, 30);
+  assert.ok(movies.length >= 1000);
   assert.equal(details, 30);
   assert.ok(maximum <= 6);
-  assert.equal(movies[0].director, "Director");
-  assert.equal(movies[0].belongsToCollection, false);
-  assert.deepEqual(movies[0].cast, ["Lead"]);
+  const refreshed = movies.find((m) => m.tmdbId === 1)!;
+  assert.equal(refreshed.director, "Director");
+  assert.equal(refreshed.belongsToCollection, false);
+  assert.deepEqual(refreshed.cast, ["Lead"]);
+  assert.equal(discovery.length, 16);
+  assert.ok(
+    discovery.some(
+      (url) => url.searchParams.get("with_original_language") === "ja",
+    ),
+  );
+  assert.ok(
+    discovery.some(
+      (url) =>
+        url.searchParams.get("primary_release_date.gte") === "1930-01-01",
+    ),
+  );
+  assert.ok(
+    discovery.every((url) => url.searchParams.get("with_runtime.gte") === "60"),
+  );
 });
 test("TMDB provider rejects insufficient/malformed results for safe demo fallback", async () => {
   const malformed: typeof fetch = async () =>

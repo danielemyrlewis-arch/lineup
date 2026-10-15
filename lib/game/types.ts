@@ -12,6 +12,10 @@ export interface Movie {
   originalLanguage: string | null;
   productionCountries: string[] | null;
   belongsToCollection: boolean | null;
+  /** Selection hints only; question evaluation still uses belongsToCollection. */
+  collectionId?: number | null;
+  collectionName?: string | null;
+  franchiseKey?: string | null;
   popularity: number;
   voteCount: number;
 }

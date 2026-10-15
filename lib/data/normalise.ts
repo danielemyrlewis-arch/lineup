@@ -25,12 +25,22 @@ export function normaliseMovie(raw: unknown): Movie | null {
     poster = string(m.poster_path);
   if (
     !id ||
+    !Number.isSafeInteger(id) ||
     !title ||
     m.adult === true ||
+    m.video === true ||
+    m.status === "Rumored" ||
+    m.status === "Planned" ||
     !poster ||
     !/^\/[a-zA-Z0-9._-]+\.(jpg|png|webp)$/.test(poster)
   )
     return null;
+  const validDate =
+    typeof m.release_date === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(m.release_date) &&
+    Number.isFinite(Date.parse(m.release_date)) &&
+    new Date(m.release_date).toISOString().slice(0, 10) === m.release_date &&
+    m.release_date <= new Date().toISOString().slice(0, 10);
   const year =
     typeof m.release_date === "string" &&
     /^\d{4}-\d{2}-\d{2}$/.test(m.release_date)
@@ -44,34 +54,40 @@ export function normaliseMovie(raw: unknown): Movie | null {
     .filter((c): c is Record<string, unknown> => c !== null)
     .sort((a, b) => Number(a.order ?? 999) - Number(b.order ?? 999))
     .slice(0, 5);
+  const cast = billed?.flatMap((c) => {
+    const name = string(c.name);
+    return name ? [name] : [];
+  });
+  const countries = strings(m.production_countries, "iso_3166_1")?.filter(
+    (country) => /^[A-Z]{2}$/.test(country),
+  );
   return {
     id: String(id),
     tmdbId: id,
     title,
     posterPath: poster,
     releaseYear:
-      year && year >= 1888 && year <= new Date().getFullYear() ? year : null,
+      validDate && year && year >= 1888 && year <= new Date().getFullYear()
+        ? year
+        : null,
     genres: strings(m.genres, "name"),
     runtime: number(m.runtime),
     director: string(director?.name),
-    cast: billed?.length
-      ? billed.flatMap((c) => {
-          const name = string(c.name);
-          return name ? [name] : [];
-        })
-      : null,
+    cast: cast?.length ? cast : null,
     originalLanguage:
       typeof m.original_language === "string" &&
       /^[a-z]{2}$/.test(m.original_language)
         ? m.original_language
         : null,
-    productionCountries: strings(m.production_countries, "iso_3166_1"),
+    productionCountries: countries?.length ? countries : null,
     belongsToCollection:
       m.belongs_to_collection === null
         ? false
         : record(m.belongs_to_collection)?.id
           ? true
           : null,
+    collectionId: number(record(m.belongs_to_collection)?.id),
+    collectionName: string(record(m.belongs_to_collection)?.name),
     popularity: number(m.popularity) ?? 0,
     voteCount: number(m.vote_count) ?? 0,
   };

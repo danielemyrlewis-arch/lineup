@@ -5,6 +5,12 @@ import { X } from "lucide-react";
 import type { Movie, Puzzle, Question } from "@/lib/game/types";
 import { gameReducer, initialState } from "@/lib/game/engine";
 import { recordResult, readStats } from "@/lib/game/persistence";
+import {
+  emptyPracticeHistory,
+  readPracticeHistory,
+  rememberPracticePuzzle,
+  writePracticeHistory,
+} from "@/lib/game/practice-history";
 import { shareResult } from "@/lib/game/share";
 import { MovieBoard } from "./movie-board";
 import { QuestionPanel } from "./question-panel";
@@ -30,8 +36,14 @@ export function Game({ initialPuzzle }: { initialPuzzle: Puzzle }) {
   const [showShareText, setShowShareText] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const actionLock = useRef(false);
+  const practiceHistory = useRef(emptyPracticeHistory());
   const scrollRef = useRef<HTMLElement>(null);
   useEffect(() => {
+    practiceHistory.current = rememberPracticePuzzle(
+      readPracticeHistory(),
+      initialPuzzle,
+    );
+    writePracticeHistory(practiceHistory.current);
     const key = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
@@ -43,7 +55,7 @@ export function Game({ initialPuzzle }: { initialPuzzle: Puzzle }) {
       window.removeEventListener("keydown", key);
       if (timer.current) clearTimeout(timer.current);
     };
-  }, []);
+  }, [initialPuzzle]);
   const ask = (question: Question) => {
     if (actionLock.current || state.status !== "playing") return;
     const next = gameReducer(state, { type: "ask", question });
@@ -78,6 +90,9 @@ export function Game({ initialPuzzle }: { initialPuzzle: Puzzle }) {
     setError("");
     try {
       const r = await fetch("/api/lineup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(practiceHistory.current),
         cache: "no-store",
         signal: AbortSignal.timeout(45000),
       });
@@ -85,6 +100,11 @@ export function Game({ initialPuzzle }: { initialPuzzle: Puzzle }) {
         throw new Error("The next lineup couldn’t load. Please try again.");
       const puzzle: Puzzle = await r.json();
       const fresh = initialState(puzzle);
+      practiceHistory.current = rememberPracticePuzzle(
+        practiceHistory.current,
+        fresh.puzzle,
+      );
+      writePracticeHistory(practiceHistory.current);
       dispatch({ type: "new", puzzle: fresh.puzzle });
       setDeparting([]);
       setBusy(false);

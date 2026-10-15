@@ -12,7 +12,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open **http://127.0.0.1:5173**. Leave the token blank to play the curated 40-film demo catalogue, with poster artwork and fonts served locally. The game randomly selects 24 films and a mystery on each new lineup. No account is needed. A refresh starts a fresh practice game; unfinished games are deliberately not persisted indefinitely.
+Open **http://127.0.0.1:5173**. Leave the token blank to play the **1,206-film fallback catalogue**. Fonts and the original 40 posters are local; additional posters use responsive TMDB CDN images without an API token. Practice selects 24 films with recency and diversity weighting. No account is needed. A refresh starts a new game while retaining recent-film memory; unfinished game state is not persisted.
 
 ### Add TMDB
 
@@ -26,7 +26,7 @@ Get the token from your [TMDB API account settings](https://www.themoviedb.org/s
 
 For the hosted Site, configure `TMDB_API_TOKEN` as a **server runtime secret** in Sites. For Vercel, set it in project environment variables and redeploy. No real token was supplied with this build; live TMDB requests are implemented and tested with mocked responses, while the deployed game runs in demo mode.
 
-The provider discovers well-known films with at least 2,500 TMDB votes, fetches details with appended credits in batches of six, takes the first five billed cast members, deduplicates titles/releases, and caches the catalogue for 24 hours per server instance. A 15-second overall deadline prevents repeated slow upstream requests from blocking the game indefinitely. Missing/invalid tokens, upstream errors, and insufficient catalogues automatically fall back to demo data, with a short retry backoff. Serverless instances may refill their caches independently.
+The server always starts with the full bundled catalogue. With a token, TMDB discovery covers eight release-period buckets, animation/horror/comedy, and Japanese/Korean/French/Spanish/Hindi films. Pages rotate daily and candidates interleave across buckets. Each refresh hydrates up to 30 films with appended credits, at most six concurrent requests and 46 upstream calls total, then merges valid records into the seed catalogue by TMDB ID. The resulting catalogue is cached for 24 hours per server instance. A 15-second overall deadline and five-second request deadlines bound upstream delays. Missing/invalid tokens or upstream failure keep the full fallback available; failures retry after a fixed one-minute backoff. This deliberately avoids fetching 1,000 detail records during a cold page load. Serverless instances refill independently; live additions are cache-local, not a durable catalogue sync.
 
 ### Check and build
 
@@ -34,6 +34,7 @@ The provider discovers well-known films with at least 2,500 TMDB votes, fetches 
 npm run lint
 npm run typecheck
 npm test
+npm run simulate:practice -- 20
 npm run build
 npm start
 ```
@@ -70,11 +71,16 @@ components/game/
   poster.tsx              Sized/lazy artwork with accessible fallback
   dialog.tsx              Native modal focus trapping and focus return
 lib/
-  data/demo.ts            40 curated recognisable films
+  data/catalogue.ts       1,206-film server-side Practice seed catalogue
+  data/catalogue-snapshot.ts Compact generated TMDB metadata snapshot
+  data/demo.ts            Original 40 curated films and local artwork overrides
   data/normalise.ts       Defensive TMDB → internal Movie normalisation
   data/provider.ts        Replaceable demo/TMDB providers; server only
   game/types.ts           Movie, puzzle, question and state contracts
-  game/engine.ts          Seeded lineup generation and pure game reducer
+  game/engine.ts          Unchanged seeded Daily path and pure game reducer
+  game/practice-selection.ts Weighted Practice generation and question checks
+  game/practice-eligibility.ts Recognition and feature-film filters
+  game/practice-history.ts Bounded local recency and SSR cookie mirror
   game/questions.ts       Definitions, evaluation, validation, search and ranking
   game/copy.ts            Central result copy
   game/share.ts           Spoiler-free Web Share / clipboard fallback
@@ -101,9 +107,35 @@ tests/                   Core game and provider tests
 - Practice stats are stored only on this browser and are explicitly labelled that way. No account, daily puzzle, payment, advertising, award questions, arbitrary AI answers, or multiplayer has been implemented.
 - Practice mysteries live in client memory so the game works without sessions. This is suitable for free practice, not an anti-cheat boundary. A scored Daily Mode should keep its mystery and answer evaluation on the server.
 
+## Practice selection
+
+The fallback combines **1,200 TMDB-derived snapshot records** with the original curated films, deduplicated by TMDB ID, giving **1,206 eligible films**. It retains only gameplay facts (about 288 KB of generated source), not overviews or full credits. The full catalogue stays on the server; only 24 films reach the browser. The historical snapshot covers films through 2017, with newer films supplied by the original curated additions and optional live TMDB enrichment. It is a broad fallback, not a current movie chart.
+
+Snapshot provenance: [movies_complete.csv at pinned commit 84d01fc](https://github.com/TjanMichela/Movie-Data-Analysis/blob/84d01fcfb0b89f12ce445740fddac37270e4a042/movies_complete.csv). The source repository’s MIT notice is preserved in `public/licenses/catalogue-source.txt`; TMDB metadata and artwork remain subject to TMDB’s terms. Rebuild with `python3 scripts/build-demo-catalogue.py /path/to/movies_complete.csv`. Original curated values and local poster paths override matching snapshot records while retaining collection hints. On 15 October 2026 all **1,166 additional poster URLs** returned HTTP 200; original artwork remains local.
+
+Every candidate needs a valid TMDB ID, title, poster path, released year, genres and a 60–360 minute feature runtime. Adult/video/planned records, explicit TV Movie records, future/invalid dates and shorts are rejected. Preferred minimum vote counts are age-sensitive:
+
+| Release year | Preferred | First widening | Final widening |
+| ------------ | --------: | -------------: | -------------: |
+| Before 1980  |       250 |            200 |            150 |
+| 1980–1999    |       600 |            400 |            250 |
+| 2000 onward  |     1,200 |            800 |            500 |
+
+Non-English thresholds are 65% of these figures, floored at 150 votes. Marginal records also need popularity ≥0.5; films with at least twice the applicable vote threshold do not need that popularity floor. This preserves older/high-vote classics even when current popularity is low. Widening happens only when fewer than 24 candidates are fresh enough, with no arbitrary low-vote filler. Optional metadata gaps reduce selection weight; the fallback has all eight gameplay categories populated.
+
+`localStorage` key `lineup:practice-films:v1` stores the newest ten displayed boards (**at most 240 IDs**) and ten separate mystery IDs. Abandoned boards count as shown. Recording is idempotent, malformed input is sanitised, and unavailable/full storage falls back to in-memory history. A compact same-site cookie mirrors only the IDs so server-rendered refreshes also respect cooldown; it contains no account or result data. New-lineup requests send the bounded local history in a POST body. Daily puzzles and practice result statistics use their existing separate paths.
+
+Films from the previous five boards are excluded whenever at least 24 suitable fresh candidates exist. Films from boards six through ten have **0.035×** normal weight. Small pools relax exclusion with **0.002×** weight for the most recent five boards. Recent mystery answers get an additional **0.005×** appearance penalty and are excluded from answer selection for ten games. Titles naturally re-enter once they leave history.
+
+Weighted sampling reduces overrepresentation of decades, genres, animation/live action, collection membership, director/cast, original language and countries. There are no fixed genre or decade slots. Collection IDs/names, plus broad MCU/Middle-earth/Wizarding World groups, normally allow one franchise representative. Normalised same-title remakes cannot share a board when alternatives exist. Small homogeneous pools relax those preferences instead of failing.
+
+Each proposed board is checked with the **unchanged `validQuestions`**. Acceptance targets at least six distinct splits with four or more films on each side, four valid categories and three categories with balanced splits. Up to five weighted attempts choose a healthy board or the best available board if a limited pool cannot meet that target. This changes selection, never question evaluation, ranking or suggestions.
+
+For optional development diagnostics, run `LINEUP_DEBUG=1 npm run dev`. Server logs show eligible pool size, recency exclusions/penalties, selected IDs, decade/genre distributions and question quality. There is no production debug UI or API field. `npm run simulate:practice -- 20` provides a reproducible sequential-lineup report and asserts cooldown, metadata and franchise invariants.
+
 ## Tests
 
-The tests cover all eleven requested rule cases, deterministic seeds, unknown metadata, strict threshold boundaries, invalid payloads, ended games, reset behaviour, spoiler-free results, aliases, equivalent suggestion partitions, TMDB normalisation, bounded metadata fetching and upstream failures. They use Node's built-in test runner without a state or testing framework dependency. Browser review covers the mobile and desktop layouts, controlled search, elimination, final picks and results.
+The 39 tests cover the existing game/rule cases plus Practice uniqueness, five-/ten-board recency, mystery cooldown, franchise/remake grouping, smaller/homogeneous pools, gradual widening, malformed metadata, bounded local history and cookies, question quality, broad TMDB discovery and bounded metadata fetching. They use Node's built-in test runner without a state or testing framework dependency. Browser review covers the mobile and desktop layouts, controlled search, elimination, final picks and results.
 
 ## TMDB attribution and artwork
 
@@ -119,7 +151,7 @@ API implementation follows TMDB's [append-to-response](https://developer.themovi
 
 1. Store versioned daily puzzle records (24 movie IDs/order, immutable metadata snapshot, mystery ID and date/time-zone policy), with server-side question/guess validation and one scored attempt per day.
 2. Add optional accounts and sync local statistics after completion, with streaks and win distributions.
-3. Grow and audit the curated catalogue, allow multiple directors and version collection semantics so old daily answers stay stable.
+3. Refresh the historical catalogue snapshot, allow multiple directors and version collection semantics so old daily answers stay stable.
 4. Add reproducible daily sharing, production monitoring and real-device assistive-technology checks.
 
 These are extension points, not partially built features. `Puzzle` already has a mode, stable seed, ID and creation timestamp; the engine is independent of data providers and presentation.
