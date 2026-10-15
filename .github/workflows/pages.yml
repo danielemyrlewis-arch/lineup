@@ -25,6 +25,11 @@ jobs:
       - name: Configure Pages
         id: pages
         uses: actions/configure-pages@v6
+        with:
+          # One-time manual bootstrap: a repository-scoped token with Pages and Administration write.
+          # Delete PAGES_BOOTSTRAP_TOKEN after creation; pushes always use the built-in token.
+          enablement: ${{ github.event_name == 'workflow_dispatch' && secrets.PAGES_BOOTSTRAP_TOKEN != '' }}
+          token: ${{ github.event_name == 'workflow_dispatch' && secrets.PAGES_BOOTSTRAP_TOKEN || github.token }}
       - run: npm ci
       - run: npm run audit:public
       - run: npm run lint
