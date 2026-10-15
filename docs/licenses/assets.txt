@@ -1,0 +1,12 @@
+LINEUP asset credits
+
+Libre Franklin: Google Fonts, SIL Open Font License 1.1.
+Font files are distributed locally without modification.
+
+Movie poster artwork: TMDB image CDN, at 342px. Rights belong to the respective film rights holders.
+
+TMDB logo: approved TMDB mark, unmodified; source mirror https://commons.wikimedia.org/wiki/File:Tmdb.new.logo.svg
+TMDB: https://www.themoviedb.org
+This product uses the TMDB API but is not endorsed or certified by TMDB.
+
+This prototype is free and non-commercial. Check current TMDB attribution and licensing requirements before public launch.

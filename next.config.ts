@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-// Build-time only. GitHub Actions supplies configure-pages' actual base path.
+// Build-time only. build:pages supplies /lineup for the public repository site.
 const rawBasePath = process.env.PAGES_BASE_PATH?.trim() ?? "";
 const basePath = rawBasePath === "/" ? "" : rawBasePath.replace(/\/$/, "");
 if (basePath && !/^\/[A-Za-z0-9._-]+$/.test(basePath))

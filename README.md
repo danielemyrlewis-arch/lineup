@@ -17,65 +17,38 @@ npm run dev
 
 Open http://localhost:3000. No `.env` file is needed. Development uses Next's local development server; production does not.
 
-### Create the public repository and deploy
+### Publish directly from main /docs
 
-1. Create an **empty public repository** on GitHub, for example `lineup`. Do not initialise a README there.
-2. Extract the supplied clean source archive into a new folder. It contains no `.git`, credentials, previous hosting configuration or local runtime state. Initialise a fresh public history from that folder:
+The complete publishable site is committed in **`docs/`**, including `docs/.nojekyll` so GitHub Pages serves Next.js's `_next` assets directly. There is no custom deployment workflow, build service, token or custom secret to configure.
 
-   ```sh
-   git init -b main
-   git add .
-   git commit -m "Prepare LINEUP static public beta"
-   git remote add origin https://github.com/USERNAME/REPOSITORY.git
-   git push -u origin main
-   ```
+1. Push the committed `main` branch using GitHub Desktop's **Push origin**.
+2. In the repository, open **Settings → Pages → Build and deployment**.
+3. Set **Source: Deploy from a branch**, **Branch: main**, **Folder: /docs**, then **Save**.
+4. Once GitHub Pages finishes publishing, open **https://danielemyrlewis-arch.github.io/lineup/**.
 
-   Replace `USERNAME` and `REPOSITORY` with your GitHub account and repository. Use this clean source rather than pushing the old hosting repository's history.
+GitHub serves the files already present in `docs/`; it does not build Next.js. For future application or catalogue updates, regenerate `docs/` locally, commit it together with the source changes, then push `main`.
 
-3. In the new GitHub repository, choose **Settings → Pages → Build and deployment → Source → GitHub Actions**.
-4. Open **Actions → Deploy LINEUP to GitHub Pages → Run workflow**, selecting `main`. If the first push ran before Pages was enabled, rerun the workflow after step 3.
-5. Once the deployment succeeds, open the URL shown by the `github-pages` environment. A project repository normally uses `https://USERNAME.github.io/REPOSITORY/`. A repository named `USERNAME.github.io`, or a configured custom domain, can use the domain root.
-6. Every subsequent push to `main` automatically tests, builds and deploys. Manual workflow dispatch is also supported.
-
-The workflow uses current official `actions/checkout`, `setup-node`, `configure-pages`, `upload-pages-artifact` and `deploy-pages`. It runs `npm ci`, public-source auditing, lint, type checking and tests before uploading **only `out/`**. GitHub provides its normal temporary workflow token/OIDC; no custom credentials or application secrets need configuring. The build job reads Pages metadata; deployment permissions are scoped to the deployment job.
-
-### Static production build
+### Rebuild the published site
 
 ```sh
-npm run build
+npm run build:pages
 ```
 
-This runs `next build --webpack` with `output: "export"`, then verifies the exported assets. The output is **`out/`**. Do not run `next start`; there is no production application server.
+This sets the build-time base path to `/lineup`, runs the existing `next build --webpack` static export and its asset checks, then replaces `docs/` with the complete verified `out/` output. The command preserves local development at the domain root. All public scripts, CSS, fonts, images, favicon and links in `docs/` are compiled for `/lineup/`. No production environment variables are needed.
 
-For a project repository subpath, the one build-time setting is:
+The lower-level `npm run build` command still exports to `out/` at the domain root by default. `PAGES_BASE_PATH` remains an optional build-time setting for other hosting paths; the public beta uses `npm run build:pages` with its fixed repository path. Do not run `next start`; the published site has no application server.
+
+### Test docs with a basic static server
+
+After `npm run build:pages`, create an empty preview folder and mount `docs/` at the repository path:
 
 ```sh
-PAGES_BASE_PATH=/lineup npm run build
+mkdir -p /tmp/lineup-docs-preview
+ln -s "$PWD/docs" /tmp/lineup-docs-preview/lineup
+python3 -m http.server 4173 --bind 127.0.0.1 --directory /tmp/lineup-docs-preview
 ```
 
-`PAGES_BASE_PATH` must be empty or `/REPOSITORY`. GitHub Actions supplies the actual Pages `base_path` automatically, so changing the repository name or using a root/custom-domain site does not require source edits. Rebuild when changing the published path. This value is compiled into the assets; there are no runtime environment variables. Next's base path covers scripts, CSS and internal links; local posters, favicon and the TMDB logo use the matching prefix. The local Libre Franklin font is bundled by `next/font/local`. Native poster/headshot images and unoptimised local images need no image server.
-
-### Test the export with a basic static server
-
-For a root build:
-
-```sh
-npm run build
-python3 -m http.server 4173 --bind 127.0.0.1 --directory out
-```
-
-Open http://127.0.0.1:4173/. Next/Node does not need to be running.
-
-To test the same repository subpath used by Pages:
-
-```sh
-PAGES_BASE_PATH=/lineup npm run build
-mkdir -p /tmp/lineup-pages-preview
-ln -s "$PWD/out" /tmp/lineup-pages-preview/lineup
-python3 -m http.server 4173 --bind 127.0.0.1 --directory /tmp/lineup-pages-preview
-```
-
-Open http://127.0.0.1:4173/lineup/. Use an empty preview folder, or remove a previous preview symlink before recreating it. The symlink is a local preview convenience; the uploaded Pages artifact contains ordinary files.
+Open **http://127.0.0.1:4173/lineup/**. Remove an old preview symlink before recreating it. This symlink is only for local preview; `docs/` contains ordinary files. Next/Node does not need to be running.
 
 Checks:
 
@@ -83,14 +56,11 @@ Checks:
 npm run lint
 npm run typecheck
 npm test
-npm run simulate:practice -- 20
 npm run audit:public
-npm run build
+npm run build:pages
 ```
 
-`postbuild` verifies HTML/CSS asset paths, `.nojekyll`, a small export size and the absence of old backend references in the JavaScript. There are no nested routes or rewrite rules: the game and every sheet/result live on the home page, so refreshing the project URL works directly.
-
-Preparation checks passed with a clean `npm ci`, lint, type checking, all 57 tests and a 20-lineup simulation. Root and `/lineup/` exports each contain 81 files/about 4.45 MB. Browser checks against Python's static server covered new lineups, questions, film details, posters, fonts, attribution, results, replay, refresh cooldown and persisted statistics. The preview log contained only successful static GET requests and no API requests. The GitHub deployment workflow itself still needs to run in your chosen repository.
+`postbuild` verifies HTML/CSS asset paths, `.nojekyll`, export size and the absence of old backend references in the JavaScript. The home page contains every game, sheet and result, so refreshing the repository URL works directly. Only generated publication files belong in `docs/`.
 
 ## Static catalogue and future updates
 
@@ -112,7 +82,7 @@ python3 scripts/build-demo-catalogue.py /path/to/movies_complete.csv
 python3 scripts/build-details-snapshot.py /path/to/movies_metadata.csv /path/to/credits.csv
 ```
 
-Neither generator runs in the application, production build or deployment workflow. Their pinned sources are recorded in the scripts: [gameplay snapshot](https://github.com/TjanMichela/Movie-Data-Analysis/blob/84d01fcfb0b89f12ce445740fddac37270e4a042/movies_complete.csv), [details and credits](https://github.com/tima-chan/TheMovieDataBase/tree/77aaa72bff5e687ad496f5a579217b312352977e). The source repository MIT notice is in `public/licenses/catalogue-source.txt`. Raw CSVs are not included in public source. To expand coverage, adjust the generator's selected-film cap and regenerate details for the resulting IDs; the game architecture does not change.
+Neither generator runs in the application, production build or published site. Their pinned sources are recorded in the scripts: [gameplay snapshot](https://github.com/TjanMichela/Movie-Data-Analysis/blob/84d01fcfb0b89f12ce445740fddac37270e4a042/movies_complete.csv), [details and credits](https://github.com/tima-chan/TheMovieDataBase/tree/77aaa72bff5e687ad496f5a579217b312352977e). The source repository MIT notice is in `public/licenses/catalogue-source.txt`. Raw CSVs are not included in public source. To expand coverage, adjust the generator's selected-film cap and regenerate details for the resulting IDs; the game architecture does not change.
 
 Unknown studio, lead or curated values stay unknown. Questions require reliable YES and NO values for every active film and retain the existing balance ranking. Musical classification is reviewed rather than inferred from TMDB's Music tag. Lead gender describes the lowest-order principal performer; display cast expansion does not alter question cast or that definition. Original TMDB overviews stay plain text and clamped; detail-sheet cast stays capped at ten with optional headshots, one scroll surface, top Cancel and sticky Lock it in.
 
@@ -128,4 +98,4 @@ Browser storage belongs to an origin: moving from a previous host to `USERNAME.g
 
 LINEUP retains its editorial black/cobalt identity and locally hosted **Libre Franklin** under the SIL Open Font License (`public/licenses/Libre-Franklin-OFL.txt`). Film metadata/artwork remain credited to [TMDB](https://www.themoviedb.org). About & credits retains the TMDB logo and notice: **This product uses the TMDB API but is not endorsed or certified by TMDB.** Static metadata was originally obtained from TMDB; the published beta makes no live metadata API requests.
 
-Deployment references: [Next.js static export](https://nextjs.org/docs/app/guides/static-exports), [Next.js base paths](https://nextjs.org/docs/app/api-reference/config/next-config-js/basePath), [GitHub Pages custom workflows](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
+Deployment references: [Next.js static export](https://nextjs.org/docs/app/guides/static-exports), [Next.js base paths](https://nextjs.org/docs/app/api-reference/config/next-config-js/basePath), [GitHub Pages publishing sources](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site).

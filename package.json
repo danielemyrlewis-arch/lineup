@@ -9,6 +9,7 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "postbuild": "node scripts/check-static-export.mjs",
+    "build:pages": "node scripts/build-pages.mjs",
     "lint": "eslint .",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
     "typecheck": "next typegen && tsc --noEmit",

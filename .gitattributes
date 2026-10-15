@@ -1,0 +1,2 @@
+# Preserve generated publication files exactly, including vendor assets.
+docs/** -text -diff linguist-generated=true

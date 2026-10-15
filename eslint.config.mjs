@@ -7,6 +7,7 @@ export default defineConfig([
   globalIgnores([
     ".next/**",
     "out/**",
+    "docs/**",
     "dist/**",
     ".sites-runtime/**",
     ".wrangler/**",
