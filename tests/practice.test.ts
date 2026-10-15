@@ -157,6 +157,8 @@ test("mystery cooldown works even when a small pool must show recent films", () 
 test("franchise and remake duplicates are avoided with enough alternatives", () => {
   const pool = fixture(70);
   for (let i = 0; i < 30; i++) pool[i].collectionName = "Big franchise";
+  // Live details include an ID while the bundled snapshot only has the name.
+  for (let i = 0; i < 15; i++) pool[i].collectionId = 88;
   pool[30].title = "Dune";
   pool[31].title = "DUNE";
   for (let seed = 1; seed <= 15; seed++) {

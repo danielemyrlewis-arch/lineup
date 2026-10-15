@@ -25,16 +25,23 @@ const titleKey = (title: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^\p{L}\p{N}]/gu, "");
-export function franchiseKey(movie: Movie): string | null {
-  if (MCU_IDS.has(movie.tmdbId)) return "marvel-cinematic-universe";
+export function franchiseKeys(movie: Movie): string[] {
+  const keys: string[] = [];
+  if (MCU_IDS.has(movie.tmdbId)) keys.push("marvel-cinematic-universe");
   const name = movie.collectionName ?? "";
   if (/middle.earth|lord of the rings|hobbit/i.test(name + " " + movie.title))
-    return "middle-earth";
+    keys.push("middle-earth");
   if (/harry potter|fantastic beasts/i.test(name + " " + movie.title))
-    return "wizarding-world";
-  if (movie.franchiseKey) return movie.franchiseKey;
-  if (movie.collectionId) return `collection-${movie.collectionId}`;
-  return name ? `collection-${titleKey(name)}` : null;
+    keys.push("wizarding-world");
+  if (movie.franchiseKey) keys.push(movie.franchiseKey);
+  // Match live records to the name-only historical snapshot as well as each
+  // other by ID. Keep both universe and series keys (e.g. MCU + Deadpool).
+  if (name) keys.push(`collection-name-${titleKey(name)}`);
+  if (movie.collectionId) keys.push(`collection-${movie.collectionId}`);
+  return [...new Set(keys)];
+}
+export function franchiseKey(movie: Movie): string | null {
+  return franchiseKeys(movie)[0] ?? null;
 }
 const decade = (movie: Movie) =>
   String(Math.floor(movie.releaseYear! / 10) * 10);
@@ -120,7 +127,7 @@ function chooseBoard(
     const different = available.filter(
       (m) =>
         !titles.has(titleKey(m.title)) &&
-        (!franchiseKey(m) || !families.has(franchiseKey(m)!)),
+        !franchiseKeys(m).some((key) => families.has(key)),
     );
     const choices = different.length ? different : available;
     const weighted = choices.map((movie) => ({ movie, weight: weight(movie) }));
@@ -130,8 +137,7 @@ function chooseBoard(
     movies.push(chosen);
     remaining.delete(chosen.tmdbId);
     titles.add(titleKey(chosen.title));
-    const family = franchiseKey(chosen);
-    if (family) families.add(family);
+    for (const family of franchiseKeys(chosen)) families.add(family);
     increment(decades, [decade(chosen)]);
     increment(genres, chosen.genres ?? []);
     increment(directors, chosen.director ? [chosen.director] : []);
