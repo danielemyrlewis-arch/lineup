@@ -11,8 +11,9 @@ export function HelpDialog({ onClose }: { onClose: () => void }) {
         <li>
           <h3>Ask up to five questions.</h3>
           <p>
-            Search for a genre, year, director or actor. Choose a question from
-            the list.
+            Search for a genre, year, director, actor or studio. Choose a
+            question from the list. Lead questions use the top-billed
+            performer’s gender.
           </p>
         </li>
         <li>

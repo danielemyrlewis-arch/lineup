@@ -1,4 +1,5 @@
 import type { Movie } from "../game/types.ts";
+import { withBundledDetails } from "./bundled-details.ts";
 // A curated, recognisable starter catalogue. Values are a snapshot, not live rankings.
 type Row = [
   number,
@@ -535,34 +536,36 @@ const rows: Row[] = [
     ["JP"],
   ],
 ];
-export const DEMO_MOVIES: Movie[] = rows.map(
-  ([
-    tmdbId,
-    title,
-    releaseYear,
-    posterPath,
-    runtime,
-    director,
-    genres,
-    cast,
-    belongsToCollection,
-    originalLanguage,
-    productionCountries,
-  ]) => ({
-    id: String(tmdbId),
-    tmdbId,
-    title,
-    releaseYear,
-    posterPath,
-    runtime,
-    director,
-    genres,
-    cast,
-    belongsToCollection,
-    originalLanguage,
-    productionCountries,
-    popularity: 50,
-    voteCount: 10000,
-    localPoster: `/posters/${tmdbId}.jpg`,
-  }),
-);
+export const DEMO_MOVIES: Movie[] = rows
+  .map(
+    ([
+      tmdbId,
+      title,
+      releaseYear,
+      posterPath,
+      runtime,
+      director,
+      genres,
+      cast,
+      belongsToCollection,
+      originalLanguage,
+      productionCountries,
+    ]) => ({
+      id: String(tmdbId),
+      tmdbId,
+      title,
+      releaseYear,
+      posterPath,
+      runtime,
+      director,
+      genres,
+      cast,
+      belongsToCollection,
+      originalLanguage,
+      productionCountries,
+      popularity: 50,
+      voteCount: 10000,
+      localPoster: `/posters/${tmdbId}.jpg`,
+    }),
+  )
+  .map(withBundledDetails);

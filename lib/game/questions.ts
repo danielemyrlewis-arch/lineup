@@ -1,4 +1,6 @@
 import type { Movie, Question, QuestionKind, RankedQuestion } from "./types.ts";
+import { STUDIOS, producedBy } from "../data/studios.ts";
+import { CURATED_QUESTIONS, curatedValue } from "../data/enrichment.ts";
 
 const genreLabels: Record<string, [string, string[]]> = {
   "Science Fiction": [
@@ -18,7 +20,7 @@ const genreLabels: Record<string, [string, string[]]> = {
   Fantasy: ["Is it a fantasy film?", ["fantasy", "magic"]],
   War: ["Is it a war film?", ["war"]],
   Mystery: ["Is it a mystery film?", ["mystery"]],
-  Music: ["Is it in the music genre?", ["music", "musical"]],
+  Music: ["Is it in the music genre?", ["music", "music genre"]],
 };
 const languages: Record<string, string> = {
   en: "English",
@@ -86,6 +88,18 @@ export function evaluateQuestion(movie: Movie, q: Question): boolean | null {
       return movie.productionCountries === null
         ? null
         : movie.productionCountries.includes(String(q.value));
+    case "studio":
+      return producedBy(movie, String(q.value));
+    case "leadGender":
+      return movie.topBilledLead?.gender == null
+        ? null
+        : movie.topBilledLead.gender === q.value;
+    case "curated": {
+      const attribute = CURATED_QUESTIONS.find(
+        (definition) => definition.attribute === q.value,
+      )?.attribute;
+      return attribute ? curatedValue(movie, attribute) : null;
+    }
   }
 }
 
@@ -109,7 +123,7 @@ export function generateQuestions(movies: Movie[]): Question[] {
       aliases,
     });
   };
-  for (const y of [1980, 1990, 2000, 2010, 2020]) {
+  for (const y of [1970, 1980, 1990, 2000, 2010, 2020]) {
     add(
       "before",
       y,
@@ -141,7 +155,15 @@ export function generateQuestions(movies: Movie[]): Question[] {
       `Was it released in the ${y}s?`,
       `In the ${y}s?`,
       "Release date",
-      ["old", "new", "year", "release", "decade", String(y)],
+      [
+        "old",
+        "new",
+        "year",
+        "release",
+        "decade",
+        String(y),
+        `${String(y).slice(-2)}s`,
+      ],
     );
   for (const genre of new Set(movies.flatMap((m) => m.genres ?? []))) {
     const [label, aliases] = genreLabels[genre] ?? [
@@ -249,6 +271,47 @@ export function generateQuestions(movies: Movie[]): Question[] {
       ],
     );
   }
+  for (const studio of STUDIOS) {
+    if (!movies.some((movie) => producedBy(movie, studio.key) === true))
+      continue;
+    add(
+      "studio",
+      studio.key,
+      `Was it produced by ${studio.name}?`,
+      `Produced by ${studio.name}?`,
+      "Production company",
+      [
+        "studio",
+        "studios",
+        "production",
+        "company",
+        "produced",
+        studio.name,
+        ...studio.aliases,
+      ],
+    );
+  }
+  for (const [gender, aliases] of [
+    ["female", ["female", "woman", "actress", "female lead"]],
+    ["male", ["male", "man", "actor", "male lead"]],
+  ] as const) {
+    const label = `Is the lead ${gender}?`;
+    add("leadGender", gender, label, label, "Lead performer", [
+      "lead",
+      "top billed",
+      "principal performer",
+      ...aliases,
+    ]);
+  }
+  for (const definition of CURATED_QUESTIONS)
+    add(
+      "curated",
+      definition.attribute,
+      definition.label,
+      definition.label,
+      definition.category,
+      [...definition.aliases],
+    );
   return result;
 }
 
@@ -302,6 +365,10 @@ function categoryPriority(q: Question) {
     "Production country",
     "Director",
     "Cast",
+    "Production company",
+    "Lead performer",
+    "Characters",
+    "Musical",
   ].indexOf(q.category);
 }
 
@@ -349,7 +416,11 @@ export function searchQuestions(
   return questions
     .filter((q) => {
       const haystack = normalise([q.label, q.category, ...q.aliases].join(" "));
-      return tokens.every((t) => haystack.includes(t));
+      return tokens.every((t) =>
+        ["male", "female", "man", "woman"].includes(t)
+          ? haystack.split(" ").includes(t)
+          : haystack.includes(t),
+      );
     })
     .slice(0, 12);
 }

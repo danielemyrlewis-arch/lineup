@@ -2,6 +2,7 @@
 import { Dialog } from "./dialog";
 import type { Movie } from "@/lib/game/types";
 import { Poster } from "./poster";
+import { FilmDetails } from "./film-details";
 export function PickDialog({
   movie,
   onLock,
@@ -17,14 +18,12 @@ export function PickDialog({
       onClose={onClose}
       className="confirm-dialog"
     >
-      <div className="confirm-poster">
-        <Poster movie={movie} eager />
+      <div className="confirm-film">
+        <div className="confirm-poster">
+          <Poster movie={movie} eager />
+        </div>
+        <FilmDetails movie={movie} />
       </div>
-      <h2>Lock in {movie.title}?</h2>
-      <p className="film-credit">
-        {movie.releaseYear ?? "Year unknown"}
-        {movie.director && <> · {movie.director}</>}
-      </p>
       <p className="confirm-note">This will be your final answer.</p>
       <button type="button" className="primary-button" onClick={onLock}>
         Lock it in

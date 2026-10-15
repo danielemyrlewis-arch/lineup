@@ -187,7 +187,7 @@ export function QuestionPanel({
                         <Search size={20} />
                         <p>No useful questions match.</p>
                         <span>
-                          Try a genre, year, director or actor.
+                          Try a genre, year, director, actor or studio.
                           <br />
                           Questions must narrow the lineup.
                         </span>

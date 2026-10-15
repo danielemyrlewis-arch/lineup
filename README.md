@@ -66,6 +66,7 @@ components/game/
   result-dialog.tsx       Win/loss screen and sharing controls
   info-dialogs.tsx         Help, attribution and local statistics
   pick-dialogs.tsx         Final-pick and fresh-lineup confirmation
+  film-details.tsx        Compact title, genres, credits and clamped synopsis
   question-panel.tsx      Controlled autocomplete, suggestions and clue history
   movie-board.tsx         Posters, FLIP reflow and collapsible eliminated films
   poster.tsx              Sized/lazy artwork with accessible fallback
@@ -74,6 +75,10 @@ lib/
   data/catalogue.ts       1,206-film server-side Practice seed catalogue
   data/catalogue-snapshot.ts Compact generated TMDB metadata snapshot
   data/demo.ts            Original 40 curated films and local artwork overrides
+  data/details-snapshot.ts Original TMDB overviews, studios and principal credits
+  data/bundled-details.ts Merge fallback details without overriding live unknowns
+  data/enrichment.ts      Extensible reviewed true/false/unknown attributes
+  data/studios.ts         Recognisable studio allow-list and explicit aliases
   data/normalise.ts       Defensive TMDB → internal Movie normalisation
   data/provider.ts        Replaceable demo/TMDB providers; server only
   game/types.ts           Movie, puzzle, question and state contracts
@@ -96,7 +101,7 @@ tests/                   Core game and provider tests
 
 ## Rules and design decisions
 
-- Only recognised questions are submitted. All eight requested metadata categories are supported; release dates include before/after thresholds and relevant decades.
+- Only recognised questions are submitted. Release date, genre, runtime, collection, director, cast, language and country questions are supported alongside the added studio, lead-performer and reviewed curated questions; release dates include before/after thresholds and relevant decades.
 - A question is available only if every active film has the needed data, at least one answers yes and one no. Unknown metadata is never guessed or treated as a negative answer.
 - Suggestions rank primarily by balance, prefer a variety of categories, and avoid offering equivalent or inverse splits. Split counts are not shown to players.
 - The pure reducer validates canonical questions, refuses duplicates and sixth questions, preserves the mystery, and accepts one active-film guess. Before/after and over/under comparisons are strict: “after 2000” excludes 2000.
@@ -109,7 +114,7 @@ tests/                   Core game and provider tests
 
 ## Practice selection
 
-The fallback combines **1,200 TMDB-derived snapshot records** with the original curated films, deduplicated by TMDB ID, giving **1,206 eligible films**. It retains only gameplay facts (about 288 KB of generated source), not overviews or full credits. The full catalogue stays on the server; only 24 films reach the browser. The historical snapshot covers films through 2017, with newer films supplied by the original curated additions and optional live TMDB enrichment. It is a broad fallback, not a current movie chart.
+The fallback combines **1,200 TMDB-derived snapshot records** with the original curated films, deduplicated by TMDB ID, giving **1,206 eligible films**. It retains compact gameplay facts (about 288 KB) plus selected film details (about 555 KB of generated source), not full credits. The full catalogue stays on the server; only 24 films reach the browser. The historical snapshot covers films through 2017, with newer films supplied by the original curated additions and optional live TMDB enrichment. It is a broad fallback, not a current movie chart.
 
 Snapshot provenance: [movies_complete.csv at pinned commit 84d01fc](https://github.com/TjanMichela/Movie-Data-Analysis/blob/84d01fcfb0b89f12ce445740fddac37270e4a042/movies_complete.csv). The source repository’s MIT notice is preserved in `public/licenses/catalogue-source.txt`; TMDB metadata and artwork remain subject to TMDB’s terms. Rebuild with `python3 scripts/build-demo-catalogue.py /path/to/movies_complete.csv`. Original curated values and local poster paths override matching snapshot records while retaining collection hints. On 15 October 2026 all **1,166 additional poster URLs** returned HTTP 200; original artwork remains local.
 
@@ -121,7 +126,7 @@ Every candidate needs a valid TMDB ID, title, poster path, released year, genres
 | 1980–1999    |       600 |            400 |            250 |
 | 2000 onward  |     1,200 |            800 |            500 |
 
-Non-English thresholds are 65% of these figures, floored at 150 votes. Marginal records also need popularity ≥0.5; films with at least twice the applicable vote threshold do not need that popularity floor. This preserves older/high-vote classics even when current popularity is low. Widening happens only when fewer than 24 candidates are fresh enough, with no arbitrary low-vote filler. Optional metadata gaps reduce selection weight; the fallback has all eight gameplay categories populated.
+Non-English thresholds are 65% of these figures, floored at 150 votes. Marginal records also need popularity ≥0.5; films with at least twice the applicable vote threshold do not need that popularity floor. This preserves older/high-vote classics even when current popularity is low. Widening happens only when fewer than 24 candidates are fresh enough, with no arbitrary low-vote filler. Optional metadata gaps reduce selection weight; the fallback has all eight original gameplay categories populated. New studio/lead fields and curated flags retain explicit unknown states where coverage is incomplete.
 
 `localStorage` key `lineup:practice-films:v1` stores the newest ten displayed boards (**at most 240 IDs**) and ten separate mystery IDs. Abandoned boards count as shown. Recording is idempotent, malformed input is sanitised, and unavailable/full storage falls back to in-memory history. A compact same-site cookie mirrors only the IDs so server-rendered refreshes also respect cooldown; it contains no account or result data. New-lineup requests send the bounded local history in a POST body. Daily puzzles and practice result statistics use their existing separate paths.
 
@@ -133,9 +138,25 @@ Each proposed board is checked with the **unchanged `validQuestions`**. Acceptan
 
 For optional development diagnostics, run `LINEUP_DEBUG=1 npm run dev`. Server logs show eligible pool size, recency exclusions/penalties, selected IDs, decade/genre distributions and question quality. There is no production debug UI or API field. `npm run simulate:practice -- 20` provides a reproducible sequential-lineup report and asserts cooldown, metadata and franchise invariants.
 
+## Additional questions and selected-film details
+
+Production companies are normalised as `{ id, name }` records. Only the 14 configured production brands in `lib/data/studios.ts` generate questions. Matching uses exact TMDB IDs or explicit historical names; it never uses substring matches or infers credits from corporate ownership. Disney Pictures, Pixar and Marvel remain separate. DreamWorks Pictures and DreamWorks Animation are also separate. The 20th Century Fox/Studios and known legacy company entries are explicitly mapped. An absent, empty or malformed company list is unknown. A NO requires a populated list of other production credits. Questions still require all active films to have reliable values and a non-constant YES/NO split.
+
+`topBilledLead` is the principal cast entry with the smallest valid TMDB `order`, using source order for ties; unnamed first credits remain unknown. The performer name, character and gender come from that same entry, not from another actor, a character name or a guessed protagonist. TMDB gender 0/missing/unrecognised means unknown, 1 means female, 2 male, and 3 nonbinary. Known nonbinary performers answer NO to both male/female questions. This is an operational definition for ensembles, animation and cross-gender roles, and the help dialog explains it. It describes the performer, not the character. Any unknown lead gender suppresses these questions for the current active set.
+
+The original TMDB overviews, production-company IDs/names and top-billed credits for **1,200 fallback films** are extracted from the [matching historical TMDB dataset](https://github.com/tima-chan/TheMovieDataBase/tree/77aaa72bff5e687ad496f5a579217b312352977e). Gender is known for **1,171** of those credits. These are historical facts, not a real-time catalogue; a documented [TMDB person correction](https://www.themoviedb.org/person/27578-elliot-page) updates a known stale name/gender entry. Rebuild with `python3 scripts/build-details-snapshot.py /path/to/movies_metadata.csv /path/to/credits.csv`. Raw 190 MB credits are never shipped. TMDB remains the source; live details use their own current response and **never** fill missing fields with historical gender/company values. Newly added films without full fallback details show only what is known.
+
+Curated booleans live in `Movie.enrichment`, with reviewed records keyed by TMDB ID in `lib/data/enrichment.ts`. `true`, `false` and absent/`null` are distinct. A generic descriptor list provides the question/aliases; future attributes can extend the interface, reviewed map and descriptors without new predicate cases. Only `hasMainAnimalCharacter` and `isMusical` are implemented now. Animal classifications cover obvious central literal/anthropomorphised animals (including dinosaurs); uncertain toys, spirits and fantasy creatures remain unreviewed. Synopses, genres, keywords and runtime AI do not classify animal characters.
+
+**Music is separate from musical.** TMDB’s Music genre identifies review candidates, not a guaranteed narrative musical. `isMusical` is an explicit reviewed value: La La Land, The Lion King and known narrative musicals are YES; Whiplash, Amadeus and Straight Outta Compton are NO. Ambiguous performance films/biopics and unreviewed titles remain unknown. Reviewed musicals can override missing Music tags, including familiar animation. There is no default NO from an absent Music tag. Because coverage is deliberately partial, musical/animal questions may become available only after narrowing to reviewed films. Unknowns never silently become NO. New curated questions use the same valid-split, balance-ranking and inverse-partition rules as every other question.
+
+Autocomplete includes studio/brand aliases, woman/female, man/male, animal, musical/singing/song/songs/musical film, before 1970 and short decade forms such as 60s. Gender words match whole words so male does not accidentally match female. Release questions now include the 1970 threshold; older decades are generated from films actually present. New categories are appended to existing tie-break priorities, without boosting them above better splits.
+
+Selecting a film shows its poster, title, year, up to three genres, director, principal performer/character and original TMDB overview. The compact two-column header and three-line mobile synopsis keep both existing confirmation actions easy to reach. Synopsis input is bounded to 1,000 characters and rendered as plain text; missing sections disappear. Opening a card makes **no detail, credits or person requests**: data is prepared in the existing catalogue/cache path and only the selected 24 records reach the browser. Lock-in, five-question rules, elimination, result/share screens, recency and diversity algorithms are unchanged.
+
 ## Tests
 
-The 39 tests cover the existing game/rule cases plus Practice uniqueness, five-/ten-board recency, mystery cooldown, franchise/remake grouping, smaller/homogeneous pools, gradual widening, malformed metadata, bounded local history and cookies, question quality, broad TMDB discovery and bounded metadata fetching. They use Node's built-in test runner without a state or testing framework dependency. Browser review covers the mobile and desktop layouts, controlled search, elimination, final picks and results.
+The 54 tests cover the existing game/rule cases plus Practice uniqueness, five-/ten-board recency, mystery cooldown, franchise/remake grouping, smaller/homogeneous pools, gradual widening, malformed metadata, bounded local history and cookies, question quality, broad TMDB discovery and bounded metadata fetching. They use Node's built-in test runner without a state or testing framework dependency. Added tests cover company mapping/ownership isolation, lead definition/unknown gender, 1970/older decades, curated tri-state musical/animal flags, aliases and ranking, actual rendered film detail sections, missing sections and synopsis escaping. Browser review covers mobile confirmation cards, search, elimination, final picks and results.
 
 ## TMDB attribution and artwork
 

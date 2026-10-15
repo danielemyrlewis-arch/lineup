@@ -45,13 +45,23 @@ test("TMDB provider authenticates server requests, appends credits, normalises a
       poster_path: "/poster.jpg",
       vote_count: 4000,
       runtime: 110,
+      overview: "Original overview from TMDB.",
+      production_companies: [{ id: 420, name: "Marvel Studios" }],
       genres: [{ name: "Drama" }],
       belongs_to_collection: null,
       original_language: "en",
       production_countries: [{ iso_3166_1: "US" }],
       credits: {
         crew: [{ name: "Director", job: "Director" }],
-        cast: [{ name: "Lead", order: 0 }],
+        cast: [
+          {
+            id: 1234,
+            name: "Lead",
+            order: 0,
+            gender: 2,
+            character: "The hero",
+          },
+        ],
       },
     });
   };
@@ -63,6 +73,16 @@ test("TMDB provider authenticates server requests, appends credits, normalises a
   assert.equal(refreshed.director, "Director");
   assert.equal(refreshed.belongsToCollection, false);
   assert.deepEqual(refreshed.cast, ["Lead"]);
+  assert.equal(refreshed.overview, "Original overview from TMDB.");
+  assert.deepEqual(refreshed.productionCompanies, [
+    { id: 420, name: "Marvel Studios" },
+  ]);
+  assert.deepEqual(refreshed.topBilledLead, {
+    tmdbId: 1234,
+    name: "Lead",
+    gender: "male",
+    character: "The hero",
+  });
   assert.equal(discovery.length, 16);
   assert.ok(
     discovery.some(

@@ -786,28 +786,57 @@ button svg {
   background: var(--elevated);
 }
 .confirm-dialog {
-  text-align: center;
+  text-align: left;
+}
+.confirm-film {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
 }
 .confirm-poster {
-  width: 120px;
-  margin: 0 auto 26px;
+  width: 84px;
   border-radius: 3px;
   overflow: hidden;
 }
 .confirm-dialog h2 {
-  font-size: 25px;
+  font-size: 23px;
   overflow-wrap: anywhere;
-  margin-bottom: 12px;
+  margin-bottom: 7px;
 }
 .film-credit {
   color: var(--secondary);
   font-size: 12px;
   line-height: 1.7;
 }
+.confirm-genres {
+  color: var(--secondary);
+  font-size: 12px;
+  line-height: 1.6;
+  margin-top: 7px;
+}
+.confirm-details {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.confirm-details:empty {
+  display: none;
+}
+.confirm-details p + p {
+  margin-top: 7px;
+}
+.confirm-synopsis {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+  color: var(--secondary);
+}
 .confirm-note {
   color: var(--secondary);
   font-size: 13px;
-  margin: 20px 0 25px;
+  margin: 16px 0 14px;
 }
 .result-dialog {
   text-align: center;
@@ -1308,7 +1337,10 @@ button svg {
     font-size: 29px;
   }
   .confirm-dialog h2 {
-    font-size: 24px;
+    font-size: 21px;
+  }
+  .confirm-synopsis {
+    -webkit-line-clamp: 3;
   }
   .result-title {
     font-size: 20px;

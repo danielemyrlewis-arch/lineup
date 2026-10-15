@@ -108,6 +108,9 @@ test("unknown metadata excludes dependent questions instead of treating unknown 
     belongsToCollection: null,
     originalLanguage: null,
     productionCountries: null,
+    productionCompanies: null,
+    topBilledLead: null,
+    enrichment: { isMusical: null, hasMainAnimalCharacter: null },
   };
   for (const x of generateQuestions(DEMO_MOVIES))
     assert.equal(evaluateQuestion(unknown, x), null);

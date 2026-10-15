@@ -1,3 +1,20 @@
+export type LeadGender = "female" | "male" | "nonbinary";
+export interface ProductionCompany {
+  id: number | null;
+  name: string;
+}
+export interface TopBilledLead {
+  tmdbId: number | null;
+  name: string;
+  character: string | null;
+  /** TMDB performer gender, never inferred from the character or name. */
+  gender: LeadGender | null;
+}
+export interface MovieEnrichment {
+  hasMainAnimalCharacter?: boolean | null;
+  isMusical?: boolean | null;
+}
+export type CuratedAttribute = keyof MovieEnrichment;
 export interface Movie {
   id: string;
   tmdbId: number;
@@ -9,6 +26,11 @@ export interface Movie {
   runtime: number | null;
   director: string | null;
   cast: string[] | null;
+  overview?: string | null;
+  productionCompanies?: ProductionCompany[] | null;
+  /** Lowest-billed-order principal performer; not a claim about an ensemble's protagonist. */
+  topBilledLead?: TopBilledLead | null;
+  enrichment?: MovieEnrichment;
   originalLanguage: string | null;
   productionCountries: string[] | null;
   belongsToCollection: boolean | null;
@@ -31,7 +53,10 @@ export type QuestionKind =
   | "director"
   | "cast"
   | "language"
-  | "country";
+  | "country"
+  | "studio"
+  | "leadGender"
+  | "curated";
 export interface Question {
   id: string;
   kind: QuestionKind;

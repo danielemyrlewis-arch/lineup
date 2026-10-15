@@ -1,4 +1,5 @@
-import type { Movie } from "../game/types.ts";
+import type { Movie, ProductionCompany, TopBilledLead } from "../game/types.ts";
+import { applyMovieEnrichment } from "./enrichment.ts";
 const record = (v: unknown): Record<string, unknown> | null =>
   typeof v === "object" && v !== null && !Array.isArray(v)
     ? (v as Record<string, unknown>)
@@ -52,7 +53,7 @@ export function normaliseMovie(raw: unknown): Movie | null {
   const billed = list(credits?.cast)
     ?.map(record)
     .filter((c): c is Record<string, unknown> => c !== null)
-    .sort((a, b) => Number(a.order ?? 999) - Number(b.order ?? 999))
+    .sort((a, b) => castOrder(a.order) - castOrder(b.order))
     .slice(0, 5);
   const cast = billed?.flatMap((c) => {
     const name = string(c.name);
@@ -61,7 +62,24 @@ export function normaliseMovie(raw: unknown): Movie | null {
   const countries = strings(m.production_countries, "iso_3166_1")?.filter(
     (country) => /^[A-Z]{2}$/.test(country),
   );
-  return {
+  const first = billed?.[0];
+  const leadName = string(first?.name);
+  const topBilledLead: TopBilledLead | null = leadName
+    ? {
+        tmdbId: number(first?.id),
+        name: leadName,
+        character: string(first?.character),
+        gender:
+          first?.gender === 1
+            ? "female"
+            : first?.gender === 2
+              ? "male"
+              : first?.gender === 3
+                ? "nonbinary"
+                : null,
+      }
+    : null;
+  return applyMovieEnrichment({
     id: String(id),
     tmdbId: id,
     title,
@@ -74,6 +92,9 @@ export function normaliseMovie(raw: unknown): Movie | null {
     runtime: number(m.runtime),
     director: string(director?.name),
     cast: cast?.length ? cast : null,
+    overview: string(m.overview)?.slice(0, 1000) ?? null,
+    productionCompanies: normaliseCompanies(m.production_companies),
+    topBilledLead,
     originalLanguage:
       typeof m.original_language === "string" &&
       /^[a-z]{2}$/.test(m.original_language)
@@ -90,5 +111,25 @@ export function normaliseMovie(raw: unknown): Movie | null {
     collectionName: string(record(m.belongs_to_collection)?.name),
     popularity: number(m.popularity) ?? 0,
     voteCount: number(m.vote_count) ?? 0,
-  };
+  });
+}
+function castOrder(value: unknown): number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0
+    ? value
+    : Number.MAX_SAFE_INTEGER;
+}
+function normaliseCompanies(value: unknown): ProductionCompany[] | null {
+  if (!Array.isArray(value) || value.length === 0) return null;
+  const companies: ProductionCompany[] = [];
+  for (const entry of value) {
+    const company = record(entry),
+      id = number(company?.id),
+      name = string(company?.name);
+    // An incomplete list cannot safely support a NO answer for an omitted studio.
+    if (!id || !Number.isSafeInteger(id) || !name) return null;
+    companies.push({ id, name });
+  }
+  return [
+    ...new Map(companies.map((company) => [company.id, company])).values(),
+  ];
 }
