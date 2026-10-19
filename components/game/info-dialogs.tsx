@@ -3,32 +3,11 @@ import { Dialog } from "./dialog";
 import Image from "next/image";
 import { publicAsset } from "@/lib/assets";
 import type { PracticeStats } from "@/lib/game/persistence";
+import { HowToPlay } from "./how-to-play";
 export function HelpDialog({ onClose }: { onClose: () => void }) {
   return (
-    <Dialog title="How to play" onClose={onClose}>
-      <h2>Find the film.</h2>
-      <p className="modal-intro">One of the 24 films is the answer.</p>
-      <ol className="how-steps">
-        <li>
-          <h3>Ask up to five questions.</h3>
-          <p>
-            Search for a genre, year, director, actor or studio. Choose a
-            question from the list. Lead questions use the top-billed
-            performer’s gender.
-          </p>
-        </li>
-        <li>
-          <h3>Narrow it down.</h3>
-          <p>Each yes or no eliminates films that don’t fit.</p>
-        </li>
-        <li>
-          <h3>Lock it in.</h3>
-          <p>
-            Select a poster whenever you’re ready. Fewer questions means a
-            better result.
-          </p>
-        </li>
-      </ol>
+    <Dialog title="How to play" className="help-dialog" onClose={onClose}>
+      <HowToPlay />
       <button type="button" className="primary-button" onClick={onClose}>
         Let’s play
       </button>

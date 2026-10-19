@@ -107,7 +107,7 @@ export const CURATED_QUESTIONS: ReadonlyArray<{
     attribute: "isMusical",
     label: "Is it a musical?",
     category: "Musical",
-    aliases: ["musical", "singing", "song", "songs", "musical film"],
+    aliases: ["musical", "musicals", "singing", "song", "songs", "musical film"],
   },
 ];
 export function applyMovieEnrichment(

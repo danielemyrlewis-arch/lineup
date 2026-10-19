@@ -19,6 +19,7 @@ import { PickDialog, RestartDialog } from "./pick-dialogs";
 import { ResultDialog } from "./result-dialog";
 import { GameShell } from "./game-shell";
 import { createPracticePuzzle } from "@/lib/game/practice-selection";
+import { dismissStrategyHint, shouldShowStrategyHint } from "@/lib/game/onboarding";
 
 type Sheet = "help" | "about" | "stats" | "restart" | "result" | null;
 export function Game({
@@ -41,6 +42,7 @@ export function Game({
   const [error, setError] = useState("");
   const [shareStatus, setShareStatus] = useState("");
   const [showShareText, setShowShareText] = useState(false);
+  const [showStrategyHint, setShowStrategyHint] = useState(shouldShowStrategyHint);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const actionLock = useRef(false);
   const practiceHistory = useRef(emptyPracticeHistory());
@@ -67,6 +69,8 @@ export function Game({
     if (actionLock.current || state.status !== "playing") return;
     const next = gameReducer(state, { type: "ask", question });
     if (next === state) return;
+    setShowStrategyHint(false);
+    dismissStrategyHint();
     actionLock.current = true;
     setBusy(true);
     setDeparting(next.history.at(-1)!.eliminatedIds);
@@ -181,6 +185,7 @@ export function Game({
           state={state}
           busy={busy}
           onAsk={ask}
+          showStrategyHint={showStrategyHint}
         />
         <MovieBoard
           key={`board-${state.puzzle.id}`}

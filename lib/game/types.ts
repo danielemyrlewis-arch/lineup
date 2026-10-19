@@ -23,6 +23,18 @@ export interface MovieEnrichment {
   isMusical?: boolean | null;
 }
 export type CuratedAttribute = keyof MovieEnrichment;
+/** Optional offline enrichment. No Oscar questions are enabled without verified coverage. */
+export interface OscarRecord {
+  oscarNominations: number | null;
+  oscarWins: number | null;
+  nominatedForBestPicture: boolean | null;
+  wonBestPicture: boolean | null;
+  awardsDataStatus: "verified" | "unknown";
+  awardsSource: string | null;
+  verifiedOn: string | null;
+  coverageThroughCeremony: number | null;
+  countingMethod: "competitive-film-category-entries" | null;
+}
 export interface Movie {
   id: string;
   tmdbId: number;
@@ -41,6 +53,7 @@ export interface Movie {
   /** Lowest-billed-order principal performer; not a claim about an ensemble's protagonist. */
   topBilledLead?: TopBilledLead | null;
   enrichment?: MovieEnrichment;
+  oscars?: OscarRecord | null;
   originalLanguage: string | null;
   productionCountries: string[] | null;
   belongsToCollection: boolean | null;
@@ -63,7 +76,9 @@ export type QuestionKind =
   | "director"
   | "cast"
   | "language"
+  | "languageNot"
   | "country"
+  | "coProduction"
   | "studio"
   | "leadGender"
   | "curated";

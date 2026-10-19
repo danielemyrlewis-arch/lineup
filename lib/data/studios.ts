@@ -119,15 +119,20 @@ export function matchesStudio(
   studio: Studio,
 ): boolean {
   return (
-    (company.id !== null && studio.tmdbIds.includes(company.id)) ||
-    studio.names.some(
+    company.id !== null ? studio.tmdbIds.includes(company.id) : studio.names.some(
       (name) => canonicalName(name) === canonicalName(company.name),
     )
   );
 }
 export function producedBy(movie: Movie, key: string): boolean | null {
   const studio = STUDIOS.find((s) => s.key === key);
-  if (!studio || !movie.productionCompanies?.length) return null;
+  if (
+    !studio || !movie.productionCompanies?.length ||
+    !movie.productionCompanies.every((company) =>
+      company && typeof company.name === "string" && company.name.trim() &&
+      (company.id === null || (Number.isSafeInteger(company.id) && company.id > 0)),
+    )
+  ) return null;
   return movie.productionCompanies.some((company) =>
     matchesStudio(company, studio),
   );

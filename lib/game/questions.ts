@@ -5,7 +5,7 @@ import { CURATED_QUESTIONS, curatedValue } from "../data/enrichment.ts";
 const genreLabels: Record<string, [string, string[]]> = {
   "Science Fiction": [
     "Is it science fiction?",
-    ["sci fi", "scifi", "space", "science fiction"],
+    ["sci fi", "scifi", "science fiction"],
   ],
   Animation: ["Is it animated?", ["cartoon", "animation", "animated"]],
   Horror: ["Is it a horror film?", ["scary", "horror", "frightening"]],
@@ -21,6 +21,9 @@ const genreLabels: Record<string, [string, string[]]> = {
   War: ["Is it a war film?", ["war"]],
   Mystery: ["Is it a mystery film?", ["mystery"]],
   Music: ["Is it in the music genre?", ["music", "music genre"]],
+  Western: ["Is it a western?", ["western", "westerns", "cowboy", "cowboys"]],
+  Documentary: ["Is it a documentary?", ["documentary", "documentaries", "nonfiction"]],
+  History: ["Is it in the history genre?", ["history", "historical"]],
 };
 const languages: Record<string, string> = {
   en: "English",
@@ -33,7 +36,26 @@ const languages: Record<string, string> = {
   zh: "Chinese",
   hi: "Hindi",
   pt: "Portuguese",
+  cn: "Cantonese",
 };
+
+const knownText = (value: unknown): value is string =>
+  typeof value === "string" && value.trim().length > 0;
+const knownList = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.length > 0 && value.every(knownText);
+const knownYear = (value: unknown): value is number =>
+  typeof value === "number" && Number.isSafeInteger(value) && value >= 1888;
+const knownRuntime = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value) && value > 0;
+const knownLanguage = (value: unknown): value is string =>
+  typeof value === "string" && /^[a-z]{2}$/.test(value);
+const knownCountries = (value: unknown): value is string[] =>
+  knownList(value) && value.every((code) => /^[A-Z]{2}$/.test(code));
+/** Retain the existing five-featured-credit scope; omit explicitly uncredited cameos. */
+const questionCast = (movie: Movie): string[] | null =>
+  !knownList(movie.cast) ? null : movie.cast.filter((name) =>
+    !movie.castMembers?.some((credit) => credit.name === name && /\buncredited\b/i.test(credit.character ?? "")),
+  );
 const countries: Record<string, string> = {
   US: "US",
   GB: "UK",
@@ -53,53 +75,65 @@ const countries: Record<string, string> = {
 export function evaluateQuestion(movie: Movie, q: Question): boolean | null {
   switch (q.kind) {
     case "before":
-      return movie.releaseYear === null
+      return !knownYear(movie.releaseYear)
         ? null
         : movie.releaseYear < Number(q.value);
     case "after":
-      return movie.releaseYear === null
+      return !knownYear(movie.releaseYear)
         ? null
         : movie.releaseYear > Number(q.value);
     case "decade":
-      return movie.releaseYear === null
+      return !knownYear(movie.releaseYear)
         ? null
         : Math.floor(movie.releaseYear / 10) * 10 === q.value;
     case "genre":
-      return movie.genres === null
+      return !knownList(movie.genres)
         ? null
         : movie.genres.includes(String(q.value));
     case "under":
-      return movie.runtime === null ? null : movie.runtime < Number(q.value);
+      return !knownRuntime(movie.runtime) ? null : movie.runtime < Number(q.value);
     case "over":
-      return movie.runtime === null ? null : movie.runtime > Number(q.value);
+      return !knownRuntime(movie.runtime) ? null : movie.runtime > Number(q.value);
     case "collection":
-      return movie.belongsToCollection === null
+      return typeof movie.belongsToCollection !== "boolean"
         ? null
         : movie.belongsToCollection === q.value;
     case "director":
-      return movie.director === null ? null : movie.director === q.value;
-    case "cast":
-      return movie.cast === null ? null : movie.cast.includes(String(q.value));
+      return !knownText(movie.director) ? null : movie.director === q.value;
+    case "cast": {
+      const cast = questionCast(movie);
+      return cast === null ? null : cast.includes(String(q.value));
+    }
     case "language":
-      return movie.originalLanguage === null
+      return !knownLanguage(movie.originalLanguage)
         ? null
         : movie.originalLanguage === q.value;
+    case "languageNot":
+      return !knownLanguage(movie.originalLanguage)
+        ? null
+        : movie.originalLanguage !== q.value;
     case "country":
-      return movie.productionCountries === null
+      return !knownCountries(movie.productionCountries)
         ? null
         : movie.productionCountries.includes(String(q.value));
+    case "coProduction":
+      return !knownCountries(movie.productionCountries)
+        ? null
+        : new Set(movie.productionCountries).size > 1;
     case "studio":
       return producedBy(movie, String(q.value));
     case "leadGender":
-      return movie.topBilledLead?.gender == null
+      return !["male", "female", "nonbinary"].includes(movie.topBilledLead?.gender ?? "")
         ? null
-        : movie.topBilledLead.gender === q.value;
+        : movie.topBilledLead?.gender === q.value;
     case "curated": {
       const attribute = CURATED_QUESTIONS.find(
         (definition) => definition.attribute === q.value,
       )?.attribute;
       return attribute ? curatedValue(movie, attribute) : null;
     }
+    default:
+      return null;
   }
 }
 
@@ -123,7 +157,11 @@ export function generateQuestions(movies: Movie[]): Question[] {
       aliases,
     });
   };
-  for (const y of [1970, 1980, 1990, 2000, 2010, 2020]) {
+  const decades = [...new Set(movies.flatMap((m) =>
+    knownYear(m.releaseYear) ? [Math.floor(m.releaseYear / 10) * 10] : [],
+  ))].sort((a, b) => a - b);
+  const thresholds = [...new Set([1970, 1980, 1990, 2000, 2010, 2020, ...decades])].sort((a, b) => a - b);
+  for (const y of thresholds) {
     add(
       "before",
       y,
@@ -141,13 +179,6 @@ export function generateQuestions(movies: Movie[]): Question[] {
       ["new", "recent", "year", "release", "later", "date", "after"],
     );
   }
-  const decades = [
-    ...new Set(
-      movies.flatMap((m) =>
-        m.releaseYear === null ? [] : [Math.floor(m.releaseYear / 10) * 10],
-      ),
-    ),
-  ];
   for (const y of decades)
     add(
       "decade",
@@ -156,13 +187,13 @@ export function generateQuestions(movies: Movie[]): Question[] {
       `In the ${y}s?`,
       "Release date",
       [
-        "old",
-        "new",
+        y < 2000 ? "old" : "new recent",
         "year",
         "release",
         "decade",
         String(y),
         `${String(y).slice(-2)}s`,
+        ({1920:"twenties",1930:"thirties",1940:"forties",1950:"fifties",1960:"sixties",1970:"seventies",1980:"eighties",1990:"nineties",2000:"noughties two thousands",2010:"twenty tens",2020:"twenty twenties"} as Record<number,string>)[y] ?? "",
       ],
     );
   for (const genre of new Set(movies.flatMap((m) => m.genres ?? []))) {
@@ -174,24 +205,32 @@ export function generateQuestions(movies: Movie[]): Question[] {
   }
   add("under", 90, "Is it under 90 minutes?", "Under 90 minutes?", "Runtime", [
     "short",
+    "shorter",
+    "less",
+    "90 minutes",
+    "ninety minutes",
     "runtime",
     "length",
     "duration",
     "time",
   ]);
-  for (const [minutes, text] of [
-    [90, "90 minutes"],
-    [120, "2 hours"],
-    [150, "2½ hours"],
+  for (const [minutes, text, aliases] of [
+    [90, "90 minutes", ["ninety minutes"]],
+    [120, "2 hours", ["two hours"]],
+    [150, "2½ hours", ["2.5 hours", "two and a half hours", "two half hours"]],
+    [180, "3 hours", ["three hours"]],
   ] as const) {
     add("over", minutes, `Is it over ${text}?`, `Over ${text}?`, "Runtime", [
       "long",
+      "longer",
+      "more",
       "runtime",
       "length",
       "duration",
       "time",
       String(minutes),
-      minutes === 150 ? "2.5 hours" : "",
+      `${minutes} minutes`,
+      ...aliases,
     ]);
   }
   add(
@@ -221,12 +260,16 @@ export function generateQuestions(movies: Movie[]): Question[] {
       "Director",
       ["director", "directed", name],
     );
-  for (const name of new Set(movies.flatMap((m) => m.cast ?? [])))
-    add("cast", name, `Is ${name} in it?`, `${name} in it?`, "Cast", [
+  for (const name of new Set(movies.flatMap((m) => questionCast(m) ?? [])))
+    add("cast", name, `Is ${name} in its featured cast?`, `${name} in the cast?`, "Cast", [
       "actor",
       "actress",
       "cast",
       "stars",
+      "feature",
+      "features",
+      "featuring",
+      "starring",
       name,
     ]);
   for (const lang of new Set(
@@ -245,6 +288,12 @@ export function generateQuestions(movies: Movie[]): Question[] {
       ["language", "original", name],
     );
   }
+  add(
+    "languageNot", "en",
+    "Is its original language other than English?",
+    "Original language not English?", "Language",
+    ["non English", "non-English", "not English", "foreign language", "original language"],
+  );
   for (const country of new Set(
     movies.flatMap((m) => m.productionCountries ?? []),
   )) {
@@ -255,7 +304,7 @@ export function generateQuestions(movies: Movie[]): Question[] {
     add(
       "country",
       country,
-      `Is it a ${name} production?`,
+      `Is it a production from ${new Intl.DisplayNames(["en"], { type: "region" }).of(country) ?? country}?`,
       `${name} production?`,
       "Production country",
       [
@@ -271,6 +320,12 @@ export function generateQuestions(movies: Movie[]): Question[] {
       ],
     );
   }
+  add(
+    "coProduction", true,
+    "Is it an international co-production?",
+    "An international co-production?", "Production country",
+    ["international", "co production", "coproduction", "multiple countries", "joint production"],
+  );
   for (const studio of STUDIOS) {
     if (!movies.some((movie) => producedBy(movie, studio.key) === true))
       continue;
@@ -295,7 +350,7 @@ export function generateQuestions(movies: Movie[]): Question[] {
     ["female", ["female", "woman", "actress", "female lead"]],
     ["male", ["male", "man", "actor", "male lead"]],
   ] as const) {
-    const label = `Is the lead ${gender}?`;
+    const label = `Is the top-billed performer ${gender}?`;
     add("leadGender", gender, label, label, "Lead performer", [
       "lead",
       "top billed",
@@ -324,7 +379,7 @@ export function validQuestions(
     .flatMap((q) => {
       if (asked.has(q.id)) return [];
       const answers = movies.map((m) => evaluateQuestion(m, q));
-      if (answers.some((a) => a === null)) return [];
+      if (answers.some((a) => typeof a !== "boolean")) return [];
       const yesCount = answers.filter(Boolean).length;
       const noCount = movies.length - yesCount;
       if (!yesCount || !noCount) return [];
@@ -402,25 +457,41 @@ export function suggestedQuestions(
 const normalise = (s: string) =>
   s
     .toLocaleLowerCase()
+    .replace(/½/g, ".5")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9 ]/g, " ")
+    .replace(/(\d)(?=(?:minutes?|mins?|hours?|hrs?)\b)/g, "$1 ")
+    .replace(/\bmins?\b/g, "minutes")
+    .replace(/\bhrs?\b/g, "hours")
     .replace(/\s+/g, " ")
     .trim();
+// Ignore grammatical filler, while preserving meaningful negation and numbers.
+const filler = new Set([
+  "is", "it", "a", "an", "the", "was", "were", "does", "do", "did",
+  "its", "of", "in", "than", "to", "for", "film", "films", "movie", "movies",
+]);
 export function searchQuestions(
   questions: RankedQuestion[],
   query: string,
 ): RankedQuestion[] {
-  const tokens = normalise(query).split(" ").filter(Boolean);
+  const phrase = normalise(query);
+  const tokens = phrase.split(" ").filter((token) => token && !filler.has(token));
   if (!tokens.length) return questions.slice(0, 8);
-  return questions
-    .filter((q) => {
+  return [...new Map(questions.map((q) => [q.id, q])).values()]
+    .flatMap((q, index) => {
       const haystack = normalise([q.label, q.category, ...q.aliases].join(" "));
-      return tokens.every((t) =>
-        ["male", "female", "man", "woman"].includes(t)
-          ? haystack.split(" ").includes(t)
+      const words = haystack.split(" ");
+      const matches = tokens.every((t) =>
+        ["male", "female", "man", "woman"].includes(t) || /^\d+$/.test(t)
+          ? words.includes(t)
           : haystack.includes(t),
       );
+      if (!matches) return [];
+      const exact = [q.label, ...q.aliases].some((text) => normalise(text) === phrase);
+      return [{ q, score: exact ? 1 : 0, index }];
     })
-    .slice(0, 12);
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .slice(0, 12)
+    .map(({ q }) => q);
 }

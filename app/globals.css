@@ -237,6 +237,12 @@ button svg {
   color: var(--secondary);
   margin-bottom: 10px;
 }
+.strategy-hint {
+  color: var(--secondary);
+  font-size: 12px;
+  line-height: 1.6;
+  margin: -2px 0 12px;
+}
 .search-root {
   position: relative;
   z-index: 20;
@@ -746,6 +752,49 @@ button svg {
   font-size: 13px;
   color: var(--secondary);
   line-height: 1.8;
+}
+.help-dialog {
+  width: 520px;
+}
+.help-intro {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+.help-example {
+  margin: 14px 0 0;
+  padding: 14px 16px;
+  background: var(--elevated);
+  border-radius: 4px;
+}
+.help-example figcaption {
+  font-size: 12px;
+  color: var(--secondary);
+  margin-bottom: 8px;
+}
+.help-example p strong {
+  color: var(--text);
+  margin-left: 8px;
+}
+.help-example .help-flow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+}
+.help-tip {
+  margin-bottom: 24px;
+}
+.help-tip h3 {
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+.help-tip p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--secondary);
 }
 .primary-button {
   width: 100%;
@@ -1305,8 +1354,13 @@ button svg {
     font-size: 11px;
   }
   .search-popover {
+    position: static;
+    margin-top: 8px;
     width: 100%;
     max-width: none;
+  }
+  .search-popover [role="listbox"] {
+    max-height: min(330px, 45dvh);
   }
   .search-popover [role="option"] {
     font-size: 13px;

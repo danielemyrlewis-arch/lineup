@@ -12,10 +12,12 @@ export function QuestionPanel({
   state,
   busy,
   onAsk,
+  showStrategyHint = false,
 }: {
   state: GameState;
   busy: boolean;
   onAsk: (q: Question) => void;
+  showStrategyHint?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
@@ -45,6 +47,8 @@ export function QuestionPanel({
         ?.scrollIntoView({ block: "nearest" });
   }, [highlighted, open]);
   const ask = (q: Question) => {
+    // Dismiss a touch keyboard while retaining desktop keyboard focus.
+    if (window.matchMedia("(pointer: coarse)").matches) input.current?.blur();
     setQuery("");
     setFocused(false);
     setHighlighted(0);
@@ -84,6 +88,11 @@ export function QuestionPanel({
             <label className="ask-label" htmlFor="question-search">
               Ask anything that helps narrow it down
             </label>
+            {showStrategyHint && (
+              <p id="strategy-hint" className="strategy-hint">
+                Try a question that could rule out lots of films.
+              </p>
+            )}
             <div
               className="search-root"
               ref={root}
@@ -100,6 +109,7 @@ export function QuestionPanel({
                   type="text"
                   role="combobox"
                   aria-autocomplete="list"
+                  aria-describedby={showStrategyHint ? "strategy-hint" : undefined}
                   aria-controls="question-options"
                   aria-expanded={open}
                   aria-activedescendant={
@@ -189,7 +199,8 @@ export function QuestionPanel({
                         <span>
                           Try a genre, year, director, actor or studio.
                           <br />
-                          Questions must narrow the lineup.
+                          Questions need known answers for every remaining
+                          film and must narrow the lineup.
                         </span>
                       </div>
                     )}

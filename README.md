@@ -64,6 +64,8 @@ npm run build:pages
 
 ## Static catalogue and future updates
 
+The [question/catalogue audit](notes/question-audit.md) records current coverage, question definitions, beginner guidance and Oscar-source research. Oscar questions remain disabled pending verified reusable data; absent awards records never mean zero.
+
 The catalogue actually present in this checkout contains **1,206 films**: a 1,200-film historical TMDB-derived snapshot merged with the original 40 curated films by TMDB ID. This conversion keeps the existing film data and selection/diversity rules unchanged.
 
 - `lib/data/catalogue-snapshot.ts`: compact factual gameplay data: ID, title/year, poster reference, genres, runtime, director, question cast, collection, language/countries, votes and popularity.
@@ -84,7 +86,7 @@ python3 scripts/build-details-snapshot.py /path/to/movies_metadata.csv /path/to/
 
 Neither generator runs in the application, production build or published site. Their pinned sources are recorded in the scripts: [gameplay snapshot](https://github.com/TjanMichela/Movie-Data-Analysis/blob/84d01fcfb0b89f12ce445740fddac37270e4a042/movies_complete.csv), [details and credits](https://github.com/tima-chan/TheMovieDataBase/tree/77aaa72bff5e687ad496f5a579217b312352977e). The source repository MIT notice is in `public/licenses/catalogue-source.txt`. Raw CSVs are not included in public source. To expand coverage, adjust the generator's selected-film cap and regenerate details for the resulting IDs; the game architecture does not change.
 
-Unknown studio, lead or curated values stay unknown. Questions require reliable YES and NO values for every active film and retain the existing balance ranking. Musical classification is reviewed rather than inferred from TMDB's Music tag. Lead gender describes the lowest-order principal performer; display cast expansion does not alter question cast or that definition. Original TMDB overviews stay plain text and clamped; detail-sheet cast stays capped at ten with optional headshots, one scroll surface, top Cancel and sticky Lock it in.
+Unknown studio, lead or curated values stay unknown. Questions require reliable YES and NO values for every active film and retain the existing balance ranking. Musical classification is reviewed rather than inferred from TMDB's Music tag. Lead questions explicitly describe the top-billed performer, not an ensemble's protagonist or character gender. Featured-cast questions use the existing five stored leading credits, excluding explicitly uncredited appearances; the detail sheet still shows up to ten. Original language is not a claim about all dialogue, and production countries are not story/filming locations. Original TMDB overviews stay plain text and clamped; detail-sheet cast keeps optional headshots, one scroll surface, top Cancel and sticky Lock it in.
 
 ## Browser storage and static-hosting limitations
 
