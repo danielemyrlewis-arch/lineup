@@ -30,6 +30,14 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
           </a>
           .
         </p>
+        <p>
+          Selected Oscar records are checked through the 2024 ceremony. Data from{" "}
+          <a href="https://github.com/delventhalz/json-nominations" target="_blank" rel="noreferrer">
+            JSON Nominations
+          </a>{" "}
+          by Zac Delventhal, with independent film checks.{" "}
+          <a href={publicAsset("/licenses/oscar-source.txt")}>Source and licence</a>.
+        </p>
       </div>
       <a
         className="tmdb-logo-link"

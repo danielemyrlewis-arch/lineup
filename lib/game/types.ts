@@ -33,6 +33,8 @@ export interface OscarRecord {
   awardsSource: string | null;
   verifiedOn: string | null;
   coverageThroughCeremony: number | null;
+  /** Eligibility/nomination year, not the calendar year of the ceremony. */
+  verifiedThroughAwardYear: number | null;
   countingMethod: "competitive-film-category-entries" | null;
 }
 export interface Movie {
@@ -81,6 +83,7 @@ export type QuestionKind =
   | "coProduction"
   | "studio"
   | "leadGender"
+  | "oscar"
   | "curated";
 export interface Question {
   id: string;

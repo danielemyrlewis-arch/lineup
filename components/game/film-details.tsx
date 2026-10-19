@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { Movie } from "../../lib/game/types";
+import { oscarSummary } from "../../lib/data/awards";
 
 /** Presentation only: all details already belong to the prepared puzzle. */
 export function FilmDetails({ movie }: { movie: Movie }) {
@@ -8,6 +9,7 @@ export function FilmDetails({ movie }: { movie: Movie }) {
     ?.filter((member) => member.name.trim())
     .slice(0, 10);
   const genres = movie.genres?.slice(0, 3);
+  const awards = oscarSummary(movie.oscars);
   return (
     <>
       <div className="confirm-summary">
@@ -21,6 +23,7 @@ export function FilmDetails({ movie }: { movie: Movie }) {
       </div>
       <div className="confirm-details">
         {movie.director && <p>Directed by {movie.director}</p>}
+        {awards && <p className="film-credit" aria-label="Academy Awards">{awards}</p>}
         {movie.overview?.trim() && (
           <p className="confirm-synopsis">{movie.overview}</p>
         )}

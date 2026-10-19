@@ -13,6 +13,8 @@
     "lint": "eslint .",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
     "typecheck": "next typegen && tsc --noEmit",
+    "prepare:oscars": "node --experimental-strip-types scripts/import-oscars.ts",
+    "simulate:oscars": "node --experimental-strip-types scripts/simulate-oscars.ts",
     "simulate:practice": "node --experimental-strip-types scripts/simulate-practice.ts",
     "audit:public": "node scripts/audit-public-source.mjs"
   },

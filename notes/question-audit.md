@@ -1,5 +1,7 @@
 # LINEUP question and catalogue audit — 19 October 2026
 
+This records the earlier gameplay/onboarding change. Its Oscars decision is historical and has been superseded by the [Oscar integration coverage report](oscar-coverage.md), including the limited reviewed records now published.
+
 ## Repository and implementation plan
 
 Preserve the current Next.js static export, `npm run build:pages`, `/lineup/` base path, committed `docs/` and `docs/.nojekyll`. No deployment workflow, service, credentials, runtime metadata fetching or dependency is added.

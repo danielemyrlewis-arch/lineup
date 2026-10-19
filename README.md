@@ -64,7 +64,7 @@ npm run build:pages
 
 ## Static catalogue and future updates
 
-The [question/catalogue audit](notes/question-audit.md) records current coverage, question definitions, beginner guidance and Oscar-source research. Oscar questions remain disabled pending verified reusable data; absent awards records never mean zero.
+The [question/catalogue audit](notes/question-audit.md) records the earlier gameplay/onboarding work. The [Oscar coverage report](notes/oscar-coverage.md) records the current awards integration: 20 independently checked records, seven canonical questions and strict suppression whenever any active film is unknown. The other 1,186 films remain unknown; absent awards records never mean zero. This intentionally limits availability.
 
 The catalogue actually present in this checkout contains **1,206 films**: a 1,200-film historical TMDB-derived snapshot merged with the original 40 curated films by TMDB ID. This conversion keeps the existing film data and selection/diversity rules unchanged.
 
@@ -73,6 +73,7 @@ The catalogue actually present in this checkout contains **1,206 films**: a 1,20
 - `lib/data/demo.ts`: the original modern additions and 40 local poster overrides.
 - `lib/data/enrichment.ts`: reviewed musical/animal true/false/unknown flags, keyed by TMDB ID.
 - `lib/data/studios.ts`: exact studio IDs and explicit rebrand aliases, without ownership inference.
+- `lib/data/oscar-snapshot.ts`: lightweight reviewed Oscar enrichment; full source JSON and audit reports never enter the browser bundle.
 - `lib/data/catalogue.ts` and `bundled-details.ts`: merge these static sources.
 
 The browser loads the catalogue as one cacheable static JavaScript chunk. Every initial, refreshed or new lineup is generated locally with a fresh random seed and existing recency history. No request-time data generation occurs. Images can still load from TMDB's public image CDN: those are image assets, not metadata/API calls. Only the existing 40 small poster files are local; no mass poster download was added. Missing/failed artwork retains its existing fallback behaviour.

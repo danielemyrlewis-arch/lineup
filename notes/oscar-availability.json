@@ -1,0 +1,20 @@
+{
+  "lineups": 100,
+  "seedStart": "0x4f534300",
+  "strategy": "First ordinary suggestion after each answer; no Oscar targeting or mystery-aware selection",
+  "initialAvailable": 0,
+  "everAvailable": 0,
+  "turnsWithAvailability": 0,
+  "availableByTurn": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "availableByQuestion": {},
+  "initialPercent": 0,
+  "everPercent": 0,
+  "note": "A question must have both answers and every active film verified. Turn 5 is visible but the question limit prevents another ask."
+}

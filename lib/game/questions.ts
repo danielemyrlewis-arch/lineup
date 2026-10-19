@@ -1,6 +1,7 @@
 import type { Movie, Question, QuestionKind, RankedQuestion } from "./types.ts";
 import { STUDIOS, producedBy } from "../data/studios.ts";
 import { CURATED_QUESTIONS, curatedValue } from "../data/enrichment.ts";
+import { OSCAR_QUESTIONS, evaluateOscar } from "../data/awards.ts";
 
 const genreLabels: Record<string, [string, string[]]> = {
   "Science Fiction": [
@@ -126,6 +127,10 @@ export function evaluateQuestion(movie: Movie, q: Question): boolean | null {
       return !["male", "female", "nonbinary"].includes(movie.topBilledLead?.gender ?? "")
         ? null
         : movie.topBilledLead?.gender === q.value;
+    case "oscar":
+      return !knownYear(movie.releaseYear) || movie.releaseYear > (movie.oscars?.verifiedThroughAwardYear ?? 0)
+        ? null
+        : evaluateOscar(movie.oscars, String(q.value));
     case "curated": {
       const attribute = CURATED_QUESTIONS.find(
         (definition) => definition.attribute === q.value,
@@ -367,6 +372,10 @@ export function generateQuestions(movies: Movie[]): Question[] {
       definition.category,
       [...definition.aliases],
     );
+  for (const definition of OSCAR_QUESTIONS)
+    add("oscar", definition.key, definition.label, definition.label, "Awards", [
+      "oscar", "oscars", "academy award", "academy awards", "awards", ...definition.aliases,
+    ]);
   return result;
 }
 
@@ -424,6 +433,7 @@ function categoryPriority(q: Question) {
     "Lead performer",
     "Characters",
     "Musical",
+    "Awards",
   ].indexOf(q.category);
 }
 

@@ -5,6 +5,7 @@ import { runInNewContext } from "node:vm";
 import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import ts from "typescript";
+import * as awards from "../lib/data/awards.ts";
 import { normaliseMovie } from "../lib/data/normalise.ts";
 import { applyMovieEnrichment, curatedValue } from "../lib/data/enrichment.ts";
 import { producedBy } from "../lib/data/studios.ts";
@@ -55,8 +56,9 @@ runInNewContext(compiled.outputText, {
   React,
   exports: componentExports,
   require: (name: string) => {
-    assert.equal(name, "react");
-    return React;
+    if (name === "react") return React;
+    assert.equal(name, "../../lib/data/awards");
+    return awards;
   },
 });
 const render = (m: Movie) =>

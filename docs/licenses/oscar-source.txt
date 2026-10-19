@@ -1,0 +1,30 @@
+MIT License
+
+Copyright (c) 2024 Zac Delventhal
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+LINEUP source provenance
+JSON nominations by Zac Delventhal, pinned to e617f8a780d20a516280b35645585e66bdebec83 (3 April 2024).
+https://github.com/delventhalz/json-nominations
+Only a small, independently checked factual enrichment is published. Full source JSON is not bundled.
+The upstream README credits the Oscars Winner and Nominee Master Spreadsheet and TMDB corrections.
+No separate spreadsheet redistribution licence was found. The MIT notice covers the JSON author's rights;
+it is not a warranty of upstream rights, accuracy, completeness or commercial clearance.
+Independent references and the per-film review policy are documented in notes/oscar-coverage.md.

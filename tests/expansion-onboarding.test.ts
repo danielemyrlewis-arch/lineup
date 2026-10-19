@@ -139,7 +139,7 @@ test("undefined, empty and malformed metadata stay unknown across every supporte
   assert.equal(evaluateQuestion(base,unsupported),null);
 });
 
-test("autocomplete de-duplicates question IDs and never offers unsupported Oscar or plot attributes", () => {
+test("autocomplete de-duplicates IDs and suppresses unavailable awards and unsupported plot attributes", () => {
   const questions=validQuestions(PRACTICE_CATALOGUE);
   const matches=searchQuestions([...questions,...questions],"old");
   assert.equal(new Set(matches.map(q=>q.id)).size,matches.length);
@@ -162,7 +162,7 @@ test("explicitly uncredited cameos are excluded without rewriting cached cast or
 
 const reviewed={oscarNominations:4,oscarWins:2,nominatedForBestPicture:true,wonBestPicture:false,
   awardsDataStatus:"verified",awardsSource:"https://example.org/reviewed-record",
-  verifiedOn:"2026-10-19",coverageThroughCeremony:98,countingMethod:"competitive-film-category-entries"};
+  verifiedOn:"2026-10-19",coverageThroughCeremony:98,verifiedThroughAwardYear:2025,countingMethod:"competitive-film-category-entries"};
 test("optional Oscar records preserve reviewed counts and explicitly verified zero without inventing data", () => {
   assert.deepEqual(normaliseOscarRecord(reviewed),reviewed);
   const zero={...reviewed,oscarNominations:0,oscarWins:0,nominatedForBestPicture:false};
@@ -176,7 +176,7 @@ test("missing, partial, inconsistent or unverified Oscar rows remain entirely un
     {...reviewed,countingMethod:null}]) assert.deepEqual(normaliseOscarRecord(row),UNKNOWN_OSCARS);
   const films=[film(1,{oscars:normaliseOscarRecord(reviewed)}),film(2,{oscars:null})];
   assert.deepEqual(searchQuestions(validQuestions(films),"Oscar"),[]);
-  assert.equal(PRACTICE_CATALOGUE.filter(m=>m.oscars?.awardsDataStatus==="verified").length,0);
+  assert.equal(PRACTICE_CATALOGUE.filter(m=>m.oscars?.awardsDataStatus==="verified").length,20);
 });
 
 function storage(entries:Record<string,string>={}) {
