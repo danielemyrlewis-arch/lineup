@@ -64,7 +64,7 @@ npm run build:pages
 
 ## Static catalogue and future updates
 
-The [question/catalogue audit](notes/question-audit.md) records the earlier gameplay/onboarding work. The [Oscar coverage report](notes/oscar-coverage.md) records the current awards integration: 20 independently checked records, seven canonical questions and strict suppression whenever any active film is unknown. The other 1,186 films remain unknown; absent awards records never mean zero. This intentionally limits availability.
+The [question/catalogue audit](notes/question-audit.md) records the earlier gameplay/onboarding work. The [current Oscar coverage report](notes/oscar-coverage-improvement.md) documents question-level evidence: 1,200 films have verified Best Picture answers through the 2026 ceremony; 512 have positive nomination evidence. Exact totals remain limited to 20 reviewed records, including ten verified zeros. Unknown answers still suppress only the affected question. A 1,000-lineup simulation found an Oscar question initially in 85.5% of games and before the question limit in 94.2%; general nomination/win questions remain uncommon. Automatic suggestion exposure is only 3.8% during play (0% at the opening); availability through search is substantially higher.
 
 The catalogue actually present in this checkout contains **1,206 films**: a 1,200-film historical TMDB-derived snapshot merged with the original 40 curated films by TMDB ID. This conversion keeps the existing film data and selection/diversity rules unchanged.
 
@@ -74,6 +74,7 @@ The catalogue actually present in this checkout contains **1,206 films**: a 1,20
 - `lib/data/enrichment.ts`: reviewed musical/animal true/false/unknown flags, keyed by TMDB ID.
 - `lib/data/studios.ts`: exact studio IDs and explicit rebrand aliases, without ownership inference.
 - `lib/data/oscar-snapshot.ts`: lightweight reviewed Oscar enrichment; full source JSON and audit reports never enter the browser bundle.
+- `lib/data/oscar-question-snapshot.ts`: compact CC0-backed question evidence, independent of exact totals. Raw evidence and the offline verifier stay outside the browser bundle.
 - `lib/data/catalogue.ts` and `bundled-details.ts`: merge these static sources.
 
 The browser loads the catalogue as one cacheable static JavaScript chunk. Every initial, refreshed or new lineup is generated locally with a fresh random seed and existing recency history. No request-time data generation occurs. Images can still load from TMDB's public image CDN: those are image assets, not metadata/API calls. Only the existing 40 small poster files are local; no mass poster download was added. Missing/failed artwork retains its existing fallback behaviour.

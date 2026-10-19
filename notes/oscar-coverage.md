@@ -1,5 +1,7 @@
 # LINEUP Oscar coverage — 19 October 2026
 
+Historical report for commit a280b45. The [coverage improvement report](oscar-coverage-improvement.md) supersedes its availability figures and all-or-nothing verification model. This report and the original audit remain as the baseline.
+
 This is a **limited, working integration**, not a complete Oscar catalogue. All seven questions are implemented in the existing engine. Only 20 independently checked film records are published. The remainder stay unknown. In a 100-lineup simulation using the ordinary first-suggestion strategy, Oscar questions appeared in **0/100 initial lineups and 0/100 games through five questions**. Broader source review is needed before this will be a commonly available question family. No selection rule or question-safety rule was relaxed to increase frequency.
 
 ## Selected source, licence and provenance

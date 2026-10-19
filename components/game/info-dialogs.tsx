@@ -31,11 +31,16 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
           .
         </p>
         <p>
-          Selected Oscar records are checked through the 2024 ceremony. Data from{" "}
+          Best Picture records cover the 2026 ceremony. Other Oscar records have
+          separate verified coverage. Data from{" "}
+          <a href="https://www.wikidata.org" target="_blank" rel="noreferrer">
+            Wikidata
+          </a>{" "}
+          (CC0) and{" "}
           <a href="https://github.com/delventhalz/json-nominations" target="_blank" rel="noreferrer">
             JSON Nominations
           </a>{" "}
-          by Zac Delventhal, with independent film checks.{" "}
+          by Zac Delventhal.{" "}
           <a href={publicAsset("/licenses/oscar-source.txt")}>Source and licence</a>.
         </p>
       </div>

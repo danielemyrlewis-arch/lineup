@@ -123,15 +123,16 @@ test("reviewed real films preserve distinct song/acting nominations and correct 
   assert.equal(get(278).oscars?.oscarWins,0);
   assert.equal(get(872).oscars?.nominatedForBestPicture,false);
   assert.equal(get(244).oscars?.oscarNominations,0); // original King Kong
-  assert.equal(get(254).oscars?.awardsDataStatus,"unknown"); // no leakage to its remake
-  assert.equal(get(238).oscars?.awardsDataStatus,"unknown"); // unreviewed matched film, not a zero
+  assert.equal(get(254).oscars?.oscarNominations,null); // no zero leakage to its nominated remake
+  assert.equal(get(238).oscars?.oscarNominations,null); // a confirmed positive is still not an exact total
 });
 
-test("only twenty small reviewed records ship; audit candidates and full upstream JSON are outside runtime data",()=>{
+test("exact totals remain twenty records; question evidence is separate and raw source stays outside runtime data",()=>{
   assert.equal(PRACTICE_CATALOGUE.length,1206);
   assert.equal(Object.keys(OSCAR_RECORDS).length,20);
   assert.equal(PRACTICE_CATALOGUE.filter(m=>m.oscars?.awardsDataStatus==="verified").length,20);
-  assert.equal(PRACTICE_CATALOGUE.filter(m=>m.oscars?.awardsDataStatus==="unknown").length,1186);
+  assert.equal(PRACTICE_CATALOGUE.filter(m=>m.oscars?.awardsDataStatus==="unknown").length,6);
+  assert.equal(PRACTICE_CATALOGUE.filter(m=>m.oscars?.awardsDataStatus==="partial").length,1180);
   assert.deepEqual(withBundledAwards(film(99999999)).oscars,UNKNOWN_OSCARS);
   const audit=JSON.parse(readFileSync(new URL('../notes/oscar-import-audit.json',import.meta.url),'utf8'));
   assert.equal(audit.source.sha256,SOURCE.sha256);
@@ -188,7 +189,7 @@ test("Oscar aliases surface only available canonical questions and keep Oscar Is
     assert.ok(searchQuestions(questions,query).some(q=>q.kind==="oscar"),query);
   assert.equal(searchQuestions(questions,"Was it nominated for an Oscar?")[0].id,"oscar:nominated");
   for(const query of ["Oscar","academy award","best picture"])
-    assert.ok(!searchQuestions(validQuestions([...films,get(238)]),query).some(q=>q.kind==="oscar"));
+    assert.ok(!searchQuestions(validQuestions([...films,get(28)]),query).some(q=>q.kind==="oscar"));
   const people=validQuestions([film(1,{cast:["Oscar Isaac"]}),film(2,{cast:["Another Actor"]})]);
   assert.equal(searchQuestions(people,"Oscar Isaac")[0].id,"cast:Oscar Isaac");
   assert.equal(new Set(searchQuestions([...questions,...questions],"Oscar").map(q=>q.id)).size,7);

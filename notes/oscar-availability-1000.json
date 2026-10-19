@@ -1,0 +1,388 @@
+{
+  "lineups": 1000,
+  "seedStart": 1330856704,
+  "selectionAndMysteryUnchanged": 1000,
+  "strategy": "First ordinary suggestion per turn; no awards preference, pool filtering or mystery-aware selection",
+  "initial": {
+    "anyOscar": {
+      "games": 855,
+      "percent": 85.5
+    },
+    "nomination": {
+      "games": 0,
+      "percent": 0
+    },
+    "win": {
+      "games": 0,
+      "percent": 0
+    },
+    "bestPicture": {
+      "games": 855,
+      "percent": 85.5
+    }
+  },
+  "playableDuringGame": {
+    "anyOscar": {
+      "games": 942,
+      "percent": 94.2
+    },
+    "nomination": {
+      "games": 25,
+      "percent": 2.5
+    },
+    "win": {
+      "games": 8,
+      "percent": 0.8
+    },
+    "bestPicture": {
+      "games": 941,
+      "percent": 94.1
+    }
+  },
+  "visibleInSuggestions": {
+    "initial": {
+      "anyOscar": {
+        "games": 0,
+        "percent": 0
+      },
+      "nomination": {
+        "games": 0,
+        "percent": 0
+      },
+      "win": {
+        "games": 0,
+        "percent": 0
+      },
+      "bestPicture": {
+        "games": 0,
+        "percent": 0
+      }
+    },
+    "duringGame": {
+      "anyOscar": {
+        "games": 38,
+        "percent": 3.8
+      },
+      "nomination": {
+        "games": 0,
+        "percent": 0
+      },
+      "win": {
+        "games": 0,
+        "percent": 0
+      },
+      "bestPicture": {
+        "games": 38,
+        "percent": 3.8
+      }
+    }
+  },
+  "perQuestion": {
+    "nominated": {
+      "initialGames": 0,
+      "playableGames": 23,
+      "initialPercent": 0,
+      "playablePercent": 2.3
+    },
+    "won": {
+      "initialGames": 0,
+      "playableGames": 8,
+      "initialPercent": 0,
+      "playablePercent": 0.8
+    },
+    "pictureNominated": {
+      "initialGames": 855,
+      "playableGames": 941,
+      "initialPercent": 85.5,
+      "playablePercent": 94.1
+    },
+    "pictureWon": {
+      "initialGames": 644,
+      "playableGames": 691,
+      "initialPercent": 64.4,
+      "playablePercent": 69.1
+    },
+    "nominations3": {
+      "initialGames": 0,
+      "playableGames": 10,
+      "initialPercent": 0,
+      "playablePercent": 1
+    },
+    "nominations5": {
+      "initialGames": 0,
+      "playableGames": 8,
+      "initialPercent": 0,
+      "playablePercent": 0.8
+    },
+    "wins3": {
+      "initialGames": 0,
+      "playableGames": 4,
+      "initialPercent": 0,
+      "playablePercent": 0.4
+    }
+  },
+  "availableByTurn": [
+    855,
+    768,
+    572,
+    365,
+    155
+  ],
+  "limitBlockedOnly": 0,
+  "filmCoverage": {
+    "nominated": {
+      "yes": 512,
+      "no": 10,
+      "unknown": 684
+    },
+    "won": {
+      "yes": 232,
+      "no": 13,
+      "unknown": 961
+    },
+    "pictureNominated": {
+      "yes": 177,
+      "no": 1023,
+      "unknown": 6
+    },
+    "pictureWon": {
+      "yes": 54,
+      "no": 1146,
+      "unknown": 6
+    },
+    "nominations3": {
+      "yes": 261,
+      "no": 11,
+      "unknown": 934
+    },
+    "nominations5": {
+      "yes": 168,
+      "no": 12,
+      "unknown": 1026
+    },
+    "wins3": {
+      "yes": 95,
+      "no": 15,
+      "unknown": 1096
+    }
+  },
+  "boardCoverage": {
+    "nominated": [
+      0,
+      0,
+      0,
+      0,
+      2,
+      9,
+      20,
+      44,
+      91,
+      130,
+      191,
+      169,
+      129,
+      104,
+      71,
+      24,
+      10,
+      4,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "won": [
+      0,
+      15,
+      50,
+      116,
+      158,
+      214,
+      192,
+      133,
+      78,
+      24,
+      17,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "pictureNominated": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      10,
+      121,
+      869
+    ],
+    "pictureWon": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      10,
+      121,
+      869
+    ],
+    "nominations3": [
+      2,
+      5,
+      32,
+      86,
+      145,
+      212,
+      210,
+      144,
+      84,
+      44,
+      24,
+      9,
+      2,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "nominations5": [
+      10,
+      53,
+      135,
+      225,
+      209,
+      188,
+      112,
+      43,
+      21,
+      4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "wins3": [
+      59,
+      161,
+      274,
+      248,
+      157,
+      67,
+      30,
+      3,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "sampledFilms": 1206,
+  "totalAppearances": 24000,
+  "maxAppearances": 91,
+  "definition": "Initial: 24-film board. Playable: available before spending question five, with both answers and no unknown active film. Turn-five-only availability is excluded.",
+  "groupDefinitions": {
+    "anyOscar": [
+      "nominated",
+      "won",
+      "pictureNominated",
+      "pictureWon",
+      "nominations3",
+      "nominations5",
+      "wins3"
+    ],
+    "nomination": [
+      "nominated",
+      "nominations3",
+      "nominations5"
+    ],
+    "win": [
+      "won",
+      "wins3"
+    ],
+    "bestPicture": [
+      "pictureNominated",
+      "pictureWon"
+    ]
+  }
+}

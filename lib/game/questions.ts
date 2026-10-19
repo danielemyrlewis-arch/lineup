@@ -128,9 +128,9 @@ export function evaluateQuestion(movie: Movie, q: Question): boolean | null {
         ? null
         : movie.topBilledLead?.gender === q.value;
     case "oscar":
-      return !knownYear(movie.releaseYear) || movie.releaseYear > (movie.oscars?.verifiedThroughAwardYear ?? 0)
+      return !knownYear(movie.releaseYear)
         ? null
-        : evaluateOscar(movie.oscars, String(q.value));
+        : evaluateOscar(movie.oscars, String(q.value), movie.releaseYear);
     case "curated": {
       const attribute = CURATED_QUESTIONS.find(
         (definition) => definition.attribute === q.value,

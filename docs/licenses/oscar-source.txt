@@ -28,3 +28,19 @@ The upstream README credits the Oscars Winner and Nominee Master Spreadsheet and
 No separate spreadsheet redistribution licence was found. The MIT notice covers the JSON author's rights;
 it is not a warranty of upstream rights, accuracy, completeness or commercial clearance.
 Independent references and the per-film review policy are documented in notes/oscar-coverage.md.
+
+Wikidata question-level enrichment (October 2026)
+Structured Wikidata statements, labels, identifiers and dates are released under
+CC0 1.0 Universal: https://creativecommons.org/publicdomain/zero/1.0/
+Official policy: https://www.wikidata.org/wiki/Wikidata:Copyright
+Wikidata source: https://www.wikidata.org/
+
+The added question evidence is drawn from a pinned CC0 query snapshot. Best Picture
+nominees/winners cover ceremonies 1-98, ending 15 March 2026 (2025 award year).
+Other added positive/minimum-count claims are cross-checked against the historical
+JSON source through ceremony 96; absence is never a zero or an exact total.
+The full evidence, response hashes, category-completeness checks and six unresolved
+identity cases are recorded in the repository's notes/oscar-coverage-improvement.md
+and notes/oscar-question-coverage.json. No reference article prose is reproduced.
+The prior MIT/upstream-rights qualification still applies to the retained original
+film-total records. This notice is not a claim of clearance for all third-party data.

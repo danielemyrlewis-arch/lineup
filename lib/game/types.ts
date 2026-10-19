@@ -23,13 +23,26 @@ export interface MovieEnrichment {
   isMusical?: boolean | null;
 }
 export type CuratedAttribute = keyof MovieEnrichment;
+export type OscarQuestionKey =
+  | "nominated" | "won" | "pictureNominated" | "pictureWon"
+  | "nominations3" | "nominations5" | "wins3";
+export interface OscarAnswerEvidence {
+  value: boolean;
+  source: string;
+  verifiedOn: string;
+  verifiedThroughAwardYear: number;
+  coverageThroughCeremony: number;
+  basis: "reviewed-film" | "positive-entry" | "minimum-count" | "complete-category";
+}
 /** Optional offline enrichment. No Oscar questions are enabled without verified coverage. */
 export interface OscarRecord {
   oscarNominations: number | null;
   oscarWins: number | null;
   nominatedForBestPicture: boolean | null;
   wonBestPicture: boolean | null;
-  awardsDataStatus: "verified" | "unknown";
+  awardsDataStatus: "verified" | "partial" | "unknown";
+  /** Independently verified answers. Missing/null is UNKNOWN, never NO. */
+  answers?: Partial<Record<OscarQuestionKey, OscarAnswerEvidence | null>>;
   awardsSource: string | null;
   verifiedOn: string | null;
   coverageThroughCeremony: number | null;
