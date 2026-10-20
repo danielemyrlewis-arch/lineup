@@ -38,7 +38,7 @@ export function readStats(): PracticeStats {
   }
 }
 export function recordResult(state: GameState) {
-  if (state.status === "playing") return;
+  if (state.puzzle.mode !== "practice" || state.status === "playing") return;
   try {
     const stats = readStats();
     if (stats.lastGameId === state.puzzle.id) return;

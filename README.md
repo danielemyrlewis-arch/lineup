@@ -4,7 +4,7 @@
 
 ## PUBLIC BETA — GITHUB PAGES
 
-LINEUP is a fully static Next.js export. GitHub Pages serves HTML, CSS, JavaScript and the bundled film catalogue. All lineup generation, questions, eliminations, results and Practice storage run in the browser. Production has no server, account, database, environment secrets, API routes or live TMDB metadata requests.
+LINEUP is a fully static Next.js export. GitHub Pages serves HTML, CSS, JavaScript and the bundled film catalogue. Daily puzzles are prepared offline and committed as frozen IDs. Daily selection/resume, unlimited Practice generation, questions, eliminations and results run in the browser. Production has no server, account, database, environment secrets, API routes or live TMDB metadata requests.
 
 ### Run locally
 
@@ -62,6 +62,12 @@ npm run build:pages
 
 `postbuild` verifies HTML/CSS asset paths, `.nojekyll`, export size and the absence of old backend references in the JavaScript. The home page contains every game, sheet and result, so refreshing the repository URL works directly. Only generated publication files belong in `docs/`.
 
+## Daily LINEUP
+
+Daily is the default shared challenge, with 365 frozen puzzles from **20 October 2026 to 19 October 2027**, resetting at midnight **Europe/London**. Guest progress/completion is saved per date in localStorage. Practice remains unlimited at `?mode=practice`. See [the Daily implementation and verification report](notes/daily-mode.md) and [append-only schedule maintenance](notes/daily-schedule.md).
+
+Use `npm run check:daily` to validate the frozen schedule; `npm run generate:daily -- --days 730` appends to 730 total days. Production builds run the read-only check automatically. Published entries and the pinned catalogue version must be preserved. No daily deployment or server is needed.
+
 ## Product refinement
 
 The [design refinement report](notes/design-refinement.md) documents the compact mobile layout, canonical question browser, accurate results/sharing, static social preview, responsive checks and deliberate deferrals. [Design research](notes/design-research.md) records the bounded gallery review and future product/measurement recommendations. No tracking or new runtime service was added.
@@ -81,7 +87,7 @@ The catalogue actually present in this checkout contains **1,206 films**: a 1,20
 - `lib/data/oscar-question-snapshot.ts`: compact CC0-backed question evidence, independent of exact totals. Raw evidence and the offline verifier stay outside the browser bundle.
 - `lib/data/catalogue.ts` and `bundled-details.ts`: merge these static sources.
 
-The browser loads the catalogue as one cacheable static JavaScript chunk. Every initial, refreshed or new lineup is generated locally with a fresh random seed and existing recency history. No request-time data generation occurs. Images can still load from TMDB's public image CDN: those are image assets, not metadata/API calls. Only the existing 40 small poster files are local; no mass poster download was added. Missing/failed artwork retains its existing fallback behaviour.
+The browser loads the catalogue as one cacheable static JavaScript chunk. Daily resolves the frozen schedule for the London date; Practice generates fresh random boards with its existing recency history. No request-time data generation occurs. Images can still load from TMDB's public image CDN: those are image assets, not metadata/API calls. Only the existing 40 small poster files are local; no mass poster download was added. Missing/failed artwork retains its existing fallback behaviour.
 
 The snapshot is historical (through 2017 plus curated newer additions), not a live movie chart. To refresh it later, obtain the source CSVs separately and run the offline generators, review the output, then test/build and push the changed snapshots:
 
@@ -96,9 +102,9 @@ Unknown studio, lead or curated values stay unknown. Questions require reliable 
 
 ## Browser storage and static-hosting limitations
 
-Existing localStorage keys for recently shown films, mystery cooldown, help preference and Practice statistics are unchanged. History remains bounded to ten boards/240 film IDs and ten mysteries; new lineups and refreshes respect the same cooldown/diversity logic. Storage failures fall back to in-memory history. No cookies or server sessions are needed. Refresh starts a fresh game while retaining local history; unfinished games are not persisted, as before.
+Existing localStorage keys for recently shown films, mystery cooldown, help preference and Practice statistics are unchanged. History remains bounded to ten boards/240 film IDs and ten mysteries; new lineups and refreshes respect the same cooldown/diversity logic. Storage failures fall back to in-memory history. No cookies or server sessions are needed. A Practice refresh starts a fresh game while retaining local history, as before. Daily uses its separate versioned per-date progress records and resumes unfinished or completed attempts. Mode switches retain both sessions in memory, including when storage is blocked.
 
-Browser storage belongs to an origin: moving from a previous host to `USERNAME.github.io` starts separate local statistics/history. There is no automatic cross-domain migration or account sync. Metadata changes require a new build/deployment. The first load downloads the bundled catalogue; remote posters/headshots still need an internet connection. JavaScript is required to play. This free Practice beta keeps its answer and metadata in client memory, as before.
+Browser storage belongs to an origin: moving from a previous host to `USERNAME.github.io` starts separate local statistics/history. There is no automatic cross-domain migration or account sync. Metadata changes require a new build/deployment. The first load downloads the bundled catalogue; remote posters/headshots still need an internet connection. JavaScript is required to play. Both modes keep their answer and metadata in client memory; the static Daily schedule is inspectable and is not presented as cheat-proof.
 
 ## Public source and attribution
 

@@ -23,10 +23,10 @@ const finished = (status: "won" | "lost" = "won", remaining = [17, 8, 4]): GameS
   history: remaining.map((count, i) => ({ question: questions[i], answer: true, remaining: count, eliminatedIds: [] })),
 });
 
-test("result text contains the canonical game link, real path and natural invitation without spoilers", () => {
+test("result text contains the Practice game link, real path and natural invitation without spoilers", () => {
   const state = finished();
   const text = share.shareText(state);
-  assert.equal(text, `LINEUP\nPractice · Found in 3 questions.\n\nFilms remaining:\n24 → 17 → 8 → 4\n\nCan you do better?\n${share.GAME_URL}`);
+  assert.equal(text, `LINEUP\nPractice · Found in 3 questions.\n\nFilms remaining:\n24 → 17 → 8 → 4\n\nCan you do better?\n${share.gameUrl(state)}`);
   for (const movie of state.puzzle.movies) assert.ok(!text.includes(movie.title));
   for (const answer of state.history) assert.ok(!text.includes(answer.question.label));
   assert.ok(!text.includes("→ 1\n"));

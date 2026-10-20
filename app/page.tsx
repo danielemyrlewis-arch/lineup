@@ -1,4 +1,4 @@
-import { Practice } from "@/components/game/practice";
+import { Lineup } from "@/components/game/lineup";
 export default function Home() {
-  return <Practice />;
+  return <Lineup />;
 }

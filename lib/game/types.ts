@@ -116,6 +116,8 @@ export interface RankedQuestion extends Question {
 export interface Puzzle {
   id: string;
   mode: "practice" | "daily";
+  /** Frozen schedule identity; absent for unlimited Practice. */
+  daily?: { date: string; number: number; catalogueVersion: string };
   seed: number;
   movies: Movie[];
   mysteryId: string;

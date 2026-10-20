@@ -93,7 +93,7 @@ export function QuestionPanel({
             </label>
             <p id="question-guidance" className="strategy-hint">
               {showStrategyHint
-                ? "Start broad: try a genre or a release year."
+                ? "Not sure what to ask? Browse questions below."
                 : "Try a genre, year, actor or studio."}
             </p>
             <div
@@ -215,7 +215,6 @@ export function QuestionPanel({
               )}
             </div>
             <div className="question-discovery">
-              <p className="suggestion-label">Suggested</p>
               <button
                 type="button"
                 className="browse-questions"
@@ -227,9 +226,11 @@ export function QuestionPanel({
                   setBrowseOpen(true);
                 }}
               >
-                Browse questions
+                <span>Browse questions</span>
+                <ArrowRight size={16} aria-hidden="true" />
               </button>
             </div>
+            <p className="suggestion-label">Suggested</p>
             <div className="suggestions">
               {suggestions.map((q) => (
                 <button

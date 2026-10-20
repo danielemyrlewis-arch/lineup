@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
-import type { Movie, Puzzle, Question } from "@/lib/game/types";
+import type { GameAction, GameState, Movie, Puzzle, Question } from "@/lib/game/types";
 import { gameReducer, initialState } from "@/lib/game/engine";
 import { recordResult, readStats } from "@/lib/game/persistence";
 import {
@@ -10,7 +10,7 @@ import {
   rememberPracticePuzzle,
   writePracticeHistory,
 } from "@/lib/game/practice-history";
-import { copyText, GAME_URL, shareResult, shareText } from "@/lib/game/share";
+import { copyText, gameUrl, shareResult, shareText } from "@/lib/game/share";
 import { MovieBoard } from "./movie-board";
 import { QuestionPanel } from "./question-panel";
 
@@ -20,6 +20,8 @@ import { ResultDialog } from "./result-dialog";
 import { GameShell } from "./game-shell";
 import { createPracticePuzzle } from "@/lib/game/practice-selection";
 import { dismissStrategyHint, shouldShowStrategyHint } from "@/lib/game/onboarding";
+import { advanceDailyProgress, dailyProgressKey, readDailyProgress, reconcileDailyProgress } from "@/lib/game/daily-persistence";
+import { formatDailyDate } from "@/lib/game/daily-date";
 
 type Sheet = "help" | "about" | "stats" | "restart" | "result" | null;
 
@@ -43,16 +45,40 @@ function preserveShareFocus() {
 export function Game({
   initialPuzzle,
   catalogue,
+  initialGameState,
+  onPracticeChange,
+  onDailyChange,
+  onModeChange,
+  dailyToday,
+  onToday,
+  hasNextDaily = false,
+  hasCurrentDaily = true,
 }: {
   initialPuzzle: Puzzle;
   catalogue: Movie[];
+  initialGameState?: GameState;
+  onPracticeChange?: (state: GameState) => void;
+  onDailyChange?: (state: GameState) => void;
+  onModeChange?: (mode: Puzzle["mode"]) => void;
+  dailyToday?: string;
+  onToday?: () => void;
+  hasNextDaily?: boolean;
+  hasCurrentDaily?: boolean;
 }) {
-  const [state, dispatch] = useReducer(
-    gameReducer,
-    initialPuzzle,
-    initialState,
-  );
-  const [sheet, setSheet] = useState<Sheet>(null);
+  const daily = initialPuzzle.mode === "daily";
+  const [restored] = useState(() => daily ? readDailyProgress(initialPuzzle) : null);
+  const [state, setState] = useState(() => daily
+    ? reconcileDailyProgress(initialGameState ?? initialState(initialPuzzle), restored!)
+    : initialGameState ?? initialState(initialPuzzle));
+  const [storageKind, setStorageKind] = useState(() => {
+    if (restored && (restored.kind === "missing" || restored.kind === "saved") &&
+        (state.history.length > restored.state.history.length ||
+         (state.status !== "playing" && restored.state.status === "playing"))) return "unavailable";
+    return restored?.kind ?? "missing";
+  });
+  const [sheet, setSheet] = useState<Sheet>(() => daily && restored?.kind !== "invalid" && state.status !== "playing" ? "result" : null);
+  const dailyIsCurrent = !daily || state.puzzle.daily?.date === dailyToday;
+  const blocked = daily && storageKind === "invalid";
   const [selected, setSelected] = useState<Movie | null>(null);
   const [departing, setDeparting] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
@@ -67,11 +93,10 @@ export function Game({
   const practiceHistory = useRef(emptyPracticeHistory());
   const scrollRef = useRef<HTMLElement>(null);
   useEffect(() => {
-    practiceHistory.current = rememberPracticePuzzle(
-      readPracticeHistory(),
-      initialPuzzle,
-    );
-    writePracticeHistory(practiceHistory.current);
+    if (!daily) {
+      practiceHistory.current = rememberPracticePuzzle(readPracticeHistory(), initialPuzzle);
+      writePracticeHistory(practiceHistory.current);
+    }
     const key = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k" && !document.querySelector("dialog[open]")) {
         e.preventDefault();
@@ -83,38 +108,70 @@ export function Game({
       window.removeEventListener("keydown", key);
       if (timer.current) clearTimeout(timer.current);
     };
-  }, [initialPuzzle]);
+  }, [initialPuzzle, daily]);
+  useEffect(() => {
+    if (!daily) onPracticeChange?.(state);
+    else if (storageKind !== "invalid") onDailyChange?.(state);
+  }, [state, daily, storageKind, onPracticeChange, onDailyChange]);
+  useEffect(() => {
+    if (!daily || !initialPuzzle.daily) return;
+    const sync = (event: StorageEvent) => {
+      if (event.key !== dailyProgressKey(initialPuzzle.daily!.date)) return;
+      const latest = readDailyProgress(initialPuzzle);
+      setStorageKind(latest.kind);
+      if (latest.kind === "saved") {
+        setState(current => reconcileDailyProgress(current, latest));
+        setSelected(null);
+        if (latest.state.status !== "playing") setSheet("result");
+      } else if (latest.kind === "invalid") {
+        setSelected(null); setSheet(null);
+      }
+    };
+    window.addEventListener("storage", sync);
+    return () => window.removeEventListener("storage", sync);
+  }, [daily, initialPuzzle]);
+
+  const advance = (action: GameAction) => {
+    if (blocked) return null;
+    if (!daily) {
+      const next = gameReducer(state, action);
+      setState(next);
+      return { state: next, accepted: next !== state };
+    }
+    const result = advanceDailyProgress(state, action);
+    setStorageKind(result.kind);
+    if (result.kind === "invalid") { setSelected(null); setSheet(null); return null; }
+    setState(result.state);
+    if (result.state.status !== "playing") {
+      setSelected(null); setSheet("result");
+    }
+    return result;
+  };
   const ask = (question: Question) => {
     if (actionLock.current || state.status !== "playing") return;
-    const next = gameReducer(state, { type: "ask", question });
-    if (next === state) return;
+    const result = advance({ type: "ask", question });
+    if (!result?.accepted) return;
+    const next = result.state;
     setShowStrategyHint(false);
     dismissStrategyHint();
     actionLock.current = true;
     setBusy(true);
     setDeparting(next.history.at(-1)!.eliminatedIds);
-    dispatch({ type: "ask", question });
-    const reduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    timer.current = setTimeout(
-      () => {
-        setDeparting([]);
-        setBusy(false);
-        actionLock.current = false;
-      },
-      reduced ? 50 : 650,
-    );
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    timer.current = setTimeout(() => {
+      setDeparting([]); setBusy(false); actionLock.current = false;
+    }, reduced ? 50 : 650);
   };
   const guess = () => {
     if (!selected || busy) return;
-    dispatch({ type: "guess", movieId: selected.id });
-    const next = gameReducer(state, { type: "guess", movieId: selected.id });
-    recordResult(next);
+    const result = advance({ type: "guess", movieId: selected.id });
+    if (!result?.accepted) return;
+    if (!daily) recordResult(result.state);
     setSelected(null);
     setSheet("result");
   };
   const newLineup = async () => {
+    if (daily) { onModeChange?.("practice"); return; }
     if (newLoading) return;
     setNewLoading(true);
     setError("");
@@ -132,7 +189,7 @@ export function Game({
         fresh.puzzle,
       );
       writePracticeHistory(practiceHistory.current);
-      dispatch({ type: "new", puzzle: fresh.puzzle });
+      setState(fresh);
       setDeparting([]);
       setBusy(false);
       actionLock.current = false;
@@ -178,7 +235,7 @@ export function Game({
     setShareBusy(true);
     setShareStatus("");
     setShareFallback(null);
-    const text = kind === "link" ? GAME_URL : shareText(state);
+    const text = kind === "link" ? gameUrl(state) : shareText(state);
     const label = kind === "link" ? "Game link to copy" : "Spoiler-free result to copy";
     try {
       const result = await copyText(text);
@@ -202,13 +259,16 @@ export function Game({
   const stats = sheet === "stats" ? readStats() : null;
   return (
     <GameShell
+      mode={state.puzzle.mode}
+      onModeChange={onModeChange}
+      dailyIsCurrent={dailyIsCurrent}
       onHelp={openHelp}
       onStats={() => setSheet("stats")}
       onAbout={() => setSheet("about")}
     >
       <section className="game-toolbar" aria-label="Game controls">
-        <h2>Practice</h2>
-        <button
+        <h2>{daily ? `Daily #${String(state.puzzle.daily!.number).padStart(3, "0")}` : "Practice"}</h2>
+        {daily ? <time className="daily-date" dateTime={state.puzzle.daily!.date}>{formatDailyDate(state.puzzle.daily!.date)}</time> : <button
           type="button"
           className="text-button"
           onClick={() =>
@@ -217,22 +277,36 @@ export function Game({
           disabled={newLoading || busy}
         >
           {newLoading ? "Loading…" : "New lineup"}
-        </button>
+        </button>}
       </section>
-      <section
+      {daily && !dailyIsCurrent && <div className="daily-notice" role="status">
+        <p>{hasCurrentDaily ? `A new Daily is ready. You’re viewing ${formatDailyDate(state.puzzle.daily!.date)}’s lineup. Finish it here, or open the new puzzle.` : `The UK date has changed. You’re viewing ${formatDailyDate(state.puzzle.daily!.date)}’s lineup. No Daily is scheduled today; Practice is available.`}</p>
+        {hasCurrentDaily ? <button type="button" className="text-button" onClick={onToday}>Play today’s lineup →</button> : <button type="button" className="text-button" onClick={() => onModeChange?.("practice")}>Play Practice</button>}
+      </div>}
+      {daily && storageKind === "unavailable" && <p className="daily-storage-note" role="status">Browser storage is unavailable. You can play and switch modes, but Daily progress may not survive a refresh.</p>}
+      {blocked && <section className="daily-notice" role="alert">
+        <p>Your saved Daily progress couldn’t be read safely. Today’s attempt hasn’t been reset. Practice is still available.</p>
+        <button type="button" className="secondary-button" onClick={() => onModeChange?.("practice")}>Play Practice</button>
+      </section>}
+      {!blocked && <section
         id="lineup"
         tabIndex={-1}
         ref={scrollRef}
         className="game-layout"
-        aria-label="Practice game"
+        aria-label={daily ? "Daily game" : "Practice game"}
       >
-        <QuestionPanel
+        {daily && state.status !== "playing" ? <aside className="daily-complete" aria-label="Daily complete">
+          <h3>{dailyIsCurrent ? "Today’s LINEUP is complete." : "This Daily is complete."}</h3>
+          <p>{dailyIsCurrent ? hasNextDaily ? "The next one arrives at midnight UK time." : "You’ve reached the end of the current Daily schedule. Practice is always open." : hasCurrentDaily ? "Today’s new lineup is ready above." : "Practice is available while the Daily schedule is updated."}</p>
+          <button type="button" className="secondary-button" onClick={() => setSheet("result")}>View your result</button>
+          <button type="button" className="primary-button" onClick={() => onModeChange?.("practice")}>Play Practice</button>
+        </aside> : <QuestionPanel
           key={`questions-${state.puzzle.id}`}
           state={state}
           busy={busy}
           onAsk={ask}
           showStrategyHint={showStrategyHint}
-        />
+        />}
         <MovieBoard
           key={`board-${state.puzzle.id}`}
           movies={state.puzzle.movies}
@@ -244,9 +318,9 @@ export function Game({
           finished={state.status !== "playing"}
           selectedId={selected?.id}
         />
-      </section>
+      </section>}
       <div className="board-bottom">
-        {state.status !== "playing" && (
+        {!daily && state.status !== "playing" && (
           <button className="text-button" onClick={() => setSheet("result")}>
             View your result
           </button>

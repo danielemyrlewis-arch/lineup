@@ -19,7 +19,10 @@
     "prepare:oscars": "node --experimental-strip-types scripts/import-oscars.ts",
     "simulate:oscars": "node --experimental-strip-types scripts/simulate-oscars.ts",
     "simulate:practice": "node --experimental-strip-types scripts/simulate-practice.ts",
-    "audit:public": "node scripts/audit-public-source.mjs"
+    "audit:public": "node scripts/audit-public-source.mjs",
+    "generate:daily": "node --experimental-strip-types scripts/generate-daily.ts",
+    "check:daily": "node --experimental-strip-types scripts/generate-daily.ts --check",
+    "prebuild": "npm run check:daily"
   },
   "dependencies": {
     "lucide-react": "^1.31.0",

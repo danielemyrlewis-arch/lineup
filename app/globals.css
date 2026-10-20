@@ -131,8 +131,66 @@ button svg {
   gap: 28px;
   font-size: 13px;
 }
-.practice-tab {
+.mode-switch {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.mode-switch button {
+  min-height: 44px;
+  padding: 10px 2px;
+  background: none;
+  color: var(--secondary);
+  border-bottom: 2px solid transparent;
+}
+.mode-switch button[aria-pressed="true"] {
   color: var(--text);
+  border-bottom-color: var(--accent);
+}
+.mode-switch button:hover:not(:disabled) {
+  color: var(--text);
+}
+.daily-date {
+  font-size: 12px;
+  color: var(--secondary);
+}
+.daily-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 20px;
+  padding: 14px 0;
+  color: var(--secondary);
+  font-size: 13px;
+}
+.daily-notice p {
+  max-width: 620px;
+}
+.daily-storage-note {
+  font-size: 12px;
+  color: var(--secondary);
+  margin: 14px 0;
+  line-height: 1.7;
+}
+.daily-complete h3 {
+  font-size: 21px;
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+.daily-complete p {
+  font-size: 13px;
+  color: var(--secondary);
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+.daily-complete .primary-button {
+  margin-top: 8px;
+}
+.result-mode {
+  font-size: 12px;
+  color: var(--secondary);
+  margin-bottom: 12px;
 }
 .header-help {
   padding: 12px 0;
@@ -294,7 +352,7 @@ button svg {
 .suggestion-label {
   color: var(--secondary);
   font-size: 12px;
-  margin: 0;
+  margin: 14px 0 8px;
 }
 .suggestions {
   display: flex;
@@ -322,24 +380,29 @@ button svg {
   opacity: 0.45;
 }
 .question-discovery {
+  margin-top: 10px;
+}
+.browse-questions {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-top: 8px;
+  gap: 16px;
+  width: 100%;
   min-height: 44px;
-}
-.browse-questions {
-  min-height: 44px;
-  padding: 8px 0 8px 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
   background: none;
-  color: var(--text);
-  font-size: 12px;
-  text-decoration: underline;
-  text-underline-offset: 4px;
+  color: var(--accent-text);
+  font-size: 13px;
+  text-align: left;
+}
+.browse-questions:hover:not(:disabled) {
+  background: var(--elevated);
 }
 .browse-questions:disabled {
   color: var(--secondary);
+  border-color: var(--border);
   opacity: .5;
 }
 .question-browser-dialog {
@@ -1411,8 +1474,9 @@ button svg {
     padding: 0 20px;
   }
   .site-header {
-    gap: 18px;
+    gap: 10px;
     min-height: 60px;
+    flex-wrap: wrap;
   }
   .header-brand {
     align-items: flex-start;
@@ -1428,9 +1492,11 @@ button svg {
     display: none;
   }
   .site-header nav {
-    gap: 20px;
+    gap: 12px;
     font-size: 12px;
   }
+  .mode-switch { gap: 8px; }
+  .mode-switch button { padding-inline: 1px; }
   .hero {
     padding: 14px 0 16px;
   }
@@ -1669,7 +1735,7 @@ button svg {
     padding: 0 16px;
   }
   .site-header nav {
-    gap: 15px;
+    gap: 10px;
     font-size: 11px;
   }
   .hero h1 {

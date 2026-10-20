@@ -3,7 +3,7 @@ import { Dialog } from "./dialog";
 import type { GameState } from "@/lib/game/types";
 import { deductionPath } from "@/lib/game/engine";
 import { RESULT_COPY } from "@/lib/game/copy";
-import { questionCount } from "@/lib/game/share";
+import { dailyResultLabel, questionCount } from "@/lib/game/share";
 import { Poster } from "./poster";
 
 export function ResultDialog({
@@ -35,6 +35,7 @@ export function ResultDialog({
     (m) => m.id === state.puzzle.mysteryId,
   )!;
   const won = state.status === "won";
+  const dailyLabel = dailyResultLabel(state);
   const path = deductionPath(state);
   const remaining = state.activeIds.length;
   return (
@@ -43,6 +44,7 @@ export function ResultDialog({
       onClose={onClose}
       className={`result-dialog ${won ? "result-won" : ""}`}
     >
+      {dailyLabel && <p className="result-mode">{dailyLabel}</p>}
       <h2>{won ? RESULT_COPY.won : RESULT_COPY.lost}</h2>
       {!won && (
         <p className="result-description">
@@ -56,7 +58,7 @@ export function ResultDialog({
         <div>
           {won && <h3 className="result-title">{movie.title}</h3>}
           <p className="result-questions">
-            {won ? `Found in ${questionCount(state)}.` : `${questionCount(state)} used.`}
+            {won && !dailyLabel ? `Found in ${questionCount(state)}.` : `${questionCount(state)} used.`}
           </p>
         </div>
       </div>
@@ -82,7 +84,7 @@ export function ResultDialog({
         onClick={onNew}
         disabled={newLoading || shareBusy}
       >
-        {newLoading ? "Preparing…" : "Play again"}
+        {newLoading ? "Preparing…" : dailyLabel ? "Play Practice" : "Play again"}
       </button>
       <div className="result-share-block">
         <p className="result-invite">Think a friend could do better?</p>

@@ -1,0 +1,2785 @@
+{
+  "schema": 1,
+  "launchDate": "2026-10-20",
+  "throughDate": "2027-10-19",
+  "puzzles": 365,
+  "catalogueVersion": "lineup-catalogue-2026-10-20-v1",
+  "catalogueSha256": "33298b6f7823da3feb66334715e9c508bad44c7d68b3d970fa76fb45a00e0368",
+  "catalogueFilms": 1206,
+  "scheduleSha256": "3681a74f65367a11f358ac49dd786baf7b05cab7ef4cbe162465d9e8d24d3948",
+  "initial365Sha256": "3681a74f65367a11f358ac49dd786baf7b05cab7ef4cbe162465d9e8d24d3948",
+  "totalUniqueMysteries": 365,
+  "initial365UniqueMysteries": 365,
+  "minimumValidQuestions": 191,
+  "minimumDecades": 6,
+  "minimumGenres": 13,
+  "maximumConsecutiveOverlap": 0,
+  "first30": {
+    "puzzles": 30,
+    "uniqueFilms": 553,
+    "totalAppearances": 720,
+    "maximumFilmAppearances": 3,
+    "uniqueMysteries": 30,
+    "repeatedFilms": [
+      {
+        "tmdbId": 19,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 81,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 149,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 234,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 269,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 335,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 391,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 422,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 490,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 548,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 643,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 653,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 797,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 923,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 1678,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 3035,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 5156,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 5336,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 9929,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 11216,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 11906,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 13310,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 18148,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 33701,
+        "appearances": 3
+      },
+      {
+        "tmdbId": 15,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 33,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 68,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 88,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 101,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 129,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 142,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 146,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 162,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 169,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 194,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 223,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 303,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 346,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 348,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 387,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 389,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 406,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 408,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 429,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 510,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 521,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 579,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 581,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 593,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 600,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 613,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 614,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 621,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 639,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 660,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 670,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 671,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 679,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 694,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 696,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 756,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 770,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 827,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 832,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 845,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 854,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 871,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 938,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 957,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 962,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 963,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 966,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 985,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 1092,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 1368,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 1573,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 1643,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 1813,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 1924,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 2000,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 3170,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 3782,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 4011,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 4935,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 6114,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 7551,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 8290,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 8329,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 8392,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 8587,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 9029,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 9322,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 9323,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 9385,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 9394,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 9473,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 9474,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 9480,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 9487,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 9495,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 9532,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 9732,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 9739,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 9837,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 10515,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 10528,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 10536,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 10734,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 10882,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 11224,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 11360,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 11774,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 11878,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 12101,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 12230,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 12477,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 14756,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 16307,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 16859,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 19404,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 20126,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 20352,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 34584,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 36658,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 36685,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 44896,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 62215,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 94329,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 110415,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 137106,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 227306,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 257344,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 262391,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 265195,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 269149,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 325133,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 328111,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 333484,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 335797,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 339403,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 346698,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 372058,
+        "appearances": 2
+      },
+      {
+        "tmdbId": 438631,
+        "appearances": 2
+      }
+    ],
+    "days": [
+      {
+        "date": "2026-10-20",
+        "number": 1,
+        "filmIds": [
+          696,
+          8374,
+          28178,
+          38575,
+          2164,
+          94329,
+          269,
+          1954,
+          387,
+          335,
+          490,
+          10674,
+          1678,
+          15,
+          600,
+          58574,
+          1368,
+          149,
+          13310,
+          962,
+          44896,
+          11906,
+          9487,
+          3035
+        ],
+        "mysteryMovieId": 3035,
+        "decades": {
+          "1920": 1,
+          "1930": 1,
+          "1940": 1,
+          "1950": 2,
+          "1960": 2,
+          "1970": 2,
+          "1980": 4,
+          "1990": 4,
+          "2000": 3,
+          "2010": 4
+        },
+        "genres": {
+          "Action": 7,
+          "Adventure": 9,
+          "Animation": 4,
+          "Comedy": 4,
+          "Crime": 4,
+          "Drama": 11,
+          "Family": 5,
+          "Fantasy": 1,
+          "History": 1,
+          "Horror": 4,
+          "Mystery": 2,
+          "Romance": 1,
+          "Science Fiction": 5,
+          "Thriller": 5,
+          "War": 3,
+          "Western": 2
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 222,
+          "balancedPartitions": 24,
+          "categories": 10,
+          "balancedCategories": 6,
+          "healthy": true,
+          "score": 50
+        },
+        "voteCountMin": 194,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-10-21",
+        "number": 2,
+        "filmIds": [
+          613,
+          250546,
+          510,
+          44833,
+          328111,
+          10693,
+          20126,
+          9509,
+          10536,
+          37735,
+          406,
+          6978,
+          9479,
+          38050,
+          391,
+          3782,
+          223,
+          630,
+          20352,
+          1933,
+          11216,
+          164,
+          244,
+          1089
+        ],
+        "mysteryMovieId": 244,
+        "decades": {
+          "1930": 2,
+          "1940": 1,
+          "1950": 2,
+          "1960": 3,
+          "1970": 2,
+          "1980": 2,
+          "1990": 3,
+          "2000": 3,
+          "2010": 6
+        },
+        "genres": {
+          "Action": 6,
+          "Adventure": 5,
+          "Animation": 4,
+          "Comedy": 4,
+          "Crime": 3,
+          "Drama": 10,
+          "Family": 5,
+          "Fantasy": 4,
+          "History": 1,
+          "Horror": 4,
+          "Music": 1,
+          "Mystery": 3,
+          "Romance": 3,
+          "Science Fiction": 2,
+          "Thriller": 7,
+          "War": 1,
+          "Western": 1
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 213,
+          "balancedPartitions": 22,
+          "categories": 10,
+          "balancedCategories": 7,
+          "healthy": true,
+          "score": 53
+        },
+        "voteCountMin": 202,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-10-22",
+        "number": 3,
+        "filmIds": [
+          257344,
+          49018,
+          241,
+          9462,
+          797,
+          810,
+          103,
+          770,
+          9598,
+          18148,
+          269149,
+          88,
+          306819,
+          3049,
+          957,
+          10527,
+          10882,
+          643,
+          5156,
+          346698,
+          660,
+          16869,
+          653,
+          19404
+        ],
+        "mysteryMovieId": 5156,
+        "decades": {
+          "1920": 2,
+          "1930": 1,
+          "1940": 1,
+          "1950": 2,
+          "1960": 2,
+          "1970": 2,
+          "1980": 2,
+          "1990": 4,
+          "2000": 3,
+          "2010": 4,
+          "2020": 1
+        },
+        "genres": {
+          "Action": 4,
+          "Adventure": 4,
+          "Animation": 4,
+          "Comedy": 8,
+          "Crime": 3,
+          "Drama": 12,
+          "Family": 5,
+          "Fantasy": 4,
+          "History": 1,
+          "Horror": 2,
+          "Music": 1,
+          "Mystery": 1,
+          "Romance": 4,
+          "Science Fiction": 2,
+          "Thriller": 4,
+          "War": 2
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 222,
+          "balancedPartitions": 25,
+          "categories": 9,
+          "balancedCategories": 7,
+          "healthy": true,
+          "score": 51
+        },
+        "voteCountMin": 190,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-10-23",
+        "number": 4,
+        "filmIds": [
+          9929,
+          85350,
+          1593,
+          227306,
+          13804,
+          19,
+          579,
+          2108,
+          8656,
+          9480,
+          5336,
+          11621,
+          439,
+          265195,
+          845,
+          1370,
+          548,
+          36647,
+          15512,
+          923,
+          9325,
+          7551,
+          16307,
+          9732
+        ],
+        "mysteryMovieId": 11621,
+        "decades": {
+          "1920": 1,
+          "1950": 2,
+          "1960": 3,
+          "1970": 4,
+          "1980": 2,
+          "1990": 4,
+          "2000": 5,
+          "2010": 3
+        },
+        "genres": {
+          "Action": 7,
+          "Adventure": 7,
+          "Animation": 5,
+          "Comedy": 6,
+          "Crime": 4,
+          "Drama": 11,
+          "Family": 5,
+          "Fantasy": 2,
+          "History": 1,
+          "Horror": 5,
+          "Music": 1,
+          "Mystery": 2,
+          "Romance": 1,
+          "Science Fiction": 4,
+          "Thriller": 8,
+          "War": 3
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 216,
+          "balancedPartitions": 24,
+          "categories": 10,
+          "balancedCategories": 6,
+          "healthy": true,
+          "score": 50
+        },
+        "voteCountMin": 191,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-10-24",
+        "number": 5,
+        "filmIds": [
+          9532,
+          181533,
+          597,
+          109428,
+          4011,
+          36685,
+          694,
+          422,
+          3170,
+          169,
+          102899,
+          16859,
+          8916,
+          254,
+          827,
+          234,
+          9323,
+          5924,
+          101,
+          12230,
+          671,
+          37136,
+          686,
+          614
+        ],
+        "mysteryMovieId": 4011,
+        "decades": {
+          "1920": 1,
+          "1940": 1,
+          "1950": 2,
+          "1960": 2,
+          "1970": 2,
+          "1980": 4,
+          "1990": 6,
+          "2000": 3,
+          "2010": 3
+        },
+        "genres": {
+          "Action": 4,
+          "Adventure": 7,
+          "Animation": 5,
+          "Comedy": 6,
+          "Crime": 4,
+          "Drama": 11,
+          "Family": 5,
+          "Fantasy": 5,
+          "Horror": 6,
+          "Music": 1,
+          "Mystery": 1,
+          "Romance": 1,
+          "Science Fiction": 5,
+          "Thriller": 5
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 216,
+          "balancedPartitions": 32,
+          "categories": 11,
+          "balancedCategories": 8,
+          "healthy": true,
+          "score": 58
+        },
+        "voteCountMin": 198,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-10-25",
+        "number": 6,
+        "filmIds": [
+          9502,
+          225574,
+          168259,
+          9806,
+          9426,
+          285,
+          658,
+          33701,
+          11036,
+          104,
+          278927,
+          10734,
+          68718,
+          10098,
+          438631,
+          239,
+          8872,
+          81,
+          57214,
+          9029,
+          9394,
+          832,
+          38356,
+          12477
+        ],
+        "mysteryMovieId": 12477,
+        "decades": {
+          "1920": 1,
+          "1930": 1,
+          "1950": 1,
+          "1960": 1,
+          "1970": 3,
+          "1980": 3,
+          "1990": 2,
+          "2000": 5,
+          "2010": 6,
+          "2020": 1
+        },
+        "genres": {
+          "Action": 9,
+          "Adventure": 8,
+          "Animation": 4,
+          "Comedy": 8,
+          "Crime": 3,
+          "Drama": 8,
+          "Family": 3,
+          "Fantasy": 3,
+          "Horror": 1,
+          "Music": 1,
+          "Mystery": 1,
+          "Romance": 3,
+          "Science Fiction": 3,
+          "Thriller": 4,
+          "War": 1,
+          "Western": 2
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 205,
+          "balancedPartitions": 23,
+          "categories": 8,
+          "balancedCategories": 6,
+          "healthy": true,
+          "score": 46
+        },
+        "voteCountMin": 257,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-10-26",
+        "number": 7,
+        "filmIds": [
+          330459,
+          854,
+          405,
+          34584,
+          31011,
+          57158,
+          2362,
+          8290,
+          83542,
+          608,
+          9495,
+          521,
+          9837,
+          2000,
+          45269,
+          325133,
+          62,
+          10144,
+          76163,
+          920,
+          10515,
+          2105,
+          146,
+          303
+        ],
+        "mysteryMovieId": 146,
+        "decades": {
+          "1940": 1,
+          "1950": 2,
+          "1960": 2,
+          "1970": 2,
+          "1980": 3,
+          "1990": 4,
+          "2000": 4,
+          "2010": 6
+        },
+        "genres": {
+          "Action": 7,
+          "Adventure": 12,
+          "Animation": 4,
+          "Comedy": 6,
+          "Crime": 2,
+          "Drama": 10,
+          "Family": 5,
+          "Fantasy": 6,
+          "History": 2,
+          "Horror": 1,
+          "Music": 1,
+          "Mystery": 2,
+          "Romance": 6,
+          "Science Fiction": 6,
+          "Thriller": 5,
+          "War": 1,
+          "Western": 1
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 221,
+          "balancedPartitions": 25,
+          "categories": 10,
+          "balancedCategories": 6,
+          "healthy": true,
+          "score": 50
+        },
+        "voteCountMin": 196,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-10-27",
+        "number": 8,
+        "filmIds": [
+          621,
+          254320,
+          61791,
+          585,
+          73,
+          142,
+          508,
+          157353,
+          2978,
+          985,
+          429,
+          346,
+          1637,
+          129,
+          9385,
+          857,
+          408,
+          90,
+          152532,
+          194,
+          10112,
+          1092,
+          62215,
+          1369
+        ],
+        "mysteryMovieId": 508,
+        "decades": {
+          "1930": 1,
+          "1940": 1,
+          "1950": 1,
+          "1960": 1,
+          "1970": 4,
+          "1980": 3,
+          "1990": 3,
+          "2000": 5,
+          "2010": 5
+        },
+        "genres": {
+          "Action": 5,
+          "Adventure": 4,
+          "Animation": 5,
+          "Comedy": 8,
+          "Crime": 2,
+          "Drama": 11,
+          "Family": 5,
+          "Fantasy": 4,
+          "History": 2,
+          "Horror": 1,
+          "Mystery": 2,
+          "Romance": 5,
+          "Science Fiction": 5,
+          "Thriller": 5,
+          "War": 2,
+          "Western": 1
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 219,
+          "balancedPartitions": 25,
+          "categories": 10,
+          "balancedCategories": 6,
+          "healthy": true,
+          "score": 50
+        },
+        "voteCountMin": 241,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-10-28",
+        "number": 9,
+        "filmIds": [
+          1597,
+          137106,
+          11878,
+          9739,
+          244786,
+          36658,
+          914,
+          11319,
+          943,
+          381,
+          128,
+          1643,
+          624,
+          676,
+          9836,
+          339403,
+          6114,
+          744,
+          19913,
+          223702,
+          273248,
+          609,
+          675,
+          68
+        ],
+        "mysteryMovieId": 339403,
+        "decades": {
+          "1940": 1,
+          "1950": 1,
+          "1960": 2,
+          "1970": 2,
+          "1980": 3,
+          "1990": 4,
+          "2000": 6,
+          "2010": 5
+        },
+        "genres": {
+          "Action": 5,
+          "Adventure": 8,
+          "Animation": 5,
+          "Comedy": 8,
+          "Crime": 5,
+          "Drama": 7,
+          "Family": 3,
+          "Fantasy": 5,
+          "History": 1,
+          "Horror": 2,
+          "Music": 1,
+          "Mystery": 3,
+          "Romance": 7,
+          "Science Fiction": 3,
+          "Thriller": 4,
+          "War": 2,
+          "Western": 1
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 207,
+          "balancedPartitions": 22,
+          "categories": 10,
+          "balancedCategories": 6,
+          "healthy": true,
+          "score": 50
+        },
+        "voteCountMin": 240,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-10-29",
+        "number": 10,
+        "filmIds": [
+          162,
+          311,
+          106,
+          51497,
+          11774,
+          592,
+          935,
+          83666,
+          10545,
+          1417,
+          8839,
+          335797,
+          1996,
+          1813,
+          3112,
+          12101,
+          138843,
+          10948,
+          756,
+          643,
+          834,
+          310131,
+          838,
+          1585
+        ],
+        "mysteryMovieId": 311,
+        "decades": {
+          "1920": 1,
+          "1940": 2,
+          "1950": 1,
+          "1960": 1,
+          "1970": 3,
+          "1980": 3,
+          "1990": 4,
+          "2000": 4,
+          "2010": 5
+        },
+        "genres": {
+          "Action": 4,
+          "Adventure": 4,
+          "Animation": 4,
+          "Comedy": 6,
+          "Crime": 4,
+          "Drama": 13,
+          "Family": 7,
+          "Fantasy": 6,
+          "History": 1,
+          "Horror": 3,
+          "Music": 2,
+          "Mystery": 4,
+          "Romance": 2,
+          "Science Fiction": 3,
+          "Thriller": 8,
+          "War": 2
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 212,
+          "balancedPartitions": 24,
+          "categories": 10,
+          "balancedCategories": 7,
+          "healthy": true,
+          "score": 53
+        },
+        "voteCountMin": 201,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-10-30",
+        "number": 11,
+        "filmIds": [
+          12092,
+          33,
+          2080,
+          302946,
+          8587,
+          332567,
+          9322,
+          272,
+          824,
+          38,
+          938,
+          871,
+          639,
+          1584,
+          2501,
+          76341,
+          9377,
+          8392,
+          228161,
+          348,
+          9313,
+          963,
+          302699,
+          396535
+        ],
+        "mysteryMovieId": 1584,
+        "decades": {
+          "1940": 1,
+          "1950": 1,
+          "1960": 2,
+          "1970": 1,
+          "1980": 3,
+          "1990": 4,
+          "2000": 6,
+          "2010": 6
+        },
+        "genres": {
+          "Action": 9,
+          "Adventure": 5,
+          "Animation": 4,
+          "Comedy": 5,
+          "Crime": 3,
+          "Drama": 10,
+          "Family": 4,
+          "Fantasy": 3,
+          "Horror": 3,
+          "Music": 2,
+          "Mystery": 2,
+          "Romance": 3,
+          "Science Fiction": 6,
+          "Thriller": 8,
+          "Western": 2
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 205,
+          "balancedPartitions": 23,
+          "categories": 10,
+          "balancedCategories": 8,
+          "healthy": true,
+          "score": 56
+        },
+        "voteCountMin": 435,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-10-31",
+        "number": 12,
+        "filmIds": [
+          193610,
+          601,
+          1538,
+          188927,
+          9772,
+          567,
+          389,
+          11631,
+          9032,
+          11906,
+          37724,
+          1572,
+          49017,
+          10376,
+          11360,
+          5511,
+          333484,
+          14756,
+          372058,
+          36668,
+          293660,
+          22803,
+          11886,
+          1678
+        ],
+        "mysteryMovieId": 9772,
+        "decades": {
+          "1940": 1,
+          "1950": 3,
+          "1960": 1,
+          "1970": 2,
+          "1980": 1,
+          "1990": 4,
+          "2000": 5,
+          "2010": 7
+        },
+        "genres": {
+          "Action": 9,
+          "Adventure": 6,
+          "Animation": 3,
+          "Comedy": 4,
+          "Crime": 3,
+          "Drama": 9,
+          "Family": 3,
+          "Fantasy": 3,
+          "History": 1,
+          "Horror": 3,
+          "Mystery": 1,
+          "Romance": 3,
+          "Science Fiction": 4,
+          "Thriller": 9,
+          "War": 1,
+          "Western": 1
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 208,
+          "balancedPartitions": 20,
+          "categories": 10,
+          "balancedCategories": 7,
+          "healthy": true,
+          "score": 53
+        },
+        "voteCountMin": 187,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-11-01",
+        "number": 13,
+        "filmIds": [
+          78,
+          496243,
+          2502,
+          8487,
+          453,
+          11224,
+          1685,
+          598,
+          34544,
+          14306,
+          258489,
+          1573,
+          75780,
+          9474,
+          652,
+          152584,
+          668,
+          8681,
+          149,
+          9473,
+          6844,
+          11474,
+          269,
+          3035
+        ],
+        "mysteryMovieId": 652,
+        "decades": {
+          "1930": 1,
+          "1950": 2,
+          "1960": 2,
+          "1970": 3,
+          "1980": 2,
+          "1990": 3,
+          "2000": 6,
+          "2010": 5
+        },
+        "genres": {
+          "Action": 8,
+          "Adventure": 7,
+          "Animation": 3,
+          "Comedy": 6,
+          "Crime": 5,
+          "Drama": 12,
+          "Family": 2,
+          "Fantasy": 1,
+          "History": 1,
+          "Horror": 1,
+          "Music": 1,
+          "Mystery": 1,
+          "Romance": 3,
+          "Science Fiction": 5,
+          "Thriller": 9,
+          "War": 1,
+          "Western": 2
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 204,
+          "balancedPartitions": 24,
+          "categories": 9,
+          "balancedCategories": 6,
+          "healthy": true,
+          "score": 48
+        },
+        "voteCountMin": 227,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-11-02",
+        "number": 14,
+        "filmIds": [
+          9614,
+          277,
+          46529,
+          891,
+          64688,
+          1924,
+          11216,
+          425,
+          490,
+          18148,
+          10764,
+          613,
+          862,
+          297761,
+          872,
+          966,
+          653,
+          929,
+          19,
+          525,
+          110415,
+          315837,
+          10528,
+          967
+        ],
+        "mysteryMovieId": 277,
+        "decades": {
+          "1920": 2,
+          "1950": 3,
+          "1960": 2,
+          "1970": 2,
+          "1980": 2,
+          "1990": 3,
+          "2000": 5,
+          "2010": 5
+        },
+        "genres": {
+          "Action": 12,
+          "Adventure": 7,
+          "Animation": 2,
+          "Comedy": 6,
+          "Crime": 5,
+          "Drama": 8,
+          "Family": 2,
+          "Fantasy": 5,
+          "History": 3,
+          "Horror": 1,
+          "Music": 2,
+          "Mystery": 2,
+          "Romance": 2,
+          "Science Fiction": 7,
+          "Thriller": 6,
+          "War": 1,
+          "Western": 1
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 220,
+          "balancedPartitions": 24,
+          "categories": 10,
+          "balancedCategories": 7,
+          "healthy": true,
+          "score": 53
+        },
+        "voteCountMin": 190,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-11-03",
+        "number": 15,
+        "filmIds": [
+          1402,
+          76170,
+          1542,
+          22794,
+          377,
+          3034,
+          6637,
+          87,
+          288,
+          10331,
+          5336,
+          60308,
+          593,
+          581,
+          2567,
+          670,
+          10882,
+          91314,
+          97367,
+          9929,
+          9732,
+          698,
+          8329,
+          3133
+        ],
+        "mysteryMovieId": 9929,
+        "decades": {
+          "1950": 2,
+          "1960": 2,
+          "1970": 5,
+          "1980": 2,
+          "1990": 3,
+          "2000": 6,
+          "2010": 4
+        },
+        "genres": {
+          "Action": 6,
+          "Adventure": 9,
+          "Animation": 4,
+          "Comedy": 4,
+          "Crime": 3,
+          "Drama": 9,
+          "Family": 4,
+          "Fantasy": 2,
+          "History": 1,
+          "Horror": 4,
+          "Mystery": 4,
+          "Romance": 1,
+          "Science Fiction": 5,
+          "Thriller": 3,
+          "War": 1,
+          "Western": 2
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 211,
+          "balancedPartitions": 24,
+          "categories": 10,
+          "balancedCategories": 7,
+          "healthy": true,
+          "score": 53
+        },
+        "voteCountMin": 191,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-11-04",
+        "number": 16,
+        "filmIds": [
+          9693,
+          37135,
+          923,
+          346698,
+          548,
+          22538,
+          679,
+          45612,
+          628,
+          1368,
+          19404,
+          105864,
+          11321,
+          660,
+          234,
+          20352,
+          8247,
+          262391,
+          422,
+          2454,
+          147,
+          5156,
+          11183,
+          11545
+        ],
+        "mysteryMovieId": 1368,
+        "decades": {
+          "1920": 1,
+          "1940": 1,
+          "1950": 2,
+          "1960": 2,
+          "1970": 2,
+          "1980": 2,
+          "1990": 4,
+          "2000": 4,
+          "2010": 5,
+          "2020": 1
+        },
+        "genres": {
+          "Action": 5,
+          "Adventure": 8,
+          "Animation": 3,
+          "Comedy": 6,
+          "Crime": 2,
+          "Drama": 10,
+          "Family": 4,
+          "Fantasy": 3,
+          "Horror": 4,
+          "Mystery": 2,
+          "Romance": 2,
+          "Science Fiction": 4,
+          "Thriller": 6,
+          "War": 1
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 212,
+          "balancedPartitions": 25,
+          "categories": 9,
+          "balancedCategories": 6,
+          "healthy": true,
+          "score": 48
+        },
+        "voteCountMin": 191,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-11-05",
+        "number": 17,
+        "filmIds": [
+          10195,
+          796,
+          13,
+          161,
+          253,
+          16859,
+          8065,
+          9532,
+          118,
+          391,
+          156022,
+          828,
+          9394,
+          1891,
+          3078,
+          33701,
+          797,
+          10734,
+          8413,
+          17578,
+          27205,
+          12405,
+          783,
+          273481
+        ],
+        "mysteryMovieId": 118,
+        "decades": {
+          "1930": 1,
+          "1950": 1,
+          "1960": 2,
+          "1970": 4,
+          "1980": 3,
+          "1990": 3,
+          "2000": 5,
+          "2010": 5
+        },
+        "genres": {
+          "Action": 7,
+          "Adventure": 7,
+          "Animation": 2,
+          "Comedy": 5,
+          "Crime": 5,
+          "Drama": 10,
+          "Family": 1,
+          "Fantasy": 3,
+          "History": 1,
+          "Horror": 2,
+          "Mystery": 3,
+          "Romance": 4,
+          "Science Fiction": 4,
+          "Thriller": 6,
+          "Western": 2
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 208,
+          "balancedPartitions": 28,
+          "categories": 9,
+          "balancedCategories": 7,
+          "healthy": true,
+          "score": 51
+        },
+        "voteCountMin": 257,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-11-06",
+        "number": 18,
+        "filmIds": [
+          2048,
+          131634,
+          9323,
+          671,
+          203833,
+          10137,
+          88,
+          865,
+          117,
+          45317,
+          2000,
+          787,
+          657,
+          637,
+          289,
+          57800,
+          703,
+          402,
+          1491,
+          8810,
+          335,
+          10536,
+          20126,
+          879
+        ],
+        "mysteryMovieId": 57800,
+        "decades": {
+          "1940": 1,
+          "1960": 3,
+          "1970": 3,
+          "1980": 4,
+          "1990": 5,
+          "2000": 4,
+          "2010": 4
+        },
+        "genres": {
+          "Action": 8,
+          "Adventure": 7,
+          "Animation": 3,
+          "Comedy": 7,
+          "Crime": 2,
+          "Drama": 10,
+          "Family": 4,
+          "Fantasy": 4,
+          "History": 2,
+          "Horror": 1,
+          "Music": 1,
+          "Mystery": 2,
+          "Romance": 4,
+          "Science Fiction": 5,
+          "Thriller": 8,
+          "Western": 1
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 210,
+          "balancedPartitions": 26,
+          "categories": 11,
+          "balancedCategories": 9,
+          "healthy": true,
+          "score": 61
+        },
+        "voteCountMin": 202,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-11-07",
+        "number": 19,
+        "filmIds": [
+          510,
+          38365,
+          101,
+          8871,
+          4935,
+          9355,
+          49538,
+          2667,
+          667,
+          122906,
+          962,
+          773,
+          303,
+          832,
+          10747,
+          545611,
+          429,
+          12,
+          87421,
+          8290,
+          1250,
+          804,
+          64635,
+          614
+        ],
+        "mysteryMovieId": 8871,
+        "decades": {
+          "1920": 1,
+          "1930": 1,
+          "1940": 1,
+          "1950": 2,
+          "1960": 3,
+          "1970": 2,
+          "1980": 1,
+          "1990": 2,
+          "2000": 5,
+          "2010": 5,
+          "2020": 1
+        },
+        "genres": {
+          "Action": 8,
+          "Adventure": 7,
+          "Animation": 2,
+          "Comedy": 7,
+          "Crime": 2,
+          "Drama": 9,
+          "Family": 2,
+          "Fantasy": 3,
+          "Horror": 2,
+          "Mystery": 1,
+          "Romance": 2,
+          "Science Fiction": 6,
+          "Thriller": 7,
+          "War": 1,
+          "Western": 2
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 208,
+          "balancedPartitions": 22,
+          "categories": 9,
+          "balancedCategories": 7,
+          "healthy": true,
+          "score": 51
+        },
+        "voteCountMin": 234,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-11-08",
+        "number": 20,
+        "filmIds": [
+          22,
+          10191,
+          702,
+          854,
+          36685,
+          792,
+          206647,
+          10681,
+          827,
+          37094,
+          265195,
+          157350,
+          805,
+          1949,
+          12230,
+          1895,
+          15,
+          10515,
+          764,
+          643,
+          242224,
+          985,
+          13310,
+          1832
+        ],
+        "mysteryMovieId": 10515,
+        "decades": {
+          "1920": 1,
+          "1940": 1,
+          "1950": 2,
+          "1960": 2,
+          "1970": 2,
+          "1980": 3,
+          "1990": 3,
+          "2000": 5,
+          "2010": 5
+        },
+        "genres": {
+          "Action": 6,
+          "Adventure": 8,
+          "Animation": 4,
+          "Comedy": 5,
+          "Crime": 4,
+          "Drama": 12,
+          "Family": 4,
+          "Fantasy": 6,
+          "History": 1,
+          "Horror": 7,
+          "Music": 1,
+          "Mystery": 3,
+          "Romance": 2,
+          "Science Fiction": 4,
+          "Thriller": 5,
+          "War": 1
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 220,
+          "balancedPartitions": 25,
+          "categories": 10,
+          "balancedCategories": 7,
+          "healthy": true,
+          "score": 53
+        },
+        "voteCountMin": 198,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-11-09",
+        "number": 21,
+        "filmIds": [
+          205596,
+          9480,
+          12445,
+          4247,
+          3114,
+          81,
+          9342,
+          16307,
+          603,
+          3170,
+          9385,
+          9029,
+          3782,
+          11970,
+          269149,
+          7551,
+          132232,
+          34584,
+          257344,
+          1092,
+          6114,
+          120467,
+          238713,
+          646
+        ],
+        "mysteryMovieId": 34584,
+        "decades": {
+          "1940": 2,
+          "1950": 2,
+          "1960": 1,
+          "1970": 2,
+          "1980": 2,
+          "1990": 4,
+          "2000": 4,
+          "2010": 7
+        },
+        "genres": {
+          "Action": 7,
+          "Adventure": 8,
+          "Animation": 5,
+          "Comedy": 8,
+          "Crime": 2,
+          "Drama": 5,
+          "Family": 6,
+          "Fantasy": 5,
+          "History": 1,
+          "Horror": 3,
+          "Music": 1,
+          "Mystery": 2,
+          "Romance": 3,
+          "Science Fiction": 4,
+          "Thriller": 6,
+          "War": 1,
+          "Western": 1
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 200,
+          "balancedPartitions": 25,
+          "categories": 10,
+          "balancedCategories": 7,
+          "healthy": true,
+          "score": 53
+        },
+        "voteCountMin": 208,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-11-10",
+        "number": 22,
+        "filmIds": [
+          298312,
+          4108,
+          9078,
+          33,
+          639,
+          203,
+          1892,
+          129,
+          114150,
+          1813,
+          571,
+          665,
+          9487,
+          82695,
+          696,
+          68728,
+          10895,
+          1103,
+          13183,
+          1398,
+          70981,
+          600,
+          963,
+          82992
+        ],
+        "mysteryMovieId": 13183,
+        "decades": {
+          "1940": 2,
+          "1950": 1,
+          "1960": 2,
+          "1970": 3,
+          "1980": 4,
+          "1990": 3,
+          "2000": 3,
+          "2010": 6
+        },
+        "genres": {
+          "Action": 6,
+          "Adventure": 5,
+          "Animation": 4,
+          "Comedy": 4,
+          "Crime": 4,
+          "Drama": 8,
+          "Family": 5,
+          "Fantasy": 2,
+          "History": 1,
+          "Horror": 3,
+          "Music": 2,
+          "Mystery": 4,
+          "Romance": 4,
+          "Science Fiction": 5,
+          "Thriller": 6,
+          "War": 1,
+          "Western": 1
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 208,
+          "balancedPartitions": 23,
+          "categories": 10,
+          "balancedCategories": 7,
+          "healthy": true,
+          "score": 53
+        },
+        "voteCountMin": 356,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-11-11",
+        "number": 23,
+        "filmIds": [
+          19995,
+          1955,
+          44896,
+          324668,
+          1578,
+          9593,
+          8329,
+          4348,
+          9654,
+          275,
+          11878,
+          9475,
+          268,
+          1643,
+          521,
+          621,
+          14160,
+          1991,
+          53182,
+          19,
+          335797,
+          123553,
+          938,
+          137
+        ],
+        "mysteryMovieId": 14160,
+        "decades": {
+          "1920": 1,
+          "1950": 1,
+          "1960": 2,
+          "1970": 2,
+          "1980": 3,
+          "1990": 4,
+          "2000": 6,
+          "2010": 5
+        },
+        "genres": {
+          "Action": 8,
+          "Adventure": 5,
+          "Animation": 3,
+          "Comedy": 5,
+          "Crime": 3,
+          "Drama": 11,
+          "Family": 4,
+          "Fantasy": 5,
+          "History": 1,
+          "Horror": 1,
+          "Music": 1,
+          "Mystery": 3,
+          "Romance": 5,
+          "Science Fiction": 2,
+          "Thriller": 5,
+          "War": 1,
+          "Western": 2
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 214,
+          "balancedPartitions": 23,
+          "categories": 11,
+          "balancedCategories": 8,
+          "healthy": true,
+          "score": 58
+        },
+        "voteCountMin": 240,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-11-12",
+        "number": 24,
+        "filmIds": [
+          644,
+          1573,
+          333484,
+          1624,
+          387,
+          298,
+          142,
+          826,
+          559,
+          794,
+          11906,
+          177572,
+          269,
+          311324,
+          2292,
+          62215,
+          240,
+          372058,
+          35,
+          872585,
+          770,
+          14756,
+          438631,
+          149
+        ],
+        "mysteryMovieId": 14756,
+        "decades": {
+          "1930": 1,
+          "1950": 1,
+          "1960": 1,
+          "1970": 3,
+          "1980": 2,
+          "1990": 3,
+          "2000": 6,
+          "2010": 5,
+          "2020": 2
+        },
+        "genres": {
+          "Action": 7,
+          "Adventure": 7,
+          "Animation": 4,
+          "Comedy": 4,
+          "Crime": 3,
+          "Drama": 11,
+          "Family": 2,
+          "Fantasy": 2,
+          "History": 4,
+          "Horror": 2,
+          "Romance": 3,
+          "Science Fiction": 4,
+          "Thriller": 3,
+          "War": 3,
+          "Western": 1
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 207,
+          "balancedPartitions": 21,
+          "categories": 9,
+          "balancedCategories": 7,
+          "healthy": true,
+          "score": 51
+        },
+        "voteCountMin": 322,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-11-13",
+        "number": 25,
+        "filmIds": [
+          19908,
+          4233,
+          12101,
+          47971,
+          80278,
+          408,
+          1924,
+          957,
+          14,
+          18148,
+          9322,
+          1541,
+          901,
+          966,
+          653,
+          9799,
+          32657,
+          12477,
+          348,
+          8741,
+          238636,
+          146,
+          10193,
+          845
+        ],
+        "mysteryMovieId": 9322,
+        "decades": {
+          "1920": 1,
+          "1930": 2,
+          "1950": 2,
+          "1960": 1,
+          "1970": 3,
+          "1980": 2,
+          "1990": 5,
+          "2000": 3,
+          "2010": 5
+        },
+        "genres": {
+          "Action": 5,
+          "Adventure": 5,
+          "Animation": 3,
+          "Comedy": 4,
+          "Crime": 4,
+          "Drama": 9,
+          "Family": 3,
+          "Fantasy": 4,
+          "History": 1,
+          "Horror": 5,
+          "Mystery": 2,
+          "Romance": 2,
+          "Science Fiction": 4,
+          "Thriller": 7,
+          "War": 2,
+          "Western": 1
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 214,
+          "balancedPartitions": 25,
+          "categories": 10,
+          "balancedCategories": 7,
+          "healthy": true,
+          "score": 53
+        },
+        "voteCountMin": 190,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-11-14",
+        "number": 26,
+        "filmIds": [
+          339403,
+          14869,
+          395992,
+          334,
+          9495,
+          953,
+          11360,
+          207,
+          9552,
+          141,
+          8392,
+          423,
+          9615,
+          9929,
+          194,
+          9522,
+          110415,
+          5336,
+          562,
+          8587,
+          619,
+          195589,
+          1678,
+          579
+        ],
+        "mysteryMovieId": 562,
+        "decades": {
+          "1940": 1,
+          "1950": 1,
+          "1960": 1,
+          "1970": 3,
+          "1980": 3,
+          "1990": 4,
+          "2000": 7,
+          "2010": 4
+        },
+        "genres": {
+          "Action": 7,
+          "Adventure": 2,
+          "Animation": 5,
+          "Comedy": 4,
+          "Crime": 2,
+          "Drama": 10,
+          "Family": 5,
+          "Fantasy": 3,
+          "History": 1,
+          "Horror": 5,
+          "Music": 1,
+          "Mystery": 1,
+          "Romance": 3,
+          "Science Fiction": 4,
+          "Thriller": 9,
+          "War": 2
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 212,
+          "balancedPartitions": 19,
+          "categories": 10,
+          "balancedCategories": 6,
+          "healthy": true,
+          "score": 50
+        },
+        "voteCountMin": 191,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-11-15",
+        "number": 27,
+        "filmIds": [
+          54138,
+          406,
+          767,
+          9574,
+          607,
+          227306,
+          120,
+          85,
+          94329,
+          5925,
+          431,
+          11901,
+          11224,
+          325133,
+          871,
+          9474,
+          3035,
+          153,
+          9928,
+          3082,
+          262391,
+          679,
+          68,
+          12429
+        ],
+        "mysteryMovieId": 9574,
+        "decades": {
+          "1930": 2,
+          "1950": 1,
+          "1960": 2,
+          "1970": 2,
+          "1980": 3,
+          "1990": 4,
+          "2000": 5,
+          "2010": 5
+        },
+        "genres": {
+          "Action": 7,
+          "Adventure": 7,
+          "Animation": 3,
+          "Comedy": 8,
+          "Crime": 1,
+          "Drama": 7,
+          "Family": 5,
+          "Fantasy": 3,
+          "History": 1,
+          "Horror": 2,
+          "Mystery": 1,
+          "Romance": 1,
+          "Science Fiction": 9,
+          "Thriller": 4,
+          "War": 2,
+          "Western": 2
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 209,
+          "balancedPartitions": 20,
+          "categories": 10,
+          "balancedCategories": 6,
+          "healthy": true,
+          "score": 50
+        },
+        "voteCountMin": 227,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-11-16",
+        "number": 28,
+        "filmIds": [
+          45243,
+          10528,
+          5156,
+          433,
+          9739,
+          9837,
+          548,
+          670,
+          49519,
+          251,
+          81,
+          2330,
+          47933,
+          247,
+          82507,
+          9473,
+          4011,
+          11778,
+          581,
+          947,
+          319,
+          9659,
+          196,
+          422
+        ],
+        "mysteryMovieId": 247,
+        "decades": {
+          "1940": 1,
+          "1950": 2,
+          "1960": 3,
+          "1970": 2,
+          "1980": 2,
+          "1990": 8,
+          "2000": 2,
+          "2010": 4
+        },
+        "genres": {
+          "Action": 8,
+          "Adventure": 9,
+          "Animation": 4,
+          "Comedy": 7,
+          "Crime": 6,
+          "Drama": 10,
+          "Family": 4,
+          "Fantasy": 6,
+          "History": 1,
+          "Horror": 1,
+          "Music": 2,
+          "Mystery": 5,
+          "Romance": 2,
+          "Science Fiction": 4,
+          "Thriller": 6,
+          "War": 2,
+          "Western": 1
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 212,
+          "balancedPartitions": 27,
+          "categories": 10,
+          "balancedCategories": 8,
+          "healthy": true,
+          "score": 56
+        },
+        "voteCountMin": 290,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-11-17",
+        "number": 29,
+        "filmIds": [
+          36658,
+          137106,
+          253412,
+          490,
+          162,
+          1051,
+          2034,
+          169,
+          13053,
+          33701,
+          335,
+          223,
+          14836,
+          694,
+          380,
+          234,
+          63,
+          454,
+          15472,
+          109445,
+          328111,
+          41733,
+          13310,
+          58595
+        ],
+        "mysteryMovieId": 490,
+        "decades": {
+          "1920": 1,
+          "1940": 1,
+          "1950": 1,
+          "1960": 1,
+          "1970": 2,
+          "1980": 2,
+          "1990": 4,
+          "2000": 6,
+          "2010": 6
+        },
+        "genres": {
+          "Action": 4,
+          "Adventure": 6,
+          "Animation": 5,
+          "Comedy": 4,
+          "Crime": 4,
+          "Drama": 12,
+          "Family": 5,
+          "Fantasy": 4,
+          "Horror": 3,
+          "Mystery": 3,
+          "Romance": 2,
+          "Science Fiction": 3,
+          "Thriller": 8,
+          "Western": 1
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 210,
+          "balancedPartitions": 26,
+          "categories": 9,
+          "balancedCategories": 7,
+          "healthy": true,
+          "score": 51
+        },
+        "voteCountMin": 257,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      },
+      {
+        "date": "2026-11-18",
+        "number": 30,
+        "filmIds": [
+          7485,
+          334541,
+          627,
+          11774,
+          9366,
+          391,
+          260346,
+          89,
+          49051,
+          4935,
+          389,
+          346,
+          756,
+          11072,
+          286565,
+          593,
+          197,
+          12437,
+          1091,
+          923,
+          2277,
+          11216,
+          155,
+          797
+        ],
+        "mysteryMovieId": 923,
+        "decades": {
+          "1940": 1,
+          "1950": 2,
+          "1960": 2,
+          "1970": 3,
+          "1980": 3,
+          "1990": 4,
+          "2000": 5,
+          "2010": 4
+        },
+        "genres": {
+          "Action": 8,
+          "Adventure": 6,
+          "Animation": 2,
+          "Comedy": 3,
+          "Crime": 4,
+          "Drama": 12,
+          "Family": 2,
+          "Fantasy": 3,
+          "History": 1,
+          "Horror": 2,
+          "Music": 1,
+          "Mystery": 4,
+          "Romance": 2,
+          "Science Fiction": 4,
+          "Thriller": 5,
+          "War": 1,
+          "Western": 2
+        },
+        "consecutiveOverlap": 0,
+        "questionQuality": {
+          "valid": 211,
+          "balancedPartitions": 20,
+          "categories": 9,
+          "balancedCategories": 6,
+          "healthy": true,
+          "score": 48
+        },
+        "voteCountMin": 353,
+        "recognitionTier": 0,
+        "franchiseDuplicates": 0,
+        "missingPosters": 0
+      }
+    ]
+  },
+  "policy": {
+    "selection": "Existing Practice selection with separate offline Daily history; no runtime generation.",
+    "cooldown": "Existing five-board exclusions and ten-board soft recency penalties; one film per family/title.",
+    "mystery": "Random unused member of the quality-checked board for initial 365; no question ranking uses the mystery.",
+    "catalogue": "Reuse local normalized catalogue once; pinned full-record fingerprint prevents silent published-version mutation.",
+    "extension": "Append only; existing entries are preserved, never derived again from seeds."
+  }
+}

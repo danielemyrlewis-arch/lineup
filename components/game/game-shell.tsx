@@ -5,11 +5,17 @@ export function GameShell({
   onHelp,
   onStats,
   onAbout,
+  mode = "daily",
+  onModeChange,
+  dailyIsCurrent = true,
 }: {
   children: ReactNode;
   onHelp?: () => void;
   onStats?: () => void;
   onAbout?: () => void;
+  mode?: "daily" | "practice";
+  onModeChange?: (mode: "daily" | "practice") => void;
+  dailyIsCurrent?: boolean;
 }) {
   return (
     <div className="app-shell" id="top">
@@ -25,7 +31,10 @@ export function GameShell({
           <span className="brand-tagline">Find the film.</span>
         </div>
         <nav aria-label="Main">
-          <span className="practice-tab">Practice</span>
+          <div className="mode-switch" role="group" aria-label="Game mode">
+            <button type="button" aria-pressed={mode === "daily"} onClick={() => onModeChange?.("daily")} disabled={!onModeChange}>Daily</button>
+            <button type="button" aria-pressed={mode === "practice"} onClick={() => onModeChange?.("practice")} disabled={!onModeChange}>Practice</button>
+          </div>
           <button
             type="button"
             className="header-help"
@@ -43,7 +52,7 @@ export function GameShell({
             <br />
             <span>One answer.</span>
           </h1>
-          <p>Ask up to five yes-or-no questions. Find the film.</p>
+          <p>{mode === "daily" && dailyIsCurrent ? "Five yes-or-no questions. Find today’s film." : "Ask up to five yes-or-no questions. Find the film."}</p>
         </section>
         {children}
       </main>
@@ -52,7 +61,7 @@ export function GameShell({
           <p>For the love of film.</p>
           <p className="footer-description">
             A free movie guessing game. Narrow 24 films with up to five questions,
-            then make one final guess. Play as often as you like.
+            then make one final guess. A shared Daily, plus unlimited Practice.
           </p>
         </div>
         <div className="footer-links">

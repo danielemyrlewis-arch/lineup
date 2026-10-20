@@ -1,0 +1,57 @@
+/** Explicit offline schedule maintenance. Ordinary builds only run --check. */
+import { readFileSync, writeFileSync } from "node:fs";
+import { PRACTICE_CATALOGUE } from "../lib/data/catalogue.ts";
+import { DAILY_SCHEDULE_DATA } from "../lib/data/daily-schedule.ts";
+import { DAILY_LAUNCH_DATE, DAILY_INITIAL_DAYS, DAILY_CATALOGUE_VERSION, DAILY_CATALOGUE_SHA256, DAILY_FROZEN_PREFIX } from "../lib/data/daily-config.ts";
+import { appendSchedule, catalogueFingerprint, daysThrough, digest, validateSchedule } from "./daily/preparation.ts";
+
+const args=process.argv.slice(2),check=args.includes("--check");
+const option=(name:string)=>args.includes(name)?args[args.indexOf(name)+1]:undefined;
+for(const arg of args)if(arg.startsWith("--")&&!["--check","--days","--through"].includes(arg))throw new Error(`Unknown option ${arg}`);
+for(const name of ["--days","--through"])if(args.includes(name)&&(!option(name)||option(name)!.startsWith("--")))
+  throw new Error(`${name} requires a value.`);
+for(const name of ["--check","--days","--through"])if(args.filter(arg=>arg===name).length>1)throw new Error(`Duplicate option ${name}`);
+if(option("--days")&&option("--through"))throw new Error("Use either --days or --through, not both.");
+const actualFingerprint=catalogueFingerprint(PRACTICE_CATALOGUE);
+if(actualFingerprint!==DAILY_CATALOGUE_SHA256)throw new Error("The pinned Daily catalogue changed. Retain the published catalogue version and its film records before maintaining/deploying the schedule.");
+if(DAILY_SCHEDULE_DATA.launchDate!==DAILY_LAUNCH_DATE)throw new Error("Published Daily launch date differs from its configuration. Do not shift existing puzzles.");
+const existing=DAILY_SCHEDULE_DATA.entries;
+if(existing.length>=DAILY_FROZEN_PREFIX.length && digest(existing.slice(0,DAILY_FROZEN_PREFIX.length))!==DAILY_FROZEN_PREFIX.sha256)
+  throw new Error("The initial published Daily schedule differs from its frozen prefix. Do not regenerate published puzzles.");
+const requested=option("--through")?daysThrough(DAILY_LAUNCH_DATE,option("--through")!):Number(option("--days")??DAILY_INITIAL_DAYS);
+if(!Number.isSafeInteger(requested)||requested<1||requested>3650)throw new Error("Use --days 1–3650 or a valid future --through YYYY-MM-DD.");
+if(check&&(option("--days")||option("--through")))throw new Error("--check validates committed data only; omit generation options.");
+if(check&&existing.length<DAILY_INITIAL_DAYS)throw new Error("Daily launch needs at least 365 committed consecutive puzzles.");
+const entries=check?existing:appendSchedule(existing,PRACTICE_CATALOGUE,DAILY_LAUNCH_DATE,Math.max(existing.length,requested),n=>{
+  if(n%30===0)console.log(`Prepared ${n} Daily lineups`);
+});
+const rows=validateSchedule(entries,PRACTICE_CATALOGUE,DAILY_LAUNCH_DATE);
+const firstThirty=rows.slice(0,30),seen=new Map<number,number>();
+for(const row of firstThirty)for(const id of row.filmIds)seen.set(id,(seen.get(id)??0)+1);
+const audit={schema:1,launchDate:DAILY_LAUNCH_DATE,throughDate:entries.at(-1)?.date??null,puzzles:entries.length,
+  catalogueVersion:DAILY_CATALOGUE_VERSION,catalogueSha256:actualFingerprint,catalogueFilms:PRACTICE_CATALOGUE.length,
+  scheduleSha256:digest(entries),initial365Sha256:digest(entries.slice(0,365)),
+  totalUniqueMysteries:new Set(entries.map(e=>e.mysteryMovieId)).size,initial365UniqueMysteries:new Set(entries.slice(0,365).map(e=>e.mysteryMovieId)).size,
+  minimumValidQuestions:Math.min(...rows.map(row=>row.questionQuality.valid)),minimumDecades:Math.min(...rows.map(row=>Object.keys(row.decades).length)),
+  minimumGenres:Math.min(...rows.map(row=>Object.keys(row.genres).length)),
+  maximumConsecutiveOverlap:Math.max(...rows.map(row=>row.consecutiveOverlap)),
+  first30:{puzzles:firstThirty.length,uniqueFilms:seen.size,totalAppearances:firstThirty.length*24,
+    maximumFilmAppearances:Math.max(...seen.values()),uniqueMysteries:new Set(firstThirty.map(row=>row.mysteryMovieId)).size,
+    repeatedFilms:[...seen].filter(([,n])=>n>1).sort((a,b)=>b[1]-a[1]||a[0]-b[0]).map(([tmdbId,appearances])=>({tmdbId,appearances})),days:firstThirty},
+  policy:{selection:"Existing Practice selection with separate offline Daily history; no runtime generation.",
+    cooldown:"Existing five-board exclusions and ten-board soft recency penalties; one film per family/title.",
+    mystery:"Random unused member of the quality-checked board for initial 365; no question ranking uses the mystery.",
+    catalogue:"Reuse local normalized catalogue once; pinned full-record fingerprint prevents silent published-version mutation.",
+    extension:"Append only; existing entries are preserved, never derived again from seeds."}};
+const auditText=JSON.stringify(audit,null,2)+"\n";
+if(check) {
+  if(readFileSync("notes/daily-generation-audit.json","utf8")!==auditText)throw new Error("Daily quality audit is stale; review and regenerate it using generate:daily.");
+} else {
+  const data=`// Generated by scripts/generate-daily.ts. Published entries are immutable; append only.\nimport type { DailyScheduleEntry } from "../game/daily-schedule.ts";\nexport const DAILY_SCHEDULE_DATA: {schema:1;launchDate:string;entries:DailyScheduleEntry[]} = {schema:1,launchDate:${JSON.stringify(DAILY_LAUNCH_DATE)},entries:[\n${entries.map(entry=>JSON.stringify(entry)).join(",\n")}\n]};\n`;
+  writeFileSync("lib/data/daily-schedule.ts",data);
+  writeFileSync("notes/daily-generation-audit.json",auditText);
+}
+console.log(JSON.stringify({puzzles:audit.puzzles,start:audit.launchDate,end:audit.throughDate,
+  initial365UniqueMysteries:audit.initial365UniqueMysteries,first30UniqueFilms:audit.first30.uniqueFilms,
+  minValidQuestions:audit.minimumValidQuestions,minDecades:audit.minimumDecades,maxConsecutiveOverlap:audit.maximumConsecutiveOverlap,
+  initial365Sha256:audit.initial365Sha256},null,2));
