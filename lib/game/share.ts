@@ -1,24 +1,63 @@
 import type { GameState } from "./types.ts";
 import { deductionPath } from "./engine.ts";
-export function shareText(state: GameState): string {
-  const n = state.history.length;
-  return `LINEUP · Find the film.\n${state.status === "won" ? `Found in ${n} question${n === 1 ? "" : "s"}` : "Not this time."}\n${deductionPath(state).join(" → ")}\nPractice mode`;
+import { SITE_URL } from "../site.ts";
+
+export const GAME_URL = SITE_URL;
+export type ShareOutcome = "shared" | "copied" | "cancelled" | "manual";
+
+/** A small platform boundary also lets tests cover denied permissions and cancellation. */
+export interface SharingPlatform {
+  share?: (data: ShareData) => Promise<void>;
+  clipboard?: { writeText: (text: string) => Promise<void> };
 }
-export async function shareResult(
-  state: GameState,
-): Promise<"shared" | "copied" | "cancelled"> {
-  const text = shareText(state);
-  if (navigator.share) {
+const browserPlatform = (): SharingPlatform =>
+  typeof navigator === "undefined" ? {} : navigator;
+
+export function questionCount(state: GameState): string {
+  const n = state.history.length;
+  return `${n} question${n === 1 ? "" : "s"}`;
+}
+
+/** Share only the outcome and counts; neither selected film nor questions can spoil the answer. */
+export function shareText(state: GameState): string {
+  const won = state.status === "won";
+  const outcome = won
+    ? `Found in ${questionCount(state)}.`
+    : state.status === "lost"
+      ? `Not this time.\n${questionCount(state)} used.`
+      : "Game in progress.";
+  return `LINEUP\nPractice · ${outcome}\n\nFilms remaining:\n${deductionPath(state).join(" → ")}\n\n${won ? "Can you do better?" : "Can you find the film?"}\n${GAME_URL}`;
+}
+
+/** Manual selection remains available when the Clipboard API is missing or permission is denied. */
+export async function copyText(
+  text: string,
+  platform: SharingPlatform = browserPlatform(),
+): Promise<"copied" | "manual"> {
+  if (platform.clipboard?.writeText) {
     try {
-      await navigator.share({ title: "LINEUP", text });
-      return "shared";
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") return "cancelled";
+      await platform.clipboard.writeText(text);
+      return "copied";
+    } catch {
+      // Do not claim success or use a deprecated automatic-copy workaround.
     }
   }
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
-    return "copied";
+  return "manual";
+}
+
+export async function shareResult(
+  state: GameState,
+  platform: SharingPlatform = browserPlatform(),
+): Promise<ShareOutcome> {
+  const text = shareText(state);
+  if (platform.share) {
+    try {
+      await platform.share({ title: "LINEUP — Find the film.", text });
+      return "shared";
+    } catch (error) {
+      if (typeof error === "object" && error !== null &&
+          "name" in error && error.name === "AbortError") return "cancelled";
+    }
   }
-  throw new Error("Sharing is unavailable. You can copy the result below.");
+  return copyText(text, platform);
 }

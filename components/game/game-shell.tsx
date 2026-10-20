@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import type { ReactNode } from "react";
 export function GameShell({
   children,
@@ -13,16 +12,16 @@ export function GameShell({
   onAbout?: () => void;
 }) {
   return (
-    <div className="app-shell">
+    <div className="app-shell" id="top">
       <a className="skip-link" href="#lineup">
         Skip to the film lineup
       </a>
       <header className="site-header">
         <div className="header-brand">
-          <Link className="brand" href="/" aria-label="LINEUP home">
+          <a className="brand" href="#top" aria-label="LINEUP — back to top">
             <span>LINEUP</span>
             <span className="brand-line" aria-hidden="true" />
-          </Link>
+          </a>
           <span className="brand-tagline">Find the film.</span>
         </div>
         <nav aria-label="Main">
@@ -44,13 +43,22 @@ export function GameShell({
             <br />
             <span>One answer.</span>
           </h1>
-          <p>Ask up to five questions. Find the film.</p>
+          <p>Ask up to five yes-or-no questions. Find the film.</p>
         </section>
         {children}
       </main>
       <footer className="site-footer">
-        <p>For the love of film.</p>
+        <div>
+          <p>For the love of film.</p>
+          <p className="footer-description">
+            A free movie guessing game. Narrow 24 films with up to five questions,
+            then make one final guess. Play as often as you like.
+          </p>
+        </div>
         <div className="footer-links">
+          <button type="button" onClick={onHelp} disabled={!onHelp}>
+            How to play
+          </button>
           <button type="button" onClick={onStats} disabled={!onStats}>
             Practice stats
           </button>

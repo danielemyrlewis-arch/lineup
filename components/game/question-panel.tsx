@@ -8,6 +8,7 @@ import {
 } from "@/lib/game/questions";
 import { activeMovies, QUESTION_LIMIT } from "@/lib/game/engine";
 import type { GameState, Question } from "@/lib/game/types";
+import { QuestionBrowser } from "./question-browser";
 export function QuestionPanel({
   state,
   busy,
@@ -23,7 +24,8 @@ export function QuestionPanel({
   const [focused, setFocused] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
   const [historyOpen, setHistoryOpen] = useState(true);
-  const root = useRef<HTMLDivElement>(null);
+  const [browseOpen, setBrowseOpen] = useState(false);
+  const budget = useRef<HTMLParagraphElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const left = QUESTION_LIMIT - state.history.length;
   const questions = useMemo(
@@ -45,8 +47,9 @@ export function QuestionPanel({
       document
         .getElementById(`option-${highlighted}`)
         ?.scrollIntoView({ block: "nearest" });
-  }, [highlighted, open]);
+  }, [highlighted, open, query, matches.length]);
   const ask = (q: Question) => {
+    if (disabled) return;
     // Dismiss a touch keyboard while retaining desktop keyboard focus.
     if (window.matchMedia("(pointer: coarse)").matches) input.current?.blur();
     setQuery("");
@@ -58,7 +61,7 @@ export function QuestionPanel({
     <aside className="question-column">
       <div className="question-panel">
         <div className="question-budget">
-          <p>
+          <p ref={budget} tabIndex={-1}>
             <strong>
               {left} question{left !== 1 ? "s" : ""} left
             </strong>
@@ -85,17 +88,16 @@ export function QuestionPanel({
           </div>
         ) : (
           <>
-            <label className="ask-label" htmlFor="question-search">
-              Ask anything that helps narrow it down
+            <label className="sr-only" htmlFor="question-search">
+              Ask a yes-or-no question
             </label>
-            {showStrategyHint && (
-              <p id="strategy-hint" className="strategy-hint">
-                Try a question that could rule out lots of films.
-              </p>
-            )}
+            <p id="question-guidance" className="strategy-hint">
+              {showStrategyHint
+                ? "Start broad: try a genre or a release year."
+                : "Try a genre, year, actor or studio."}
+            </p>
             <div
               className="search-root"
-              ref={root}
               onBlur={(e) => {
                 if (!e.currentTarget.contains(e.relatedTarget))
                   setFocused(false);
@@ -109,11 +111,11 @@ export function QuestionPanel({
                   type="text"
                   role="combobox"
                   aria-autocomplete="list"
-                  aria-describedby={showStrategyHint ? "strategy-hint" : undefined}
+                  aria-describedby="question-guidance"
                   aria-controls="question-options"
                   aria-expanded={open}
                   aria-activedescendant={
-                    open && matches.length ? `option-${highlighted}` : undefined
+                    open && matches[highlighted] ? `option-${highlighted}` : undefined
                   }
                   autoComplete="off"
                   placeholder="Ask a question…"
@@ -162,6 +164,9 @@ export function QuestionPanel({
                   </button>
                 )}
               </div>
+              <span className="sr-only" role="status" aria-live="polite">
+                {open && query ? `${matches.length} matching question${matches.length === 1 ? "" : "s"}.` : ""}
+              </span>
               {open && (
                 <div className="search-popover">
                   <div className="search-popover-label">
@@ -183,6 +188,7 @@ export function QuestionPanel({
                           className={i === highlighted ? "highlighted" : ""}
                           onMouseDown={(e) => e.preventDefault()}
                           onMouseEnter={() => setHighlighted(i)}
+                          onFocus={() => setHighlighted(i)}
                           onClick={() => ask(q)}
                         >
                           <span>
@@ -208,7 +214,22 @@ export function QuestionPanel({
                 </div>
               )}
             </div>
-            <p className="suggestion-label">Suggested</p>
+            <div className="question-discovery">
+              <p className="suggestion-label">Suggested</p>
+              <button
+                type="button"
+                className="browse-questions"
+                disabled={disabled || questions.length === 0}
+                aria-haspopup="dialog"
+                onClick={() => {
+                  setFocused(false);
+                  input.current?.blur();
+                  setBrowseOpen(true);
+                }}
+              >
+                Browse questions
+              </button>
+            </div>
             <div className="suggestions">
               {suggestions.map((q) => (
                 <button
@@ -265,6 +286,19 @@ export function QuestionPanel({
             </ol>
           )}
         </div>
+      )}
+      {browseOpen && !disabled && (
+        <QuestionBrowser
+          questions={questions}
+          onClose={() => setBrowseOpen(false)}
+          onAsk={(question) => {
+            setBrowseOpen(false);
+            ask(question);
+            // The Browse trigger becomes disabled during elimination. Restore
+            // focus to the stable budget rather than a removed/disabled control.
+            requestAnimationFrame(() => budget.current?.focus());
+          }}
+        />
       )}
     </aside>
   );

@@ -10,7 +10,7 @@ import {
   rememberPracticePuzzle,
   writePracticeHistory,
 } from "@/lib/game/practice-history";
-import { shareResult } from "@/lib/game/share";
+import { copyText, GAME_URL, shareResult, shareText } from "@/lib/game/share";
 import { MovieBoard } from "./movie-board";
 import { QuestionPanel } from "./question-panel";
 
@@ -22,6 +22,24 @@ import { createPracticePuzzle } from "@/lib/game/practice-selection";
 import { dismissStrategyHint, shouldShowStrategyHint } from "@/lib/game/onboarding";
 
 type Sheet = "help" | "about" | "stats" | "restart" | "result" | null;
+
+/** Disabled async controls can lose keyboard focus while a share/copy request is pending. */
+function preserveShareFocus() {
+  const trigger = document.activeElement;
+  const dialog = trigger?.closest("dialog[open]");
+  return () => {
+    if (!(trigger instanceof HTMLButtonElement) || !dialog ||
+        !trigger.closest(".result-share-block")) return;
+    window.requestAnimationFrame(() => {
+      if (!trigger.isConnected || trigger.disabled ||
+          trigger.closest("dialog[open]") !== dialog) return;
+      const active = document.activeElement;
+      // Respect deliberate focus movement while the platform request was open.
+      if (active && active !== trigger && active !== document.body && active !== dialog) return;
+      trigger.focus({ preventScroll: true });
+    });
+  };
+}
 export function Game({
   initialPuzzle,
   catalogue,
@@ -41,7 +59,8 @@ export function Game({
   const [newLoading, setNewLoading] = useState(false);
   const [error, setError] = useState("");
   const [shareStatus, setShareStatus] = useState("");
-  const [showShareText, setShowShareText] = useState(false);
+  const [shareFallback, setShareFallback] = useState<{ text: string; label: string } | null>(null);
+  const [shareBusy, setShareBusy] = useState(false);
   const [showStrategyHint, setShowStrategyHint] = useState(shouldShowStrategyHint);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const actionLock = useRef(false);
@@ -54,7 +73,7 @@ export function Game({
     );
     writePracticeHistory(practiceHistory.current);
     const key = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k" && !document.querySelector("dialog[open]")) {
         e.preventDefault();
         document.getElementById("question-search")?.focus();
       }
@@ -120,7 +139,7 @@ export function Game({
       setSheet(null);
       setSelected(null);
       setShareStatus("");
-      setShowShareText(false);
+      setShareFallback(null);
       window.scrollTo({
         top: 0,
         behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -134,18 +153,44 @@ export function Game({
     }
   };
   const share = async () => {
+    if (shareBusy) return;
+    const restoreFocus = preserveShareFocus();
+    setShareBusy(true);
+    setShareStatus("");
+    setShareFallback(null);
     try {
       const result = await shareResult(state);
-      setShareStatus(
-        result === "copied"
-          ? "Result copied. No spoilers."
-          : result === "shared"
-            ? "Result shared."
-            : "",
-      );
-    } catch {
-      setShowShareText(true);
-      setShareStatus("Copy your spoiler-free result below.");
+      if (result === "manual") {
+        setShareFallback({ text: shareText(state), label: "Spoiler-free result to copy" });
+        setShareStatus("Automatic sharing isn’t available. Select and copy your result below.");
+      } else {
+        setShareStatus(result === "copied" ? "Result copied. No spoilers." :
+          result === "shared" ? "Result shared." : "Sharing cancelled.");
+      }
+    } finally {
+      setShareBusy(false);
+      restoreFocus();
+    }
+  };
+  const copy = async (kind: "result" | "link") => {
+    if (shareBusy) return;
+    const restoreFocus = preserveShareFocus();
+    setShareBusy(true);
+    setShareStatus("");
+    setShareFallback(null);
+    const text = kind === "link" ? GAME_URL : shareText(state);
+    const label = kind === "link" ? "Game link to copy" : "Spoiler-free result to copy";
+    try {
+      const result = await copyText(text);
+      if (result === "copied") {
+        setShareStatus(kind === "link" ? "Game link copied." : "Result copied. No spoilers.");
+      } else {
+        setShareFallback({ text, label });
+        setShareStatus("Automatic copying isn’t available. Select and copy the text below.");
+      }
+    } finally {
+      setShareBusy(false);
+      restoreFocus();
     }
   };
   const openHelp = () => {
@@ -176,6 +221,7 @@ export function Game({
       </section>
       <section
         id="lineup"
+        tabIndex={-1}
         ref={scrollRef}
         className="game-layout"
         aria-label="Practice game"
@@ -248,9 +294,12 @@ export function Game({
           error={error}
           newLoading={newLoading}
           shareStatus={shareStatus}
-          showShareText={showShareText}
+          shareBusy={shareBusy}
+          shareFallback={shareFallback}
           onNew={newLineup}
           onShare={share}
+          onCopyResult={() => copy("result")}
+          onCopyLink={() => copy("link")}
           onClose={() => setSheet(null)}
         />
       )}

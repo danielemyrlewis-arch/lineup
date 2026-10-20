@@ -27,7 +27,8 @@ export function Dialog({
     return () => {
       dialog?.close();
       document.body.style.overflow = oldOverflow;
-      if (previous?.isConnected) previous.focus();
+      if (previous?.isConnected && !previous.matches(":disabled")) previous.focus({preventScroll: true});
+      else document.getElementById("lineup")?.focus({preventScroll: true});
     };
   }, []);
   return (

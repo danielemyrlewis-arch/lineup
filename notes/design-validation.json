@@ -1,0 +1,61 @@
+{
+  "before": {
+    "files": 82,
+    "totalBytes": 4716007,
+    "javaScriptBytes": 2760699,
+    "javaScriptGzipBytes": 1136833,
+    "cssBytes": 30893
+  },
+  "after": {
+    "files": 86,
+    "totalBytes": 4777725,
+    "javaScriptBytes": 2759068,
+    "javaScriptGzipBytes": 1135699,
+    "cssBytes": 33639
+  },
+  "staticHttpFilesVerified": 86,
+  "metadataInExportedHtml": true,
+  "canonical": "https://danielemyrlewis-arch.github.io/lineup/",
+  "ogImage": {
+    "url": "https://danielemyrlewis-arch.github.io/lineup/social/lineup-og.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 32763
+  },
+  "docsMatchesOut": true,
+  "noJekyll": true,
+  "runtimeApisAdded": 0,
+  "frontendDependenciesAdded": 0,
+  "responsiveWidthsVerified": [
+    375,
+    390,
+    430,
+    768,
+    1440
+  ],
+  "mobile390": {
+    "beforeSearchTop": 371,
+    "afterSearchTop": 321,
+    "beforeFirstPosterTop": 558,
+    "afterFirstPosterTop": 524
+  },
+  "limits": [
+    "Viewport emulation is not a physical mobile keyboard or share-target test.",
+    "Native share rejection/cancellation and denied clipboard paths are automated platform-boundary tests.",
+    "Copy success feedback observed; CUA clipboard adapter returned empty text, so OS clipboard payload was not independently read back.",
+    "No Lighthouse run or score.",
+    "No live GitHub Pages deployment performed."
+  ],
+  "keyboardCopyFocusPreserved": true,
+  "reducedHeightSearch": {
+    "width": 390,
+    "height": 500,
+    "listHeight": 225,
+    "firstResultTop": 337,
+    "keyboardSelection": true
+  },
+  "testsPassed": 128,
+  "lintPassed": true,
+  "typeScriptPassed": true,
+  "staticBuildPassed": true
+}

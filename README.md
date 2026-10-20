@@ -62,6 +62,10 @@ npm run build:pages
 
 `postbuild` verifies HTML/CSS asset paths, `.nojekyll`, export size and the absence of old backend references in the JavaScript. The home page contains every game, sheet and result, so refreshing the repository URL works directly. Only generated publication files belong in `docs/`.
 
+## Product refinement
+
+The [design refinement report](notes/design-refinement.md) documents the compact mobile layout, canonical question browser, accurate results/sharing, static social preview, responsive checks and deliberate deferrals. [Design research](notes/design-research.md) records the bounded gallery review and future product/measurement recommendations. No tracking or new runtime service was added.
+
 ## Static catalogue and future updates
 
 The [question/catalogue audit](notes/question-audit.md) records the earlier gameplay/onboarding work. The [current Oscar coverage report](notes/oscar-coverage-improvement.md) documents question-level evidence: 1,200 films have verified Best Picture answers through the 2026 ceremony; 512 have positive nomination evidence. Exact totals remain limited to 20 reviewed records, including ten verified zeros. Unknown answers still suppress only the affected question. A 1,000-lineup simulation found an Oscar question initially in 85.5% of games and before the question limit in 94.2%; general nomination/win questions remain uncommon. Automatic suggestion exposure is only 3.8% during play (0% at the opening); availability through search is substantially higher.

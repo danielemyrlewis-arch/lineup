@@ -3,31 +3,40 @@ import { Dialog } from "./dialog";
 import type { GameState } from "@/lib/game/types";
 import { deductionPath } from "@/lib/game/engine";
 import { RESULT_COPY } from "@/lib/game/copy";
-import { shareText } from "@/lib/game/share";
+import { questionCount } from "@/lib/game/share";
 import { Poster } from "./poster";
+
 export function ResultDialog({
   state,
   error,
   newLoading,
   shareStatus,
-  showShareText,
+  shareBusy,
+  shareFallback,
   onNew,
   onShare,
+  onCopyResult,
+  onCopyLink,
   onClose,
 }: {
   state: GameState;
   error: string;
   newLoading: boolean;
   shareStatus: string;
-  showShareText: boolean;
+  shareBusy: boolean;
+  shareFallback: { text: string; label: string } | null;
   onNew: () => void;
   onShare: () => void;
+  onCopyResult: () => void;
+  onCopyLink: () => void;
   onClose: () => void;
 }) {
   const movie = state.puzzle.movies.find(
     (m) => m.id === state.puzzle.mysteryId,
   )!;
   const won = state.status === "won";
+  const path = deductionPath(state);
+  const remaining = state.activeIds.length;
   return (
     <Dialog
       title={won ? RESULT_COPY.won : RESULT_COPY.lost}
@@ -40,55 +49,65 @@ export function ResultDialog({
           The film was <strong>{movie.title}.</strong>
         </p>
       )}
-      <div className="result-film">
-        <Poster movie={movie} eager />
+      <div className="result-film-summary">
+        <div className="result-film">
+          <Poster movie={movie} eager />
+        </div>
+        <div>
+          {won && <h3 className="result-title">{movie.title}</h3>}
+          <p className="result-questions">
+            {won ? `Found in ${questionCount(state)}.` : `${questionCount(state)} used.`}
+          </p>
+        </div>
       </div>
-      {won && <h3 className="result-title">{movie.title}</h3>}
-      <p className="result-questions">
-        {state.history.length} question{state.history.length !== 1 ? "s" : ""}
-      </p>
+      <p className="result-path-label">Films remaining after each question</p>
       <ol
         className="deduction-path"
-        aria-label={`Deduction path: ${deductionPath(state).join(", then ")}`}
+        aria-label={`Films remaining: ${path.join(", then ")}`}
       >
-        {deductionPath(state).map((count, i, path) => (
-          <li
-            key={i}
-            className={i === path.length - 1 ? "path-final" : undefined}
-          >
-            {i > 0 && <span className="path-connector" aria-hidden="true" />}
+        {path.map((count, i) => (
+          <li key={i} className={i === path.length - 1 ? "path-final" : undefined}>
+            {i > 0 && <span className="path-connector" aria-hidden="true">→</span>}
             <span className="path-count">{count}</span>
           </li>
         ))}
       </ol>
-      {error && (
-        <p className="error-text" role="alert">
-          {error}
-        </p>
-      )}
+      <p className="result-context">
+        {won ? "Correct" : "Incorrect"} guess with {remaining} film{remaining === 1 ? "" : "s"} remaining.
+      </p>
+      {error && <p className="error-text" role="alert">{error}</p>}
       <button
         type="button"
         className="primary-button"
         onClick={onNew}
-        disabled={newLoading}
+        disabled={newLoading || shareBusy}
       >
-        {newLoading ? "Loading…" : "Play again"}
+        {newLoading ? "Preparing…" : "Play again"}
       </button>
-      <button type="button" className="secondary-button" onClick={onShare}>
-        Share result
-      </button>
-      {shareStatus && (
-        <p className="share-status" role="status">
-          {shareStatus}
-        </p>
-      )}
-      {showShareText && (
+      <div className="result-share-block">
+        <p className="result-invite">Think a friend could do better?</p>
+        <button
+          type="button"
+          className="secondary-button"
+          onClick={onShare}
+          disabled={shareBusy}
+        >
+          {shareBusy ? "One moment…" : "Share your result"}
+        </button>
+        <div className="share-copy-actions">
+          <button type="button" onClick={onCopyResult} disabled={shareBusy}>Copy result</button>
+          <button type="button" onClick={onCopyLink} disabled={shareBusy}>Copy game link</button>
+        </div>
+      </div>
+      <p className="share-status" role="status" aria-atomic="true">{shareStatus}</p>
+      {shareFallback && (
         <textarea
           className="share-fallback"
-          aria-label="Spoiler-free result"
+          aria-label={shareFallback.label}
           readOnly
-          value={shareText(state)}
+          value={shareFallback.text}
           onFocus={(e) => e.target.select()}
+          onClick={(e) => e.currentTarget.select()}
         />
       )}
     </Dialog>
