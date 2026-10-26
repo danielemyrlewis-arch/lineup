@@ -8,11 +8,14 @@ import { londonDate, nextLondonMidnight, formatDailyDate, addCalendarDays } from
 import { DAILY_SCHEDULE, getDailyEntry, resolveDailyPuzzle } from "@/lib/game/daily-schedule";
 import { Game } from "./game";
 import { GameShell } from "./game-shell";
+import { AccountControl, usePlayerAccount } from "@/components/account/player-provider";
 
 type Mode = Puzzle["mode"];
 
 /** Modes share one cached local catalogue. Only Practice generates puzzles in the browser. */
 export function Lineup() {
+  const account = usePlayerAccount();
+  const {observeDaily} = account;
   const [catalogue, setCatalogue] = useState<Movie[] | null>(null);
   const [error, setError] = useState(false);
   const [mode, setMode] = useState<Mode>("daily");
@@ -22,7 +25,8 @@ export function Lineup() {
   const [dailySessions, setDailySessions] = useState<Record<string, GameState>>({});
   const rememberDaily = useCallback((state: GameState) => {
     setDailySessions(previous => previous[state.puzzle.id] === state ? previous : {...previous, [state.puzzle.id]: state});
-  }, []);
+    observeDaily(state);
+  }, [observeDaily]);
 
   useEffect(() => {
     let cancelled = false;
@@ -90,18 +94,20 @@ export function Lineup() {
 
   if (catalogue && mode === "practice" && practice) return (
     <Game key="practice" initialPuzzle={practice.puzzle} initialGameState={practice}
-      catalogue={catalogue} onModeChange={changeMode} onPracticeChange={setPractice} />
+      catalogue={catalogue} onModeChange={changeMode} onPracticeChange={setPractice}
+      accountControl={<AccountControl />} />
   );
   if (catalogue && mode === "daily" && daily && today) return (
     <Game key={daily.id} initialPuzzle={daily} initialGameState={dailySessions[daily.id]}
       onDailyChange={rememberDaily} catalogue={catalogue}
       onModeChange={changeMode} dailyToday={today} onToday={playToday}
-      hasCurrentDaily={!!getDailyEntry(today)} hasNextDaily={!!getDailyEntry(addCalendarDays(today, 1))} />
+      hasCurrentDaily={!!getDailyEntry(today)} hasNextDaily={!!getDailyEntry(addCalendarDays(today, 1))}
+      accountControl={<AccountControl />} onDailyComplete={account.completeDaily} accountResultAction={account.resultAction} />
   );
   const unavailable = !!catalogue && !!dailyDate && mode === "daily";
   const beforeLaunch = unavailable && dailyDate! < DAILY_SCHEDULE[0].date;
   return (
-    <GameShell mode={mode} onModeChange={changeMode}>
+    <GameShell mode={mode} onModeChange={changeMode} accountControl={<AccountControl />}>
       <section className="game-loading" aria-live="polite" aria-busy={!error && !unavailable}>
         <p>{error ? "The film catalogue couldn’t load. Please reload to try again."
           : dailyFailed ? "The Daily film data couldn’t be loaded. Practice is still available."

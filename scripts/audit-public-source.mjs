@@ -9,6 +9,7 @@ const patterns = [
     /\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,})\b/,
   ],
   ["API credential", /\bsk-[A-Za-z0-9_-]{32,}\b/],
+  ["Supabase secret key", /\bsb_secret_[A-Za-z0-9_-]{10,}\b/],
   [
     "JWT bearer",
     /\beyJ[A-Za-z0-9_-]{15,}\.eyJ[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{20,}/,

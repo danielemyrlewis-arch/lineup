@@ -8,6 +8,7 @@ export function GameShell({
   mode = "daily",
   onModeChange,
   dailyIsCurrent = true,
+  accountControl,
 }: {
   children: ReactNode;
   onHelp?: () => void;
@@ -16,13 +17,14 @@ export function GameShell({
   mode?: "daily" | "practice";
   onModeChange?: (mode: "daily" | "practice") => void;
   dailyIsCurrent?: boolean;
+  accountControl?: ReactNode;
 }) {
   return (
     <div className="app-shell" id="top">
       <a className="skip-link" href="#lineup">
         Skip to the film lineup
       </a>
-      <header className="site-header">
+      <header className={`site-header${accountControl ? " with-account" : ""}`}>
         <div className="header-brand">
           <a className="brand" href="#top" aria-label="LINEUP — back to top">
             <span>LINEUP</span>
@@ -43,6 +45,7 @@ export function GameShell({
           >
             How to play
           </button>
+          {accountControl}
         </nav>
       </header>
       <main>

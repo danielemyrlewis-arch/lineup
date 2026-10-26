@@ -4,7 +4,7 @@
 
 ## PUBLIC BETA — GITHUB PAGES
 
-LINEUP is a fully static Next.js export. GitHub Pages serves HTML, CSS, JavaScript and the bundled film catalogue. Daily puzzles are prepared offline and committed as frozen IDs. Daily selection/resume, unlimited Practice generation, questions, eliminations and results run in the browser. Production has no server, account, database, environment secrets, API routes or live TMDB metadata requests.
+LINEUP is a fully static Next.js export. GitHub Pages serves HTML, CSS, JavaScript and the bundled film catalogue. Daily puzzles are prepared offline and committed as frozen IDs. Daily selection/resume, unlimited Practice generation, questions, eliminations and results run in the browser. Optional Google accounts use Supabase directly from the browser for private completed-Daily results. Guest play remains local and independent of Supabase. GitHub Pages still serves only static files: no Next.js server, API route, server action, middleware or live TMDB metadata request is required.
 
 ### Run locally
 
@@ -15,7 +15,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. No `.env` file is needed. Development uses Next's local development server; production does not.
+Open http://localhost:3000. Guest play needs no environment configuration. For optional accounts, copy `.env.example` to ignored `.env.local` and set `NEXT_PUBLIC_SUPABASE_URL` plus `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to the project's public browser values. The production build inlines those values. Never use a secret/service-role key or database password. Development uses Next's local development server; production does not.
 
 ### Publish directly from main /docs
 
@@ -35,7 +35,7 @@ GitHub serves the files already present in `docs/`; it does not build Next.js. F
 npm run build:pages
 ```
 
-This runs the existing `next build --webpack` static export and its asset checks, then replaces `docs/` with the complete verified `out/` output. Development and production both use the **domain root**, with no repository prefix. Scripts, CSS, fonts, posters, images and internal links use root-compatible paths; canonical and sharing URLs use **https://dailylineup.co.uk/**. `public/CNAME`, `public/robots.txt`, `public/sitemap.xml` and `.nojekyll` are copied into each export automatically. No production environment variables are needed.
+This runs the existing `next build --webpack` static export and its asset checks, then replaces `docs/` with the complete verified `out/` output. Development and production both use the **domain root**, with no repository prefix. Scripts, CSS, fonts, posters, images and internal links use root-compatible paths; canonical and sharing URLs use **https://dailylineup.co.uk/**. `public/CNAME`, `public/robots.txt`, `public/sitemap.xml` and `.nojekyll` are copied into each export automatically. The account-enabled build needs the two public Supabase variables in `.env.local` at build time; GitHub Pages needs no environment settings. Rebuild whenever those public values change.
 
 The lower-level `npm run build` command exports to `out/` at the same domain root. The old `PAGES_BASE_PATH` override is no longer used, so a stale environment value cannot reintroduce the repository prefix. Do not run `next start`; the published site has no application server.
 
@@ -59,7 +59,11 @@ npm run audit:public
 npm run build:pages
 ```
 
-`postbuild` verifies root HTML/CSS asset paths, the custom-domain CNAME, canonical/social metadata, robots/sitemap, `.nojekyll`, export size and the absence of old repository/backend references in publication files. The home page contains every game, sheet and result, so refreshing the root or a mode query URL works directly. Only generated publication files belong in `docs/`.
+`postbuild` verifies root HTML/CSS asset paths, the custom-domain CNAME, canonical/social metadata, robots/sitemap, `.nojekyll`, export size and the absence of old repository/runtime film API references or secret credentials in publication files. It also verifies that configured public Supabase values reached the browser bundle. The home page contains every game, sheet and result, so refreshing the root or a mode query URL works directly. Only generated publication files belong in `docs/`.
+
+## Optional accounts
+
+Google sign-in, private Daily statistics/streaks and explicit guest-result saving are documented in [the account setup and security handoff](notes/player-accounts.md). Before testing account saves, manually run [the complete SQL migration](supabase/migrations/20261026_daily_player_results.sql) in Supabase SQL Editor and check the production auth redirect allowlist. Neither step is performed by the application. Daily and Practice remain playable when configuration, the migration or Supabase is unavailable. Practice never enters account Daily statistics.
 
 ## Daily LINEUP
 
@@ -101,13 +105,13 @@ Unknown studio, lead or curated values stay unknown. Questions require reliable 
 
 ## Browser storage and static-hosting limitations
 
-Existing localStorage keys for recently shown films, mystery cooldown, help preference and Practice statistics are unchanged. History remains bounded to ten boards/240 film IDs and ten mysteries; new lineups and refreshes respect the same cooldown/diversity logic. Storage failures fall back to in-memory history. No cookies or server sessions are needed. A Practice refresh starts a fresh game while retaining local history, as before. Daily uses its separate versioned per-date progress records and resumes unfinished or completed attempts. Mode switches retain both sessions in memory, including when storage is blocked.
+Existing localStorage keys for recently shown films, mystery cooldown, help preference and Practice statistics are unchanged. History remains bounded to ten boards/240 film IDs and ten mysteries; new lineups and refreshes respect the same cooldown/diversity logic. Storage failures fall back to in-memory history. Guest play needs no cookies or server sessions. Optional Supabase authentication has a separate `lineup:auth:v1` browser-storage key and refreshable session. A Practice refresh starts a fresh game while retaining local history, as before. Daily uses its separate versioned per-date progress records and resumes unfinished or completed attempts. Mode switches retain both sessions in memory, including when storage is blocked.
 
-Browser storage belongs to an origin: moving from `danielemyrlewis-arch.github.io` to `dailylineup.co.uk` starts separate local Daily progress, Practice history/statistics and onboarding preferences. Existing keys and validation remain unchanged, so progress saves/resumes normally on the new domain. The new origin cannot read the old origin's storage; there is no automatic cross-domain migration or account sync. Metadata changes require a new build/deployment. The first load downloads the bundled catalogue; remote posters/headshots still need an internet connection. JavaScript is required to play. Both modes keep their answer and metadata in client memory; the static Daily schedule is inspectable and is not presented as cheat-proof.
+Browser storage belongs to an origin: moving from `danielemyrlewis-arch.github.io` to `dailylineup.co.uk` starts separate local Daily progress, Practice history/statistics and onboarding preferences. Existing keys and validation remain unchanged, so progress saves/resumes normally on the new domain. The new origin cannot read the old origin's storage; guest progress is not transferred automatically. Optional authenticated accounts retrieve completed Daily results from Supabase independently; unfinished game progress remains local. Metadata changes require a new build/deployment. The first load downloads the bundled catalogue; remote posters/headshots still need an internet connection. JavaScript is required to play. Both modes keep their answer and metadata in client memory; the static Daily schedule is inspectable and is not presented as cheat-proof.
 
 ## Public source and attribution
 
-`.env`, `.env.local`, `.dev.vars`, keys, dependency/build folders and local editor/hosting caches are ignored. `.env.example` documents that no environment variables are required. `npm run audit:public` reports credential/private-metadata locations without printing their values. The one-time `node scripts/audit-public-source.mjs --history` check also scans historical source blobs; the clean release archive deliberately omits all Git history and local state.
+`.env`, `.env.local`, `.dev.vars`, keys, dependency/build folders and local editor/hosting caches are ignored. `.env.example` documents only the two optional public browser variables. `.env.local` stays ignored; its public values deliberately appear in the static account-enabled bundle. No private key belongs in either the browser or public source. `npm run audit:public` reports credential/private-metadata locations without printing their values. The one-time `node scripts/audit-public-source.mjs --history` check also scans historical source blobs; the clean release archive deliberately omits all Git history and local state.
 
 LINEUP retains its editorial black/cobalt identity and locally hosted **Libre Franklin** under the SIL Open Font License (`public/licenses/Libre-Franklin-OFL.txt`). Film metadata/artwork remain credited to [TMDB](https://www.themoviedb.org). About & credits retains the TMDB logo and notice: **This product uses the TMDB API but is not endorsed or certified by TMDB.** Static metadata was originally obtained from TMDB; the published beta makes no live metadata API requests.
 

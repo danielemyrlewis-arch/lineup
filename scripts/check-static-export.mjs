@@ -26,6 +26,17 @@ if (!/^User-agent: \*$/m.test(robots) || !/^Allow: \/$/m.test(robots) ||
     !robots.includes(`Sitemap: ${site.href}sitemap.xml`))
   throw Error("robots.txt must allow the root site and link its sitemap");
 const index = readFileSync(path.join(root, "index.html"), "utf8");
+const publishedJs = files.filter(file => file.endsWith(".js")).map(file => readFileSync(file, "utf8")).join("\n");
+// Next inlines only these public browser values; never print their contents.
+const localEnv = existsSync(".env.local") ? readFileSync(".env.local", "utf8") : "";
+const publicValue = name => process.env[name] ?? localEnv.match(new RegExp(`^${name}=(.*)$`, "m"))?.[1]?.trim();
+const accountUrl = publicValue("NEXT_PUBLIC_SUPABASE_URL");
+const accountKey = publicValue("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY");
+const accountsConfigured = !!(accountUrl && accountKey);
+if (accountsConfigured && (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(accountUrl) ||
+    !/^sb_publishable_[A-Za-z0-9_-]+$/.test(accountKey) ||
+    !publishedJs.includes(accountUrl) || !publishedJs.includes(accountKey)))
+  throw Error("The configured public Supabase values are missing or invalid in the static browser build");
 for (const tag of [
   `rel="canonical" href="${site.href}"`,
   `property="og:url" content="${site.href}"`,
@@ -50,6 +61,8 @@ function checkAsset(raw, from) {
 }
 for (const file of files) {
   const text = /\.(html|css|js|xml|txt)$/.test(file) ? readFileSync(file, "utf8") : "";
+  if (/\bsb_secret_[A-Za-z0-9_-]{10,}\b|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|postgres(?:ql)?:\/\/[^\s/]+:[^\s@]+@/.test(text))
+    throw Error(`A secret credential reached ${path.relative(root, file)}`);
   if (text.includes("danielemyrlewis-arch.github.io") || text.includes("/lineup/"))
     throw Error(`Obsolete repository URL or path in ${path.relative(root, file)}`);
   if (file.endsWith(".html")) {
@@ -69,7 +82,7 @@ for (const file of files) {
     )
   )
     throw Error(
-      "A backend/private hosting reference reached a production bundle",
+      "A runtime film API/private hosting reference reached a production bundle",
     );
 }
 const bytes = files.reduce((total, file) => total + statSync(file).size, 0);
@@ -85,6 +98,8 @@ console.log(
     files: files.length,
     megabytes: +(bytes / 1024 / 1024).toFixed(2),
     assetsVerified: true,
-    runtimeApiReferences: 0,
+    runtimeFilmApiReferences: 0,
+    accountsConfigured,
+    publicSupabaseConfigVerified: accountsConfigured,
   }),
 );

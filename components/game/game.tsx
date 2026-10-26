@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { X } from "lucide-react";
 import type { GameAction, GameState, Movie, Puzzle, Question } from "@/lib/game/types";
 import { gameReducer, initialState } from "@/lib/game/engine";
@@ -53,6 +53,9 @@ export function Game({
   onToday,
   hasNextDaily = false,
   hasCurrentDaily = true,
+  accountControl,
+  onDailyComplete,
+  accountResultAction,
 }: {
   initialPuzzle: Puzzle;
   catalogue: Movie[];
@@ -64,6 +67,9 @@ export function Game({
   onToday?: () => void;
   hasNextDaily?: boolean;
   hasCurrentDaily?: boolean;
+  accountControl?: ReactNode;
+  onDailyComplete?: (state: GameState) => void;
+  accountResultAction?: (state: GameState) => {label: string; message: string; onClick: () => void};
 }) {
   const daily = initialPuzzle.mode === "daily";
   const [restored] = useState(() => daily ? readDailyProgress(initialPuzzle) : null);
@@ -167,6 +173,7 @@ export function Game({
     const result = advance({ type: "guess", movieId: selected.id });
     if (!result?.accepted) return;
     if (!daily) recordResult(result.state);
+    else onDailyComplete?.(result.state);
     setSelected(null);
     setSheet("result");
   };
@@ -262,6 +269,7 @@ export function Game({
       mode={state.puzzle.mode}
       onModeChange={onModeChange}
       dailyIsCurrent={dailyIsCurrent}
+      accountControl={accountControl}
       onHelp={openHelp}
       onStats={() => setSheet("stats")}
       onAbout={() => setSheet("about")}
@@ -375,6 +383,7 @@ export function Game({
           onCopyResult={() => copy("result")}
           onCopyLink={() => copy("link")}
           onClose={() => setSheet(null)}
+          accountAction={daily && accountResultAction ? {...accountResultAction(state), onClick: () => { setSheet(null); accountResultAction(state).onClick(); }} : undefined}
         />
       )}
     </GameShell>

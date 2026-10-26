@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { SITE_URL, SITE_TITLE, SITE_DESCRIPTION, SOCIAL_IMAGE } from "@/lib/site";
 import "./globals.css";
+import "../components/account/account.css";
 const libreFranklin = localFont({
   src: "../public/fonts/libre-franklin-latin.woff2",
   variable: "--font-libre-franklin",

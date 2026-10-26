@@ -18,6 +18,7 @@ export function ResultDialog({
   onCopyResult,
   onCopyLink,
   onClose,
+  accountAction,
 }: {
   state: GameState;
   error: string;
@@ -30,6 +31,7 @@ export function ResultDialog({
   onCopyResult: () => void;
   onCopyLink: () => void;
   onClose: () => void;
+  accountAction?: {label: string; message: string; onClick: () => void};
 }) {
   const movie = state.puzzle.movies.find(
     (m) => m.id === state.puzzle.mysteryId,
@@ -78,6 +80,10 @@ export function ResultDialog({
         {won ? "Correct" : "Incorrect"} guess with {remaining} film{remaining === 1 ? "" : "s"} remaining.
       </p>
       {error && <p className="error-text" role="alert">{error}</p>}
+      {accountAction && <div className="result-account" aria-live="polite">
+        <p>{accountAction.message}</p>
+        <button type="button" className="text-button" onClick={accountAction.onClick}>{accountAction.label}</button>
+      </div>}
       <button
         type="button"
         className="primary-button"

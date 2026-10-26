@@ -1,0 +1,53 @@
+/* Account-only additions use LINEUP's existing editorial tokens and dialog. */
+.header-account { min-height: 44px; padding: 10px 0; background: none; color: var(--secondary); font-size: inherit; white-space: nowrap; }
+.header-account:hover { color: var(--text); }
+.header-account svg { display: none; }
+.result-account { margin: 18px 0; font-size: 12px; line-height: 1.65; color: var(--secondary); }
+.result-account .text-button { margin-top: 4px; }
+.account-dialog {
+  width: 620px;
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+}
+.account-dialog h2 { margin-bottom: 24px; }
+.account-dialog h3 { font-size: 18px; line-height: 1.4; font-weight: 650; }
+.account-dialog h4 { font-size: 13px; line-height: 1.5; font-weight: 600; }
+.account-dialog .error-text { margin: 14px 0; }
+.account-copy { font-size: 14px; color: var(--secondary); line-height: 1.75; margin: 14px 0; }
+.account-small { font-size: 12px; color: var(--secondary); line-height: 1.7; margin: 14px 0; }
+.account-welcome .primary-button { margin-top: 20px; }
+.account-identity { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 28px; }
+.account-identity > div { min-width: 0; }
+.account-identity h3, .account-identity p { overflow-wrap: anywhere; }
+.account-identity p { color: var(--secondary); font-size: 13px; margin-top: 5px; line-height: 1.6; }
+.account-identity button { flex-shrink: 0; }
+.account-save { padding-bottom: 20px; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+.account-statistics > h3 { margin-bottom: 20px; }
+.account-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 20px; }
+.account-metrics div { min-width: 0; display: flex; flex-direction: column-reverse; justify-content: flex-end; gap: 5px; }
+.account-metrics dt { font-size: 12px; color: var(--secondary); line-height: 1.6; }
+.account-metrics dd { font-size: 29px; font-weight: 700; letter-spacing: -1px; line-height: 1.2; }
+.account-best { margin: 26px 0 14px; padding-top: 22px; border-top: 1px solid var(--border); }
+.account-best > p { font-size: 15px; margin-top: 6px; line-height: 1.6; }
+.account-best > .account-small { font-size: 12px; margin: 5px 0; }
+.account-history { margin-top: 30px; }
+.account-history ol { list-style: none; padding: 0; margin: 8px 0 20px; }
+.account-history li { padding: 17px 0; border-bottom: 1px solid var(--border); }
+.account-history-heading { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; margin-bottom: 8px; }
+.account-history-heading strong { font-size: 13px; font-weight: 600; }
+.account-history-heading time { font-size: 12px; color: var(--secondary); }
+.account-history li p { font-size: 13px; line-height: 1.65; color: var(--secondary); }
+.account-history .account-win { color: var(--accent-text); }
+.account-history li .account-history-path { color: var(--text); font-size: 14px; margin-top: 5px; overflow-wrap: anywhere; }
+.account-private { margin-top: 26px; }
+@media (max-width: 600px) {
+  .site-header.with-account nav { gap: 7px; font-size: 11px; }
+  .site-header.with-account .mode-switch { gap: 6px; }
+  .header-account { width: 32px; display: grid; place-items: center; }
+  .header-account svg { display: block; }
+  .header-account .account-control-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .account-dialog { width: 100%; max-height: calc(100dvh - 24px); padding: 42px 24px 28px; }
+  .account-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; }
+  .account-metrics dd { font-size: 28px; }
+  .account-identity { gap: 12px; }
+}
