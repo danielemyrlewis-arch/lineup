@@ -12,11 +12,11 @@ function pngSize(path: string): [number, number] {
   return [bytes.readUInt32BE(16), bytes.readUInt32BE(20)];
 }
 
-test("the public share/canonical URL and raster preview retain the GitHub Pages repository path", () => {
-  assert.equal(SITE_URL, "https://danielemyrlewis-arch.github.io/lineup/");
+test("the public share/canonical URL and raster preview use the custom domain root", () => {
+  assert.equal(SITE_URL, "https://dailylineup.co.uk/");
   const image = new URL(SOCIAL_IMAGE.url);
   assert.equal(image.origin, new URL(SITE_URL).origin);
-  assert.equal(image.pathname, "/lineup/social/lineup-og.png");
+  assert.equal(image.pathname, "/social/lineup-og.png");
   assert.match(SITE_TITLE, /LINEUP.*Movie Guessing Game/);
   assert.match(SITE_DESCRIPTION, /five yes-or-no questions/);
   assert.ok(!/today|daily|premium|subscription/i.test(SITE_DESCRIPTION));
@@ -35,4 +35,15 @@ test("the single-page sitemap advertises only the real canonical game URL", () =
   const urls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]);
   assert.deepEqual(urls, [SITE_URL]);
   assert.ok(!sitemap.includes("lastmod"), "Do not invent a content modification date");
+});
+
+
+test("the custom domain and root crawler policy survive export as public files", () => {
+  assert.equal(readFileSync(publicFile("CNAME"), "utf8"), "dailylineup.co.uk\n");
+  const robots = readFileSync(publicFile("robots.txt"), "utf8");
+  assert.match(robots, /^User-agent:\s*\*$/m);
+  assert.match(robots, /^Allow:\s*\/$/m);
+  assert.match(robots, /^Sitemap:\s*https:\/\/dailylineup\.co\.uk\/sitemap\.xml$/m);
+  assert.ok(!robots.includes("github.io"));
+  assert.ok(!robots.includes("/lineup/"));
 });

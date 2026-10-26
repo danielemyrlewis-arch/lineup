@@ -1,5 +1,5 @@
 /** The public static site. Keep shared links and crawler metadata consistent. */
-export const SITE_URL = "https://danielemyrlewis-arch.github.io/lineup/";
+export const SITE_URL = "https://dailylineup.co.uk/";
 
 export const SITE_TITLE = "LINEUP — Free Movie Guessing Game";
 export const SITE_DESCRIPTION =

@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync, existsSync } from "node:fs";
 import path from "node:path";
 
 const root = path.resolve("out");
-const base = (process.env.PAGES_BASE_PATH ?? "").replace(/\/$/, "");
+const site = new URL("https://dailylineup.co.uk/");
 const files = [];
 function walk(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -15,15 +15,33 @@ if (!existsSync(path.join(root, "index.html")))
   throw Error("Missing static out/index.html");
 walk(root);
 if (!existsSync(path.join(root, ".nojekyll"))) throw Error("Missing .nojekyll");
+if (!existsSync(path.join(root, "CNAME")) ||
+    readFileSync(path.join(root, "CNAME"), "utf8") !== `${site.hostname}\n`)
+  throw Error("CNAME must contain only dailylineup.co.uk and a final newline");
+const sitemap = readFileSync(path.join(root, "sitemap.xml"), "utf8");
+if (JSON.stringify([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1])) !== JSON.stringify([site.href]))
+  throw Error("The sitemap must advertise the custom-domain root");
+const robots = readFileSync(path.join(root, "robots.txt"), "utf8");
+if (!/^User-agent: \*$/m.test(robots) || !/^Allow: \/$/m.test(robots) ||
+    !robots.includes(`Sitemap: ${site.href}sitemap.xml`))
+  throw Error("robots.txt must allow the root site and link its sitemap");
+const index = readFileSync(path.join(root, "index.html"), "utf8");
+for (const tag of [
+  `rel="canonical" href="${site.href}"`,
+  `property="og:url" content="${site.href}"`,
+  `property="og:image" content="${site.href}social/lineup-og.png"`,
+  `name="twitter:image" content="${site.href}social/lineup-og.png"`,
+]) {
+  if (!index.includes(tag)) throw Error(`Missing custom-domain metadata: ${tag}`);
+}
 function checkAsset(raw, from) {
-  if (/^(data:|https?:|#|mailto:)/.test(raw)) return;
+  if (/^(data:|#|mailto:|tel:)/.test(raw)) return;
   const relative = path.relative(root, from).split(path.sep).join("/");
-  const url = new URL(raw, `https://static.invalid${base}/${relative}`);
-  if (base && !url.pathname.startsWith(`${base}/`))
-    throw Error(`Asset escapes repository path: ${relative} → ${url.pathname}`);
+  const url = new URL(raw, new URL(relative, site));
+  if (url.origin !== site.origin) return;
   let target = path.join(
     root,
-    decodeURIComponent(url.pathname.slice(base.length)),
+    decodeURIComponent(url.pathname),
   );
   if (existsSync(target) && statSync(target).isDirectory())
     target = path.join(target, "index.html");
@@ -31,13 +49,15 @@ function checkAsset(raw, from) {
     throw Error(`Missing static asset: ${relative} → ${url.pathname}`);
 }
 for (const file of files) {
+  const text = /\.(html|css|js|xml|txt)$/.test(file) ? readFileSync(file, "utf8") : "";
+  if (text.includes("danielemyrlewis-arch.github.io") || text.includes("/lineup/"))
+    throw Error(`Obsolete repository URL or path in ${path.relative(root, file)}`);
   if (file.endsWith(".html")) {
-    const html = readFileSync(file, "utf8");
-    for (const match of html.matchAll(/\b(?:src|href)="([^"]+)"/g))
+    for (const match of text.matchAll(/\b(?:src|href)="([^"]+)"/g))
       checkAsset(match[1], file);
   }
   if (file.endsWith(".css")) {
-    for (const match of readFileSync(file, "utf8").matchAll(
+    for (const match of text.matchAll(
       /url\(["']?([^\s)"']+)["']?\)/g,
     ))
       checkAsset(match[1], file);
@@ -45,7 +65,7 @@ for (const file of files) {
   if (
     file.endsWith(".js") &&
     /api\.themoviedb\.org|\/api\/lineup|TMDB_API_TOKEN|appgprj_[a-z0-9]{10}/.test(
-      readFileSync(file, "utf8"),
+      text,
     )
   )
     throw Error(
@@ -58,7 +78,10 @@ if (bytes > 100 * 1024 * 1024)
 console.log(
   JSON.stringify({
     staticExport: true,
-    basePath: base || "/",
+    basePath: "/",
+    siteUrl: site.href,
+    cnameVerified: true,
+    metadataVerified: true,
     files: files.length,
     megabytes: +(bytes / 1024 / 1024).toFixed(2),
     assetsVerified: true,

@@ -1,18 +1,12 @@
 import type { NextConfig } from "next";
-// Build-time only. build:pages supplies /lineup for the public repository site.
-const rawBasePath = process.env.PAGES_BASE_PATH?.trim() ?? "";
-const basePath = rawBasePath === "/" ? "" : rawBasePath.replace(/\/$/, "");
-if (basePath && !/^\/[A-Za-z0-9._-]+$/.test(basePath))
-  throw new Error(
-    "PAGES_BASE_PATH must be empty or one repository path such as /lineup",
-  );
+// The GitHub Pages custom domain serves the static export at its origin root.
 const config: NextConfig = {
   output: "export",
   trailingSlash: true,
   poweredByHeader: false,
   agentRules: false,
-  basePath,
+  basePath: "",
   images: { unoptimized: true },
-  env: { NEXT_PUBLIC_BASE_PATH: basePath },
+  env: { NEXT_PUBLIC_BASE_PATH: "" },
 };
 export default config;

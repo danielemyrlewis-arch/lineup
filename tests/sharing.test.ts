@@ -30,7 +30,8 @@ test("result text contains the Practice game link, real path and natural invitat
   for (const movie of state.puzzle.movies) assert.ok(!text.includes(movie.title));
   for (const answer of state.history) assert.ok(!text.includes(answer.question.label));
   assert.ok(!text.includes("→ 1\n"));
-  assert.ok(!/🎯|today|daily|#\d/i.test(text));
+  const resultCopy = text.slice(0, text.indexOf("https://"));
+  assert.ok(!/🎯|today|daily|#\d/i.test(resultCopy));
   assert.equal((text.match(/https:\/\//g) ?? []).length, 1);
 });
 
@@ -90,7 +91,7 @@ test("missing native share uses Clipboard API and waits for success", async () =
   assert.equal(await share.shareResult(finished(), {
     clipboard: { writeText: async text => { value = text; } },
   }), "copied");
-  assert.match(value, /https:\/\/danielemyrlewis-arch.github.io\/lineup\//);
+  assert.match(value, /https:\/\/dailylineup\.co\.uk\//);
 });
 
 test("missing or rejected clipboard exposes manual fallback instead of false success", async () => {
@@ -112,7 +113,7 @@ test("copy game link writes only the public URL and explicit copy never invokes 
     share: async () => { nativeCalls++; },
     clipboard: { writeText: async text => { copied = text; } },
   }), "copied");
-  assert.equal(copied, "https://danielemyrlewis-arch.github.io/lineup/");
+  assert.equal(copied, "https://dailylineup.co.uk/");
   assert.equal(nativeCalls, 0);
 });
 
@@ -156,6 +157,6 @@ test("result screen states the actual remaining count rather than inventing a fi
 test("manual copy fallback is a named read-only field with accurate content", () => {
   const html = render(finished(), { text: share.GAME_URL, label: "Game link to copy" });
   assert.match(html, /<textarea[^>]*aria-label="Game link to copy"[^>]*readOnly=""/);
-  assert.match(html, /https:\/\/danielemyrlewis-arch.github.io\/lineup\/<\/textarea>/);
+  assert.match(html, /https:\/\/dailylineup\.co\.uk\/<\/textarea>/);
   assert.match(html, /role="status"/);
 });

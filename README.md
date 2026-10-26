@@ -19,12 +19,13 @@ Open http://localhost:3000. No `.env` file is needed. Development uses Next's lo
 
 ### Publish directly from main /docs
 
-The complete publishable site is committed in **`docs/`**, including `docs/.nojekyll` so GitHub Pages serves Next.js's `_next` assets directly. There is no custom deployment workflow, build service, token or custom secret to configure.
+The complete publishable site is committed in **`docs/`**, including `docs/.nojekyll` so GitHub Pages serves Next.js's `_next` assets directly, and `docs/CNAME` for **dailylineup.co.uk**. There is no custom deployment workflow, build service, token or custom secret to configure.
 
 1. Push the committed `main` branch using GitHub Desktop's **Push origin**.
 2. In the repository, open **Settings → Pages → Build and deployment**.
 3. Set **Source: Deploy from a branch**, **Branch: main**, **Folder: /docs**, then **Save**.
-4. Once GitHub Pages finishes publishing, open **https://danielemyrlewis-arch.github.io/lineup/**.
+4. Keep the publishing source above, configure the Pages custom domain as **dailylineup.co.uk**, and point its DNS to GitHub Pages as described in the [custom-domain handoff](notes/custom-domain.md). Enable **Enforce HTTPS** when GitHub makes it available.
+5. Once GitHub Pages and DNS are ready, open **https://dailylineup.co.uk/**.
 
 GitHub serves the files already present in `docs/`; it does not build Next.js. For future application or catalogue updates, regenerate `docs/` locally, commit it together with the source changes, then push `main`.
 
@@ -34,21 +35,19 @@ GitHub serves the files already present in `docs/`; it does not build Next.js. F
 npm run build:pages
 ```
 
-This sets the build-time base path to `/lineup`, runs the existing `next build --webpack` static export and its asset checks, then replaces `docs/` with the complete verified `out/` output. The command preserves local development at the domain root. All public scripts, CSS, fonts, images, favicon and links in `docs/` are compiled for `/lineup/`. No production environment variables are needed.
+This runs the existing `next build --webpack` static export and its asset checks, then replaces `docs/` with the complete verified `out/` output. Development and production both use the **domain root**, with no repository prefix. Scripts, CSS, fonts, posters, images and internal links use root-compatible paths; canonical and sharing URLs use **https://dailylineup.co.uk/**. `public/CNAME`, `public/robots.txt`, `public/sitemap.xml` and `.nojekyll` are copied into each export automatically. No production environment variables are needed.
 
-The lower-level `npm run build` command still exports to `out/` at the domain root by default. `PAGES_BASE_PATH` remains an optional build-time setting for other hosting paths; the public beta uses `npm run build:pages` with its fixed repository path. Do not run `next start`; the published site has no application server.
+The lower-level `npm run build` command exports to `out/` at the same domain root. The old `PAGES_BASE_PATH` override is no longer used, so a stale environment value cannot reintroduce the repository prefix. Do not run `next start`; the published site has no application server.
 
 ### Test docs with a basic static server
 
-After `npm run build:pages`, create an empty preview folder and mount `docs/` at the repository path:
+After `npm run build:pages`, serve `docs/` directly at the origin root:
 
 ```sh
-mkdir -p /tmp/lineup-docs-preview
-ln -s "$PWD/docs" /tmp/lineup-docs-preview/lineup
-python3 -m http.server 4173 --bind 127.0.0.1 --directory /tmp/lineup-docs-preview
+python3 -m http.server 4173 --bind 127.0.0.1 --directory docs
 ```
 
-Open **http://127.0.0.1:4173/lineup/**. Remove an old preview symlink before recreating it. This symlink is only for local preview; `docs/` contains ordinary files. Next/Node does not need to be running.
+Open **http://127.0.0.1:4173/** or **http://127.0.0.1:4173/?mode=practice**. No symlink or repository subdirectory is needed. Next/Node does not need to be running.
 
 Checks:
 
@@ -60,7 +59,7 @@ npm run audit:public
 npm run build:pages
 ```
 
-`postbuild` verifies HTML/CSS asset paths, `.nojekyll`, export size and the absence of old backend references in the JavaScript. The home page contains every game, sheet and result, so refreshing the repository URL works directly. Only generated publication files belong in `docs/`.
+`postbuild` verifies root HTML/CSS asset paths, the custom-domain CNAME, canonical/social metadata, robots/sitemap, `.nojekyll`, export size and the absence of old repository/backend references in publication files. The home page contains every game, sheet and result, so refreshing the root or a mode query URL works directly. Only generated publication files belong in `docs/`.
 
 ## Daily LINEUP
 
@@ -104,11 +103,11 @@ Unknown studio, lead or curated values stay unknown. Questions require reliable 
 
 Existing localStorage keys for recently shown films, mystery cooldown, help preference and Practice statistics are unchanged. History remains bounded to ten boards/240 film IDs and ten mysteries; new lineups and refreshes respect the same cooldown/diversity logic. Storage failures fall back to in-memory history. No cookies or server sessions are needed. A Practice refresh starts a fresh game while retaining local history, as before. Daily uses its separate versioned per-date progress records and resumes unfinished or completed attempts. Mode switches retain both sessions in memory, including when storage is blocked.
 
-Browser storage belongs to an origin: moving from a previous host to `USERNAME.github.io` starts separate local statistics/history. There is no automatic cross-domain migration or account sync. Metadata changes require a new build/deployment. The first load downloads the bundled catalogue; remote posters/headshots still need an internet connection. JavaScript is required to play. Both modes keep their answer and metadata in client memory; the static Daily schedule is inspectable and is not presented as cheat-proof.
+Browser storage belongs to an origin: moving from `danielemyrlewis-arch.github.io` to `dailylineup.co.uk` starts separate local Daily progress, Practice history/statistics and onboarding preferences. Existing keys and validation remain unchanged, so progress saves/resumes normally on the new domain. The new origin cannot read the old origin's storage; there is no automatic cross-domain migration or account sync. Metadata changes require a new build/deployment. The first load downloads the bundled catalogue; remote posters/headshots still need an internet connection. JavaScript is required to play. Both modes keep their answer and metadata in client memory; the static Daily schedule is inspectable and is not presented as cheat-proof.
 
 ## Public source and attribution
 
-`.env`, `.env.local`, `.dev.vars`, keys, dependency/build folders and local editor/hosting caches are ignored. `.env.example` contains only an optional public build-time path. `npm run audit:public` reports credential/private-metadata locations without printing their values. The one-time `node scripts/audit-public-source.mjs --history` check also scans historical source blobs; the clean release archive deliberately omits all Git history and local state.
+`.env`, `.env.local`, `.dev.vars`, keys, dependency/build folders and local editor/hosting caches are ignored. `.env.example` documents that no environment variables are required. `npm run audit:public` reports credential/private-metadata locations without printing their values. The one-time `node scripts/audit-public-source.mjs --history` check also scans historical source blobs; the clean release archive deliberately omits all Git history and local state.
 
 LINEUP retains its editorial black/cobalt identity and locally hosted **Libre Franklin** under the SIL Open Font License (`public/licenses/Libre-Franklin-OFL.txt`). Film metadata/artwork remain credited to [TMDB](https://www.themoviedb.org). About & credits retains the TMDB logo and notice: **This product uses the TMDB API but is not endorsed or certified by TMDB.** Static metadata was originally obtained from TMDB; the published beta makes no live metadata API requests.
 
