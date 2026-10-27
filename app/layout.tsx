@@ -34,6 +34,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: new URL("apple-touch-icon.png", SITE_URL).href, type: "image/png", sizes: "180x180" },
       { url: new URL("favicon.svg", SITE_URL).href, type: "image/svg+xml" },
       { url: new URL("favicon-32.png", SITE_URL).href, type: "image/png", sizes: "32x32" },
     ],
