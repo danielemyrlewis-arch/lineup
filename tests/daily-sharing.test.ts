@@ -104,7 +104,8 @@ test("Daily result labelling retains the existing real path and offers Practice 
   assert.match(html, /Daily LINEUP #099/);
   assert.match(html, /You got it\./);
   assert.match(html, /questions used\./);
-  assert.match(html, />Play Practice<\/button>/);
+  assert.match(html, /class="primary-button">Practice<\/button>/);
+  assert.ok(!html.includes("Play Practice"));
   assert.ok(!html.includes("Play again"));
   assert.ok(html.includes(`Films remaining: ${engine.deductionPath(state).join(", then ")}`));
   const practice = render({ ...state, puzzle: { ...state.puzzle, mode: "practice" } });

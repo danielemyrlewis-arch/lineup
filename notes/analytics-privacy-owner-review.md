@@ -2,13 +2,13 @@
 
 This document records implementation facts and remaining operator decisions. It does not certify legal compliance. No Google, Supabase, GitHub or GoDaddy settings were changed automatically.
 
-## Pre-publication requirement: confirm the privacy mailbox
+## Privacy mailbox confirmed
 
-**Do not publish until forwarding/delivery for privacy@dailylineup.co.uk is confirmed and the mailbox is monitored.** The owner has supplied the address but has not yet confirmed forwarding. Send a real test message and verify receipt; the website cannot check mailbox delivery.
+The owner confirmed on 27 October 2026 that forwarding for **privacy@dailylineup.co.uk** has been configured and successfully tested. Continue monitoring the address for privacy requests. The website does not test mail delivery automatically.
 
 ## Public notice and contact
 
-The public static `/privacy/` page describes local game storage, Supabase Google authentication, account-linked Daily results, provider requests, optional GA4, consent, cookie lifetimes, withdrawal and data requests. The owner supplied **privacy@dailylineup.co.uk** as the public privacy contact. Check that it exists, receives mail and is monitored before publishing.
+The public static `/privacy/` page describes local game storage, Supabase Google authentication, account-linked Daily results, provider requests, optional GA4, consent, cookie lifetimes, withdrawal and data requests. The owner supplied **privacy@dailylineup.co.uk** as the public privacy contact. Forwarding and receipt have been confirmed by the owner; keep the address monitored.
 
 The owner supplied **Daniel Lewis, operating LINEUP as an independent online game** as the operator. The public notice now states this. Review whether an additional business/contact address or representative details are required for the intended audience and circumstances; no address or incorporated legal entity was invented.
 
@@ -37,11 +37,11 @@ The local preference record holds a version and accept/reject choice. It is not 
 
 Only one Analytics tag download is attempted in each document, preventing duplicate runtimes. If the tag was blocked or consent was withdrawn while it was still loading, a later acceptance is remembered but Analytics may require a page refresh. Reaccepting after a fully loaded runtime reuses it without a duplicate page view. Already-started network requests cannot be recalled; withdrawal prevents subsequent collection and removes accessible GA cookies. Gameplay remains available throughout.
 
-Analytics cookies are pseudonymous identifiers; the site must not call all GA4 information anonymous. GA receives ordinary network/device information after consent even though application event parameters omit names, email, account IDs, tokens and hidden film data. The implementation does not set a GA User-ID or introduce a cross-site player identity. Sanitised page locations and blank referrers trade acquisition detail for reduced disclosure.
+Analytics cookies are pseudonymous identifiers; the site must not call all GA4 information anonymous. GA receives ordinary network/device information after consent even though application event parameters omit names, email, account IDs, tokens and hidden film data. The implementation does not set a GA User-ID or introduce a cross-site player identity. Sanitised page locations and blank referrers limit acquisition detail. A complete, allowlisted source/medium/campaign triplet may now be read from the current URL only after consent and passed through standard GA campaign configuration fields. Arbitrary query data is discarded, and no campaign tags are saved in localStorage. See [the focused UX/attribution handoff](final-ux-analytics.md).
 
 ## Owner release checks
 
-1. Confirm privacy-mailbox forwarding/delivery and monitoring before publication. Review the public notice and the items above, especially operator/contact details, retention, international processing and erasure handling.
+1. Keep the confirmed privacy mailbox monitored. Review the public notice and the items above, especially operator/contact details, retention, international processing and erasure handling.
 2. Verify opt-in, rejection, withdrawal, cookie deletion and remembered preferences on the deployed domain in an ordinary browser, including another open tab. Confirm no Analytics requests/cookies before opt-in. Google sign-in is a separate, user-requested service and may contact Google without Analytics consent.
 3. Inspect GA Realtime or DebugView with a consenting test browser, confirm only the documented safe events/parameters, then withdraw consent and verify no subsequent collection. No real production traffic is claimed by local tests.
 4. Test account persistence, saved Daily history, guest progress and Google sign-in separately from Analytics consent. Do not delete real player data merely to test this analytics change.

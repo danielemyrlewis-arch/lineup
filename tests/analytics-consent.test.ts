@@ -12,6 +12,7 @@ interface PanelProps {
   onChoice: (choice: "granted" | "denied") => void;
   onClose?: () => void;
   headingRef?: React.RefObject<HTMLHeadingElement | null>;
+  panelRef?: React.RefObject<HTMLElement | null>;
 }
 interface ConsentExports {
   AnalyticsConsent: () => React.ReactNode;
@@ -54,14 +55,32 @@ function fixture(initial: Choice) {
   interface Hook {value?: unknown; dependencies?: unknown[]; cleanup?: () => void}
   const hooks: Hook[] = [];
   const effects: {index: number; dependencies?: unknown[]; run: () => void | (() => void)}[] = [];
-  const window = new EventTarget();
+  const window = Object.assign(new EventTarget(), {getComputedStyle: () => ({bottom: "12px"})});
+  const clearance = new Map<string, string>();
+  const resizeCallbacks = new Set<() => void>();
+  let bannerHeight = 180;
   class Element {
     isConnected = true;
     focused = 0;
-    focus() { this.focused++; }
+    focusOptions: unknown[] = [];
+    focus(options?: unknown) { this.focused++; this.focusOptions.push(options); }
+    getBoundingClientRect() { return {height: bannerHeight}; }
   }
   const footer = new Element();
-  const document = {activeElement: footer, querySelector: () => footer};
+  const heading = new Element(), banner = new Element();
+  const document = {activeElement: footer, querySelector: () => footer,
+    documentElement: {style: {
+      getPropertyValue: (name: string) => clearance.get(name) ?? "",
+      setProperty: (name: string, value: string) => { clearance.set(name, value); },
+      removeProperty: (name: string) => { clearance.delete(name); },
+    }},
+  };
+  class Observer {
+    callback: () => void;
+    constructor(callback: () => void) { this.callback = callback; resizeCallbacks.add(callback); }
+    observe() {}
+    disconnect() { resizeCallbacks.delete(this.callback); }
+  }
   const react = {
     useState(value: unknown) {
       const index = cursor++;
@@ -93,8 +112,15 @@ function fixture(initial: Choice) {
       choices.push(choice); consent = choice;
       for (const listener of subscriptions) listener();
     },
-  }, {window, document, HTMLElement: Element, Event});
-  const render = () => { cursor = 0; dirty = false; tree = exports.AnalyticsConsent(); return tree; };
+  }, {window, document, HTMLElement: Element, Event, ResizeObserver: Observer});
+  const render = () => {
+    cursor = 0; dirty = false; tree = exports.AnalyticsConsent();
+    for (const node of elements(tree)) {
+      const ref = node.props.ref as React.RefObject<unknown> | undefined;
+      if (ref) ref.current = node.type === "section" ? banner : heading;
+    }
+    return tree;
+  };
   const settle = () => {
     let count = 0;
     do {
@@ -109,7 +135,9 @@ function fixture(initial: Choice) {
     } while (dirty || effects.length);
     return tree;
   };
-  return {exports, render, settle, choices, footer,
+  return {exports, render, settle, choices, footer, heading, clearance,
+    resize(height: number) { bannerHeight = height; for (const callback of resizeCallbacks) callback(); },
+    escape() { const section = elements(tree).find(node => node.type === "section")!; (section.props.onKeyDown as (event: unknown) => void)({key: "Escape", preventDefault: () => {}}); return settle(); },
     html: () => renderToStaticMarkup(tree),
     open() { (exports.AnalyticsPreferencesButton().props as {onClick: () => void}).onClick(); return settle(); },
     choose(choice: "Accept analytics" | "Reject analytics") { click(tree, choice); return settle(); },
@@ -138,7 +166,7 @@ test("an undecided visitor gets equal accept/reject controls in a non-modal regi
   assert.equal(buttons[0][1], buttons[1][1], "Both choices must use the same visual treatment");
   assert.match(html, /<section[^>]*aria-labelledby="analytics-preferences-heading"/);
   assert.ok(!html.includes("role=\"dialog\"") && !html.includes("aria-modal"));
-  assert.match(html, /Daily, Practice and Google sign-in work whichever you choose/);
+  assert.match(html, /Daily, Practice and Google sign-in work either way/);
   assert.match(html, /href="\/privacy\/"/);
 });
 
@@ -150,7 +178,7 @@ test("accept and reject submit their exact explicit choices without automatic ac
     assert.deepEqual(f.choices, [expected]);
     assert.ok(!f.html().includes("Accept analytics"));
     assert.match(f.html(), new RegExp(`Analytics preference saved: ${expected === "granted" ? "on" : "off"}`));
-    assert.equal(f.footer.focused, 1);
+    assert.equal(f.footer.focused, 0, "An initial decision must not focus or scroll to the footer");
     f.dispose();
   }
 });
@@ -163,6 +191,8 @@ test("remembered choices do not re-prompt and the footer reopens one panel witho
     assert.equal((f.html().match(/id="analytics-preferences-heading"/g) ?? []).length, 1);
     assert.match(f.html(), new RegExp(`Analytics is ${choice === "granted" ? "on" : "off"}`));
     assert.deepEqual(f.choices, []);
+    assert.equal(f.heading.focused, 1);
+    assert.equal((f.heading.focusOptions[0] as {preventScroll: boolean}).preventScroll, true);
     f.close(); assert.ok(!f.html().includes("Accept analytics"));
     assert.deepEqual(f.choices, []); assert.equal(f.footer.focused, 1);
     f.dispose();
@@ -203,4 +233,39 @@ test("the public privacy page identifies the real operator and explains consent,
   assert.equal((html.match(/<h1>/g) ?? []).length, 1);
   for (const content of ["Daniel Lewis", "privacy@dailylineup.co.uk", "lineup:auth:v1", "lineup:analytics:consent:v1", "180 days", "does not load the Analytics tag", "cannot automatically erase information already received by Google", "Analytics preferences", "Supabase", "localStorage"]) assert.ok(html.includes(content), content);
   assert.ok(!html.includes("<script") && !html.includes("service_role"));
+});
+
+
+test("a visible fixed panel reserves and updates clearance, then removes it after the choice", () => {
+  const f = fixture("unknown"); f.render(); f.settle();
+  assert.equal(f.clearance.get("--analytics-consent-space"), "204px");
+  assert.equal(f.heading.focused, 0, "Initial consent must not steal focus or scroll");
+  f.resize(240); assert.equal(f.clearance.get("--analytics-consent-space"), "264px");
+  f.choose("Reject analytics"); assert.equal(f.clearance.has("--analytics-consent-space"), false);
+  f.dispose();
+});
+
+test("Escape dismisses only reopened preferences and restores focus without scrolling", () => {
+  const f = fixture("denied"); f.render(); f.settle(); f.open();
+  assert.match(f.html(), /Close preferences/);
+  f.escape(); assert.ok(!f.html().includes("Accept analytics"));
+  assert.equal(f.footer.focused, 1);
+  assert.equal((f.footer.focusOptions[0] as {preventScroll: boolean}).preventScroll, true);
+  assert.deepEqual(f.choices, []);
+  f.dispose();
+});
+
+test("consent layout is viewport-fixed, safe-area aware and keeps equal choices outside scrollable copy", () => {
+  const css = readFileSync(new URL("../components/analytics/analytics-consent.css", import.meta.url), "utf8");
+  const banner = css.match(/\.analytics-consent\s*\{([^}]+)\}/)?.[1] ?? "";
+  assert.match(banner, /position:\s*fixed/);
+  assert.match(banner, /bottom:\s*calc\(12px \+ env\(safe-area-inset-bottom/);
+  assert.match(banner, /safe-area-inset-left/);
+  assert.match(banner, /safe-area-inset-right/);
+  assert.match(banner, /max-height:\s*calc\(100dvh/);
+  assert.match(css, /body\s*\{\s*padding-bottom:\s*var\(--analytics-consent-space, 0px\)/);
+  assert.match(css, /scroll-padding-bottom:\s*var\(--analytics-consent-space, 0px\)/);
+  assert.match(css, /\.analytics-consent-actions[^}]+grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(css, /@media \(max-width: 700px\)/);
+  assert.ok(!/flex-basis:\s*100%/.test(css), "Narrow layouts must keep both choices immediately visible together");
 });

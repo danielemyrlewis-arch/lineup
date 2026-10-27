@@ -29,12 +29,26 @@ const ask = (state: GameState) => ({type: "ask" as const,
   question: validQuestions(engine.activeMovies(state), state.history.map(h => h.question.id))[0]});
 let storage = new MemoryStorage();
 let dailyReads = 0;
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement>;
+let completedPracticeButton: ButtonProps | null = null;
+function collectCompletedPracticeButton(children: React.ReactNode): void {
+  React.Children.forEach(children, child => {
+    if (!React.isValidElement<{children?: React.ReactNode; "aria-label"?: string}>(child)) return;
+    if (child.props["aria-label"] === "Daily complete") {
+      const button = React.Children.toArray(child.props.children).find(node =>
+        React.isValidElement<ButtonProps>(node) && node.type === "button" && node.props.className === "primary-button");
+      assert.ok(React.isValidElement<ButtonProps>(button));
+      completedPracticeButton = button.props;
+    }
+    collectCompletedPracticeButton(child.props.children);
+  });
+}
 
 // Render the real Game JSX and its state initializers. Child sheets/board are
 // presentation boundaries; no synthetic hook runner or duplicated UI rules.
 const exports: {Game?: React.ComponentType<{
   initialPuzzle: Puzzle; catalogue: typeof DEMO_MOVIES; initialGameState?: GameState;
-  dailyToday?: string; hasNextDaily?: boolean; hasCurrentDaily?: boolean;
+  dailyToday?: string; hasNextDaily?: boolean; hasCurrentDaily?: boolean; onModeChange?: (mode: "daily" | "practice") => void;
 }>} = {};
 const dependencies: Record<string, unknown> = {
   "react": React,
@@ -51,7 +65,7 @@ const dependencies: Record<string, unknown> = {
   "./info-dialogs": {HelpDialog: () => null, AboutDialog: () => null, StatsDialog: () => null},
   "./pick-dialogs": {PickDialog: () => null, RestartDialog: () => React.createElement("section", {"data-test": "restart"})},
   "./result-dialog": {ResultDialog: ({state}: {state: GameState}) => React.createElement("section", {"data-test": "result", "data-status": state.status})},
-  "./game-shell": {GameShell: ({children, mode}: {children: React.ReactNode; mode: string}) => React.createElement("main", {"data-mode": mode}, children)},
+  "./game-shell": {GameShell: ({children, mode}: {children: React.ReactNode; mode: string}) => { collectCompletedPracticeButton(children); return React.createElement("main", {"data-mode": mode}, children); }},
   "@/lib/game/practice-selection": {createPracticePuzzle},
   "@/lib/game/practice-persistence": {writePracticeProgress: () => true},
   "@/lib/game/onboarding": {shouldShowStrategyHint: () => false, dismissStrategyHint: () => {}},
@@ -65,7 +79,7 @@ runInNewContext(source, {exports, require: (name: string) => {
   assert.ok(Object.hasOwn(dependencies, name), `Unexpected Game dependency ${name}`);
   return dependencies[name];
 }});
-const render = (puzzle: Puzzle, cached?: GameState, options: {dailyToday?: string; hasNextDaily?: boolean; hasCurrentDaily?: boolean} = {}) => renderToStaticMarkup(React.createElement(exports.Game!, {
+const render = (puzzle: Puzzle, cached?: GameState, options: {dailyToday?: string; hasNextDaily?: boolean; hasCurrentDaily?: boolean; onModeChange?: (mode: "daily" | "practice") => void} = {}) => renderToStaticMarkup(React.createElement(exports.Game!, {
   initialPuzzle: puzzle, catalogue: DEMO_MOVIES, initialGameState: cached,
   dailyToday: "2026-10-20", hasNextDaily: true, ...options,
 }));
@@ -91,7 +105,8 @@ test("actual completed Daily Game exposes result revisit and Practice, never rep
   assert.match(html, /Today’s LINEUP is complete/);
   assert.match(html, /midnight UK time/);
   assert.match(html, />View your result<\/button>/);
-  assert.match(html, />Play Practice<\/button>/);
+  assert.match(html, /class="primary-button">Practice<\/button>/);
+  assert.ok(!html.includes("Play Practice"));
   assert.match(html, /data-test="result" data-status="won"/);
   assert.ok(!html.includes('data-test="question-panel"'));
   assert.ok(!html.includes("New lineup") && !html.includes("Play again"));
@@ -184,4 +199,24 @@ test("an overnight tab does not promise a new Daily after the static schedule en
   assert.match(completeHtml, /Play Practice/);
   assert.ok(!completeHtml.includes("Today’s new lineup is ready"));
   assert.ok(!completeHtml.includes("A new Daily is ready"));
+});
+
+
+test("the completed Daily Practice button keeps its primary styling and existing mode navigation", () => {
+  storage = new MemoryStorage();
+  completedPracticeButton = null;
+  const puzzle = dailyPuzzle();
+  const initial = engine.initialState(puzzle);
+  dailyStorage.advanceDailyProgress(initial, {type: "guess", movieId: puzzle.mysteryId}, storage);
+  const modes: string[] = [];
+  render(puzzle, initial, {onModeChange: mode => modes.push(mode)});
+  // The real Game's child button/handler is captured during its ordinary React render.
+  const action = completedPracticeButton as ButtonProps | null;
+  assert.ok(action);
+  assert.equal(action.children, "Practice");
+  assert.equal(action.type, "button");
+  assert.equal(action.className, "primary-button");
+  assert.equal(action.style, undefined, "The copy change must not alter inline dimensions or styling");
+  action.onClick?.({} as React.MouseEvent<HTMLButtonElement>);
+  assert.deepEqual(modes, ["practice"]);
 });

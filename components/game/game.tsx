@@ -316,7 +316,7 @@ export function Game({
           <h3>{dailyIsCurrent ? "Today’s LINEUP is complete." : "This Daily is complete."}</h3>
           <p>{dailyIsCurrent ? hasNextDaily ? "The next one arrives at midnight UK time." : "You’ve reached the end of the current Daily schedule. Practice is always open." : hasCurrentDaily ? "Today’s new lineup is ready above." : "Practice is available while the Daily schedule is updated."}</p>
           <button type="button" className="secondary-button" onClick={() => setSheet("result")}>View your result</button>
-          <button type="button" className="primary-button" onClick={() => onModeChange?.("practice")}>Play Practice</button>
+          <button type="button" className="primary-button" onClick={() => onModeChange?.("practice")}>Practice</button>
         </aside> : <QuestionPanel
           key={`questions-${state.puzzle.id}`}
           state={state}

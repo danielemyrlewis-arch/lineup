@@ -93,7 +93,7 @@ export function ResultDialog({
         onClick={onNew}
         disabled={newLoading || shareBusy}
       >
-        {newLoading ? "Preparing…" : dailyLabel ? "Play Practice" : "Play again"}
+        {newLoading ? "Preparing…" : dailyLabel ? "Practice" : "Play again"}
       </button>
       <div className="result-share-block">
         <p className="result-invite">Think a friend could do better?</p>

@@ -1,3 +1,5 @@
+import { validatedAnalyticsCampaign } from "./analytics-campaign.ts";
+
 /** Optional GA4. No Google tag, consent ping or event exists before an explicit opt-in. */
 export type AnalyticsConsent = "unknown" | "granted" | "denied";
 export type AnalyticsEventName = "game_start" | "question_asked" | "game_complete" | "guess_submitted" | "share_result" | "login" | "sign_up" | "daily_return" | "question_browse";
@@ -172,7 +174,11 @@ export function createAnalyticsController({
       command("set", "ads_data_redaction", true);
       command("set", "url_passthrough", false);
       command("js", new Date(now()));
+      // Read only now, after explicit/stored grant. No landing campaign is saved or replayed.
+      const campaign = validatedAnalyticsCampaign(win.location.href);
       command("config", currentId, {send_page_view: false, ...safePage(), ignore_referrer: true,
+        // Config updates merge in a loaded runtime: clear old fields before applying fresh safe values.
+        campaign_source: "", campaign_medium: "", campaign_name: "", ...campaign,
         allow_google_signals: false, allow_ad_personalization_signals: false,
         cookie_expires: 180 * 24 * 60 * 60, cookie_update: false, cookie_path: "/", cookie_domain: "auto", cookie_flags: "SameSite=Lax;Secure"});
       configured = true;

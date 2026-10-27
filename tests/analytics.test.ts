@@ -303,3 +303,89 @@ test("withdrawal during a pending load followed by regrant never starts a compet
   const refreshed = fixture({choice: "granted"}); refreshed.controller.startAnalytics();
   assert.equal(refreshed.page.scripts.length, 1); assert.equal(refreshed.disabled(), false);
 });
+
+const campaignUrl = (source = "reddit", medium = "community", campaign = "public_testing") =>
+  `https://dailylineup.co.uk/?utm_source=${source}&utm_medium=${medium}&utm_campaign=${campaign}`;
+const campaignFields = (configuration: Record<string, unknown>) => ({
+  campaign_source: configuration.campaign_source,
+  campaign_medium: configuration.campaign_medium,
+  campaign_name: configuration.campaign_name,
+});
+
+test("campaign URL is not read, stored or transmitted while consent is unknown or rejected", () => {
+  for (const choice of [undefined, "denied"] as const) {
+    const f = fixture({choice}); let campaignReads = 0;
+    Object.defineProperty(f.browser.location, "href", {get: () => { campaignReads++; return campaignUrl(); }});
+    f.controller.startAnalytics(); f.controller.trackEvent("game_start", {mode: "daily"});
+    assert.equal(campaignReads, 0); assert.equal(f.page.scripts.length, 0); assert.equal(f.commands().length, 0);
+    assert.ok(!JSON.stringify([...f.values]).includes("reddit"));
+    assert.ok(!JSON.stringify([...f.values]).includes("campaign"));
+  }
+});
+
+test("accepting on the still-tagged landing URL sends only approved standard campaign config fields", () => {
+  const f = fixture(); f.browser.location.href = `${campaignUrl()}&code=private-code&email=private%40example.test&utm_term=private-film#token=private-token`;
+  f.controller.startAnalytics();
+  assert.equal(f.commands().length, 0);
+  f.controller.setAnalyticsConsent("granted");
+  const configuration = f.commands().find(command => command[0] === "config")![2] as Record<string, unknown>;
+  assert.deepEqual(campaignFields(configuration), {campaign_source: "reddit", campaign_medium: "community", campaign_name: "public_testing"});
+  assert.equal(configuration.page_location, "https://dailylineup.co.uk/"); assert.equal(configuration.page_referrer, "");
+  const serialised = JSON.stringify(f.commands());
+  for (const value of ["private-code", "private@example.test", "private-film", "private-token", "utm_source", "utm_term", "#token", "?utm_"])
+    assert.ok(!serialised.includes(value), value);
+  assert.ok(!JSON.stringify([...f.values]).includes("reddit"), "No application campaign persistence is introduced");
+  assert.equal(f.events("page_view").length, 1); assert.equal(f.page.scripts.length, 1);
+});
+
+test("invalid, absent or partial campaigns explicitly clear the three config fields", () => {
+  for (const href of ["https://dailylineup.co.uk/", "https://dailylineup.co.uk/?utm_source=reddit", campaignUrl("private-person"), campaignUrl("reddit", "social", "private-campaign")]) {
+    const f = fixture({choice: "granted"}); f.browser.location.href = href; f.controller.startAnalytics();
+    const configuration = f.commands().find(command => command[0] === "config")![2] as Record<string, unknown>;
+    assert.deepEqual(campaignFields(configuration), {campaign_source: "", campaign_medium: "", campaign_name: ""});
+    assert.ok(!JSON.stringify(f.commands()).includes("private-person") && !JSON.stringify(f.commands()).includes("private-campaign"));
+    assert.equal(f.events("page_view").length, 1);
+  }
+});
+
+test("consent capture uses the URL present at acceptance, without replaying a pre-consent campaign or game", () => {
+  const f = fixture(); f.browser.location.href = campaignUrl(); f.controller.startAnalytics();
+  assert.equal(f.controller.trackEvent("question_asked", {mode: "daily", question_number: 1, question_category: "genre"}, "daily:question:1"), false);
+  f.browser.location.href = "https://dailylineup.co.uk/?mode=practice";
+  f.controller.setAnalyticsConsent("granted");
+  const configuration = f.commands().find(command => command[0] === "config")![2] as Record<string, unknown>;
+  assert.deepEqual(campaignFields(configuration), {campaign_source: "", campaign_medium: "", campaign_name: ""});
+  assert.equal(f.events("question_asked").length, 0);
+  assert.ok(!JSON.stringify(f.commands()).includes("reddit"));
+});
+
+test("repeated grants do not add another campaign config, tag or page view", () => {
+  const f = fixture({choice: "granted"}); f.browser.location.href = campaignUrl("playlin", "directory", "launch");
+  const stop = f.controller.startAnalytics(); stop(); f.controller.startAnalytics(); f.controller.setAnalyticsConsent("granted");
+  assert.equal(f.commands().filter(command => command[0] === "config").length, 1);
+  assert.equal(f.page.scripts.length, 1); assert.equal(f.events("page_view").length, 1);
+  assert.deepEqual(campaignFields(f.commands().find(command => command[0] === "config")![2] as Record<string, unknown>), {
+    campaign_source: "playlin", campaign_medium: "directory", campaign_name: "launch",
+  });
+});
+
+test("a later visit configures its own campaign rather than stale attribution from a previous document", () => {
+  for (const [href, expected] of [
+    [campaignUrl("discord", "social", "launch"), {campaign_source: "discord", campaign_medium: "social", campaign_name: "launch"}],
+    ["https://dailylineup.co.uk/", {campaign_source: "", campaign_medium: "", campaign_name: ""}],
+  ] as const) {
+    const earlier = fixture({choice: "granted"}); earlier.browser.location.href = campaignUrl(); earlier.controller.startAnalytics();
+    const later = fixture({choice: "granted"}); later.browser.location.href = href; later.controller.startAnalytics();
+    assert.deepEqual(campaignFields(later.commands().find(command => command[0] === "config")![2] as Record<string, unknown>), expected);
+    assert.ok(!JSON.stringify(later.commands()).includes("reddit"));
+  }
+});
+
+test("withdrawal and regrant clear an old runtime campaign when the current URL is untagged", () => {
+  const f = fixture({choice: "granted"}); f.browser.location.href = campaignUrl(); f.controller.startAnalytics();
+  f.page.scripts[0].dispatchEvent(new Event("load")); f.controller.setAnalyticsConsent("denied");
+  f.browser.location.href = "https://dailylineup.co.uk/"; f.controller.setAnalyticsConsent("granted");
+  const configuration = f.commands().find(command => command[0] === "config")![2] as Record<string, unknown>;
+  assert.deepEqual(campaignFields(configuration), {campaign_source: "", campaign_medium: "", campaign_name: ""});
+  assert.equal(f.page.scripts.length, 1); assert.equal(f.events("page_view").length, 0);
+});

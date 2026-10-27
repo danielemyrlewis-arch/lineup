@@ -1,37 +1,53 @@
-/* Optional analytics stays in normal document flow and never covers game controls. */
+/* The measured clearance keeps the last controls and anchor targets above the fixed banner. */
+html { scroll-padding-bottom: var(--analytics-consent-space, 0px); }
+body { padding-bottom: var(--analytics-consent-space, 0px); }
 .analytics-consent {
-  max-width: 1328px;
-  margin: 0 auto 28px;
-  padding: 24px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px 32px;
+  position: fixed;
+  z-index: 100;
+  left: calc(12px + env(safe-area-inset-left, 0px));
+  right: calc(12px + env(safe-area-inset-right, 0px));
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  max-width: 1100px;
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  margin: 0 auto;
+  padding: 16px 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, auto);
+  align-items: center;
+  gap: 16px 28px;
   background: var(--surface);
   border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 8px 32px #0008;
 }
-.analytics-consent-copy { max-width: 760px; }
-.analytics-consent h2 { font-size: 18px; line-height: 1.4; font-weight: 700; }
-.analytics-consent p { margin-top: 9px; color: var(--secondary); font-size: 13px; line-height: 1.7; }
+.analytics-consent-copy { min-width: 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.analytics-consent h2 { font-size: 16px; line-height: 1.4; font-weight: 700; }
+.analytics-consent p { margin-top: 6px; color: var(--secondary); font-size: 12px; line-height: 1.65; }
 .analytics-consent a { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
 .analytics-consent .analytics-consent-current { color: var(--text); }
-.analytics-consent-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; min-width: 300px; }
+.analytics-consent-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 10px; min-width: 0; }
 .analytics-choice {
-  flex: 1 1 140px;
+  min-width: 0;
   min-height: 44px;
-  padding: 10px 14px;
+  padding: 10px 12px;
   color: var(--text);
   background: var(--elevated);
   border: 1px solid var(--secondary);
   border-radius: 3px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
 }
 .analytics-choice:hover { border-color: var(--text); }
 .analytics-consent-close, .analytics-preferences-button { min-height: 44px; padding: 10px 0; background: none; color: var(--secondary); font-size: inherit; }
-.analytics-consent-close { flex-basis: 100%; font-size: 12px; }
+.analytics-consent-close { grid-column: 1 / -1; font-size: 12px; }
 .analytics-consent-close:hover, .analytics-preferences-button:hover { color: var(--text); }
+@media (max-width: 700px) {
+  .analytics-consent { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; padding: 14px 16px; gap: 12px; }
+}
+@media (max-height: 400px) and (min-width: 500px) {
+  .analytics-consent { grid-template-columns: minmax(0, 1fr) minmax(260px, auto); grid-template-rows: minmax(0, 1fr); }
+}
 
 .privacy-shell { max-width: 880px; margin: auto; padding: 0 40px 48px; }
 .privacy-header { min-height: 88px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
@@ -48,14 +64,7 @@
 .privacy-page code { font-size: 12px; overflow-wrap: anywhere; }
 .privacy-page .privacy-storage-name { color: var(--text); }
 .privacy-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding-top: 22px; border-top: 1px solid var(--border); color: var(--secondary); font-size: 13px; }
-@media (max-width: 1000px) {
-  .analytics-consent { margin-left: 24px; margin-right: 24px; flex-direction: column; }
-  .analytics-consent-actions { justify-content: flex-start; min-width: 0; width: 100%; max-width: 440px; }
-}
 @media (max-width: 600px) {
-  .analytics-consent { margin: 0 16px 20px; padding: 20px; gap: 18px; }
-  .analytics-consent-actions { gap: 10px; }
-  .analytics-choice { flex-basis: 100%; }
   .privacy-shell { padding: 0 24px 32px; }
   .privacy-header { min-height: 72px; }
   .privacy-header .brand { font-size: 27px; }
