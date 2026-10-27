@@ -1,5 +1,4 @@
 import type { SupabaseClient, Session, User } from "@supabase/supabase-js";
-import { SITE_URL } from "../site.ts";
 
 export interface AuthSnapshot {
   status: "loading" | "signed-in" | "signed-out" | "unavailable";
@@ -79,13 +78,6 @@ async function boundedAuthRequest(
     return result.error ? message : null;
   } catch { return message; }
   finally { clearTimeout(timer); }
-}
-
-export function signInWithGoogle(client: AuthClient | null, timeoutMs = 15_000): Promise<string | null> {
-  if (!client) return Promise.resolve(UNAVAILABLE);
-  return boundedAuthRequest(() => client.auth.signInWithOAuth({
-    provider: "google", options: { redirectTo: SITE_URL },
-  }), "Google sign-in couldn’t start. Please try again. You can keep playing as a guest.", timeoutMs);
 }
 
 export function signOut(client: AuthClient | null, timeoutMs = 15_000): Promise<string | null> {

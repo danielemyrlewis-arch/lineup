@@ -32,11 +32,16 @@ const localEnv = existsSync(".env.local") ? readFileSync(".env.local", "utf8") :
 const publicValue = name => process.env[name] ?? localEnv.match(new RegExp(`^${name}=(.*)$`, "m"))?.[1]?.trim();
 const accountUrl = publicValue("NEXT_PUBLIC_SUPABASE_URL");
 const accountKey = publicValue("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY");
+const googleClientId = publicValue("NEXT_PUBLIC_GOOGLE_CLIENT_ID");
 const accountsConfigured = !!(accountUrl && accountKey);
 if (accountsConfigured && (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(accountUrl) ||
     !/^sb_publishable_[A-Za-z0-9_-]+$/.test(accountKey) ||
     !publishedJs.includes(accountUrl) || !publishedJs.includes(accountKey)))
   throw Error("The configured public Supabase values are missing or invalid in the static browser build");
+if (accountsConfigured && (!googleClientId ||
+    !/^\d+-[A-Za-z0-9_-]+\.apps\.googleusercontent\.com$/.test(googleClientId) ||
+    !publishedJs.includes(googleClientId)))
+  throw Error("The public Google Web Client ID is missing or invalid in the static browser build");
 for (const tag of [
   `rel="canonical" href="${site.href}"`,
   `property="og:url" content="${site.href}"`,
@@ -101,5 +106,6 @@ console.log(
     runtimeFilmApiReferences: 0,
     accountsConfigured,
     publicSupabaseConfigVerified: accountsConfigured,
+    publicGoogleClientIdVerified: accountsConfigured,
   }),
 );

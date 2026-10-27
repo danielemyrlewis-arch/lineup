@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import ts from "typescript";
 import type { SupabaseClient, Session } from "@supabase/supabase-js";
 import { getBrowserClient, getPublicSupabaseConfig, createSafeAuthStorage } from "../lib/account/client.ts";
-import { watchAuth, signInWithGoogle, signOut, oauthErrorFromUrl, type AuthSnapshot } from "../lib/account/auth.ts";
+import { watchAuth, signOut, oauthErrorFromUrl, type AuthSnapshot } from "../lib/account/auth.ts";
 
 type SessionResult = { data: { session: Session | null }; error: unknown };
 function deferred<T>() {
@@ -22,7 +22,6 @@ function fakeClient(read: Promise<SessionResult> = Promise.resolve({ data: { ses
   let listener: (event: string, value: Session | null) => void = () => {};
   let unsubscribed = 0;
   const calls: unknown[] = [];
-  let signInResponse: { error: unknown } | Promise<{ error: unknown }> = { error: null };
   let signOutResponse: { error: unknown } | Promise<{ error: unknown }> = { error: null };
   const client = { auth: {
     getSession: () => read,
@@ -30,14 +29,12 @@ function fakeClient(read: Promise<SessionResult> = Promise.resolve({ data: { ses
       listener = callback;
       return { data: { subscription: { unsubscribe: () => { unsubscribed++; } } } };
     },
-    signInWithOAuth: (options: unknown) => { calls.push(options); return Promise.resolve(signInResponse); },
     signOut: (options: unknown) => { calls.push(options); return Promise.resolve(signOutResponse); },
   } } as unknown as SupabaseClient;
   return {
     client, calls,
     emit: (event: string, value: Session | null) => listener(event, value),
     get unsubscribed() { return unsubscribed; },
-    set signInResponse(value: typeof signInResponse) { signInResponse = value; },
     set signOutResponse(value: typeof signOutResponse) { signOutResponse = value; },
   };
 }
@@ -156,26 +153,20 @@ test("OAuth errors are generic and normal game anchors are not mistaken for a ca
   stop();
 });
 
-test("Google OAuth uses only the canonical static root and sign-out affects this browser", async () => {
+test("sign-out affects only this browser and provider failures remain private", async () => {
   const fake = fakeClient();
-  assert.equal(await signInWithGoogle(fake.client), null);
-  assert.deepEqual(fake.calls[0], { provider: "google", options: { redirectTo: "https://dailylineup.co.uk/" } });
   assert.equal(await signOut(fake.client), null);
-  assert.deepEqual(fake.calls[1], { scope: "local" });
-  fake.signInResponse = { error: { message: "private provider response" } };
-  const error = await signInWithGoogle(fake.client);
-  assert.match(error ?? "", /couldn’t start/);
+  assert.deepEqual(fake.calls[0], { scope: "local" });
+  fake.signOutResponse = { error: { message: "private provider response" } };
+  const error = await signOut(fake.client);
+  assert.match(error ?? "", /couldn’t finish/);
   assert.ok(!error?.includes("private provider response"));
-  fake.signOutResponse = { error: true };
-  assert.match(await signOut(fake.client) ?? "", /couldn’t finish/);
-  assert.match(await signInWithGoogle(null) ?? "", /guest/);
+  assert.match(await signOut(null) ?? "", /guest/);
 });
 
-test("pending OAuth and sign-out operations do not leave controls loading indefinitely", async () => {
+test("a pending sign-out does not leave controls loading indefinitely", async () => {
   const fake = fakeClient();
-  fake.signInResponse = new Promise(() => {});
   fake.signOutResponse = new Promise(() => {});
-  assert.match(await signInWithGoogle(fake.client, 5) ?? "", /couldn’t start/);
   assert.match(await signOut(fake.client, 5) ?? "", /couldn’t finish/);
 });
 
@@ -250,11 +241,13 @@ test("the actual account provider statically renders guest children without star
     "react/jsx-runtime": await import("react/jsx-runtime"),
     "lucide-react": {UserRound: () => React.createElement("svg", {"aria-hidden": true})},
     "@/lib/account/client": {getBrowserClient: forbidden, hasPersistentAuthStorage: () => true},
-    "@/lib/account/auth": {watchAuth: forbidden, signInWithGoogle: forbidden, signOut: forbidden, oauthErrorFromUrl},
+    "@/lib/account/auth": {watchAuth: forbidden, signOut: forbidden, oauthErrorFromUrl},
+    "@/lib/account/google-sign-in": {resetGoogleSignIn: forbidden},
     "@/lib/account/results": await import("../lib/account/results.ts"),
     "@/lib/account/repository": {loadDailyResults: forbidden, saveDailyResult: forbidden},
     "@/lib/account/guest-results": await import("../lib/account/guest-results.ts"),
     "./account-panel": {AccountPanel: () => React.createElement("section", null, "Account panel")},
+    "./google-sign-in-button": {GoogleSignInButton: forbidden},
   };
   const compiled = ts.transpileModule(readFileSync(new URL("../components/account/player-provider.tsx", import.meta.url), "utf8"), {
     compilerOptions: {jsx: ts.JsxEmit.ReactJSX, module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2017},

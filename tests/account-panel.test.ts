@@ -39,7 +39,8 @@ const noop = () => {};
 const base: AccountPanelProps = {
   status: "signed-out", user: null, error: null, authBusy: false, resultsLoading: false,
   resultsError: null, results: [], pending: null, saveStatus: "idle", saveError: null,
-  onSignIn: noop, onSignOut: noop, onRetry: noop, onSaveGuest: noop, onClose: noop,
+  googleSignIn: React.createElement("div", {"data-google-sign-in-slot": true}, "Official Google sign-in slot"),
+  onSignOut: noop, onRetry: noop, onSaveGuest: noop, onClose: noop,
 };
 const render = (props: Partial<AccountPanelProps> = {}) => renderToStaticMarkup(React.createElement(exports.AccountPanel, {...base, ...props}));
 const signedIn: Partial<AccountPanelProps> = {status: "signed-in", user: {name: "Alex", email: "alex@example.test"}};
@@ -47,10 +48,10 @@ const pending: CompletedDailyResult = result("2026-10-20");
 
 test("signed-out account panel keeps Google sign-in optional and does not expose player metrics", () => {
   const html = render();
-  assert.match(html, /Continue with Google/);
+  assert.match(html, /data-google-sign-in-slot="true"/);
   assert.match(html, /Daily and Practice without an account/);
   assert.ok(!html.includes("Daily games played") && !html.includes("Sign out"));
-  assert.match(render({authBusy: true}), /disabled="">Connecting…/);
+  assert.ok(!html.includes("Continue with Google"), "AccountPanel must not produce an imitation Google button");
   const staleIdentity = render({user: {name: "Old account", email: "old@example.test"}});
   assert.ok(!staleIdentity.includes("old@example.test") && !staleIdentity.includes("Old account"));
 });
@@ -59,11 +60,19 @@ test("auth loading and unavailable states preserve a clear guest path without fa
   const loading = render({status: "loading"});
   assert.match(loading, /role="status"/);
   assert.match(loading, /Checking your session/);
-  assert.ok(!loading.includes("Continue with Google") && !loading.includes("Daily games played"));
+  assert.ok(!loading.includes("data-google-sign-in-slot") && !loading.includes("Daily games played"));
   const unavailable = render({status: "unavailable", error: "Accounts are unavailable."});
   assert.match(unavailable, /Daily and Practice are still free to play/);
   assert.match(unavailable, /role="alert"/);
   assert.match(unavailable, /Try again/);
+  assert.ok(!unavailable.includes("data-google-sign-in-slot"));
+});
+
+test("the official Google slot is rendered only for signed-out players", () => {
+  const loading = React.createElement("p", {role: "status"}, "Loading Google sign-in…");
+  const html = render({googleSignIn: loading});
+  assert.match(html, /role="status">Loading Google sign-in…/);
+  assert.ok(!render(signedIn).includes("data-google-sign-in-slot"));
 });
 
 test("private account identity is safely escaped and every requested statistic is shown", () => {

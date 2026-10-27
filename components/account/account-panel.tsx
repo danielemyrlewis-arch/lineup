@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Dialog } from "../game/dialog";
 import { calculateDailyStatistics } from "@/lib/account/statistics";
 import { londonDate, nextLondonMidnight } from "@/lib/game/daily-date";
@@ -16,7 +16,7 @@ export interface AccountPanelProps {
   pending: CompletedDailyResult | null;
   saveStatus: "idle" | "saving" | "saved" | "duplicate" | "error";
   saveError: string | null;
-  onSignIn: () => void;
+  googleSignIn: ReactNode;
   onSignOut: () => void;
   onRetry: () => void;
   onSaveGuest: () => void;
@@ -68,9 +68,7 @@ export function AccountPanel(props: AccountPanelProps) {
         <h3>Keep your Daily results.</h3>
         <p className="account-copy">Sign in to save your Daily results, see your statistics and keep track of your winning streak.</p>
         {props.pending && <p className="account-copy">Your completed Daily is available in this browser. After signing in, you can choose to save it to your account.</p>}
-        <button type="button" className="primary-button" onClick={props.onSignIn} disabled={props.authBusy}>
-          {props.authBusy ? "Connecting…" : "Continue with Google"}
-        </button>
+        {props.googleSignIn}
         <p className="account-small">Always optional. You can play Daily and Practice without an account.</p>
       </div>}
       {signedIn && <>

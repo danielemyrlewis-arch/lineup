@@ -4,11 +4,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { UserRound } from "lucide-react";
 import type { GameState } from "@/lib/game/types";
 import { getBrowserClient, hasPersistentAuthStorage } from "@/lib/account/client";
-import { oauthErrorFromUrl, signInWithGoogle, signOut, watchAuth, type AuthSnapshot } from "@/lib/account/auth";
+import { oauthErrorFromUrl, signOut, watchAuth, type AuthSnapshot } from "@/lib/account/auth";
+import { resetGoogleSignIn } from "@/lib/account/google-sign-in";
 import { completedDailyResult, type CompletedDailyResult, type DailyResult } from "@/lib/account/results";
 import { loadDailyResults, saveDailyResult, type SaveStatus } from "@/lib/account/repository";
 import { pendingGuestResult, readGuestResults, rememberGuestResult, writeGuestResults } from "@/lib/account/guest-results";
 import { AccountPanel } from "./account-panel";
+import { GoogleSignInButton } from "./google-sign-in-button";
 
 export interface AccountResultAction { label: string; message: string; onClick: () => void }
 interface PlayerAccount {
@@ -38,6 +40,7 @@ export function PlayerProvider({children}: {children: ReactNode}) {
   const [auth, setAuth] = useState<AuthSnapshot>({status: "loading", user: null, error: null});
   const authRef = useRef(auth);
   const client = useRef<SupabaseClient | null>(null);
+  const [signInClient, setSignInClient] = useState<SupabaseClient | null>(null);
   const [open, setOpen] = useState(false);
   const [authBusy, setAuthBusy] = useState(false);
   const [operationError, setOperationError] = useState<string | null>(null);
@@ -56,6 +59,7 @@ export function PlayerProvider({children}: {children: ReactNode}) {
     const oauthError = oauthErrorFromUrl(window.location.href);
     let showCallback = oauthError || new URL(window.location.href).searchParams.has("code");
     client.current = getBrowserClient();
+    setSignInClient(client.current);
     return watchAuth(client.current, next => {
       // Updating this ref in the subscription also guards pending requests before a render.
       if (authRef.current.user?.id !== next.user?.id) {
@@ -153,16 +157,12 @@ export function PlayerProvider({children}: {children: ReactNode}) {
       authBusy={authBusy} resultsLoading={resultsLoading} resultsError={resultsError} results={results}
       pending={pending} saveStatus={ownSaving?.status ?? "idle"} saveError={ownSaving?.error ?? null}
       onClose={() => setOpen(false)}
-      onSignIn={() => {
-        if (authBusy) return;
-        const generation = authGeneration.current;
-        setAuthBusy(true); setOperationError(null);
-        signInWithGoogle(client.current).then(error => { if (generation === authGeneration.current) { setOperationError(error); setAuthBusy(false); } });
-      }}
+      googleSignIn={<GoogleSignInButton client={signInClient} />}
       onSignOut={() => {
         if (authBusy || authRef.current.user?.id !== userId) return;
         const generation = authGeneration.current;
         setAuthBusy(true); setOperationError(null);
+        resetGoogleSignIn();
         signOut(client.current).then(error => {
           if (generation !== authGeneration.current) return;
           setOperationError(error); setAuthBusy(false);

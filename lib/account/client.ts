@@ -63,7 +63,7 @@ export function getBrowserClient(): SupabaseClient | null {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        // The SDK exchanges the callback code in this browser, at the static root.
+        // Retain browser support for legacy redirect callbacks and existing sessions.
         flowType: "pkce",
       },
     });
