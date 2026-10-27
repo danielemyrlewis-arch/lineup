@@ -2,6 +2,7 @@ import type { Movie, Question, QuestionKind, RankedQuestion } from "./types.ts";
 import { STUDIOS, producedBy } from "../data/studios.ts";
 import { CURATED_QUESTIONS, curatedValue } from "../data/enrichment.ts";
 import { OSCAR_QUESTIONS, evaluateOscar } from "../data/awards.ts";
+import { groupQuestions } from "./question-groups.ts";
 
 const genreLabels: Record<string, [string, string[]]> = {
   "Science Fiction": [
@@ -437,32 +438,38 @@ function categoryPriority(q: Question) {
   ].indexOf(q.category);
 }
 
-/** Prefer balanced partitions; vary the categories without displacing a much better split. */
+/** Stable teaching examples, independent of split strength and the hidden film. */
 export function suggestedQuestions(
-  questions: RankedQuestion[],
+  questions: readonly RankedQuestion[],
   count = 3,
+  exampleSeed = "lineup-examples-v1",
 ): RankedQuestion[] {
+  if (!Number.isSafeInteger(count) || count <= 0) return [];
+  const hash = (value: string) => {
+    let result = 2166136261;
+    for (let i = 0; i < value.length; i++) result = Math.imul(result ^ value.charCodeAt(i), 16777619);
+    return result >>> 0;
+  };
+  const order = (a: string, b: string) => hash(`${exampleSeed}|${a}`) - hash(`${exampleSeed}|${b}`) || (a < b ? -1 : a > b ? 1 : 0);
+  const categories = groupQuestions(questions).sort((a, b) => order(a.id, b.id));
   const selected: RankedQuestion[] = [];
   const partitions = new Set<string>();
-  for (const q of questions) {
-    if (
-      selected.some((s) => s.category === q.category) &&
-      selected.length < count - 1
-    )
-      continue;
-    const key = q.partitionKey;
-    if (partitions.has(key)) continue;
-    if (q.balance < (questions[0]?.balance ?? 0) - 0.2) continue;
-    selected.push(q);
-    partitions.add(key);
-    if (selected.length === count) return selected;
-  }
-  for (const q of questions) {
-    if (!selected.some((s) => s.partitionKey === q.partitionKey))
-      selected.push(q);
+  for (const category of categories) {
+    const question = category.questions.sort((a, b) => order(a.id, b.id))
+      .find(q => !partitions.has(q.partitionKey));
+    if (!question) continue;
+    selected.push(question);
+    partitions.add(question.partitionKey);
     if (selected.length === count) break;
   }
   return selected;
+}
+
+/** Only a fresh board gets examples. The API cannot accept a mystery ID or answers. */
+export function openingQuestionExamples(movies: Movie[], askedIds: string[] = [], count = 3): RankedQuestion[] {
+  if (askedIds.length) return [];
+  const seed = movies.map(movie => movie.id).sort().join("|");
+  return suggestedQuestions(validQuestions(movies), count, seed);
 }
 const normalise = (s: string) =>
   s
@@ -487,7 +494,7 @@ export function searchQuestions(
 ): RankedQuestion[] {
   const phrase = normalise(query);
   const tokens = phrase.split(" ").filter((token) => token && !filler.has(token));
-  if (!tokens.length) return questions.slice(0, 8);
+  if (!tokens.length) return [];
   return [...new Map(questions.map((q) => [q.id, q])).values()]
     .flatMap((q, index) => {
       const haystack = normalise([q.label, q.category, ...q.aliases].join(" "));

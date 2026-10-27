@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, ChevronDown, Search, X } from "lucide-react";
 import {
   searchQuestions,
-  suggestedQuestions,
+  openingQuestionExamples,
   validQuestions,
 } from "@/lib/game/questions";
 import { activeMovies, QUESTION_LIMIT } from "@/lib/game/engine";
@@ -36,11 +36,13 @@ export function QuestionPanel({
       ),
     [state],
   );
-  const suggestions = useMemo(() => suggestedQuestions(questions), [questions]);
+  const examples = useMemo(() => state.status === "playing"
+    ? openingQuestionExamples(state.puzzle.movies, state.history.map(h => h.question.id))
+    : [], [state.puzzle.movies, state.history, state.status]);
   const matches = searchQuestions(questions, query);
   const finalPick = left === 0 || state.activeIds.length === 1;
   const disabled = busy || state.status !== "playing" || finalPick;
-  const open = focused && !disabled;
+  const open = focused && !disabled && query.trim().length > 0;
   const latest = state.history.at(-1);
   useEffect(() => {
     if (open)
@@ -230,19 +232,26 @@ export function QuestionPanel({
                 <ArrowRight size={16} aria-hidden="true" />
               </button>
             </div>
-            <p className="suggestion-label">Suggested</p>
-            <div className="suggestions">
-              {suggestions.map((q) => (
-                <button
-                  type="button"
-                  key={q.id}
-                  disabled={disabled}
-                  onClick={() => ask(q)}
-                >
-                  <span>{q.shortLabel}</span>
-                </button>
-              ))}
-            </div>
+            {examples.length > 0 && (
+              <>
+              <p className="suggestion-label">Example questions</p>
+              <div className="suggestions">
+                {examples.map((q) => (
+                  <button
+                    type="button"
+                    key={q.id}
+                    disabled={disabled}
+                    onClick={() => {
+                      ask(q);
+                      requestAnimationFrame(() => budget.current?.focus());
+                    }}
+                  >
+                    <span>{q.shortLabel}</span>
+                  </button>
+                ))}
+              </div>
+              </>
+            )}
           </>
         )}
         {latest && (

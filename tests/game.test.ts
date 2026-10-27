@@ -243,7 +243,7 @@ test("eliminated or nonexistent films cannot be selected", () => {
   );
   assert.equal(gameReducer(n, { type: "guess", movieId: "invalid" }), n);
 });
-test("suggestion ranking prefers reasonably balanced splits", () => {
+test("canonical question ranking remains balanced while opening examples show different categories", () => {
   const valid = validQuestions(DEMO_MOVIES);
   assert.ok(valid[0].balance >= 0.45);
   assert.ok(
@@ -251,8 +251,8 @@ test("suggestion ranking prefers reasonably balanced splits", () => {
   );
   const suggestions = suggestedQuestions(valid);
   assert.equal(suggestions.length, 3);
-  assert.equal(suggestions[0].balance, valid[0].balance);
-  assert.ok(suggestions.every((x) => x.balance >= 0.3));
+  assert.equal(new Set(suggestions.map(question => question.category)).size, 3);
+  assert.ok(suggestions.every(question => valid.includes(question)));
 });
 test("search resolves aliases and actor/director names with accents and multiple words", () => {
   const valid = validQuestions(DEMO_MOVIES);

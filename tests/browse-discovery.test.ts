@@ -29,7 +29,7 @@ function render(state: GameState, hint = false, busy = false) {
   return renderToStaticMarkup(React.createElement(exports.QuestionPanel, { state, busy, onAsk: () => {}, showStrategyHint: hint }));
 }
 
-test("both modes show a named Browse button directly after search and before the separate suggestions", () => {
+test("both modes show Browse directly after search, followed by three opening examples", () => {
   for (const mode of ["daily", "practice"] as const) {
     const html = render(start(mode));
     assert.match(html, /<button[^>]*class="browse-questions"[^>]*aria-haspopup="dialog"/);
@@ -38,7 +38,40 @@ test("both modes show a named Browse button directly after search and before the
     assert.ok(html.indexOf('class="question-discovery"') < html.indexOf('class="suggestion-label"'));
     assert.ok(html.indexOf('class="suggestion-label"') < html.indexOf('class="suggestions"'));
     assert.ok(!html.includes('class="browse-questions" disabled'));
+    assert.match(html, />Example questions<\/p>/);
+    const examples = html.match(/class="suggestions">(.*?)<\/div>/)?.[1] ?? "";
+    assert.equal((examples.match(/<button /g) ?? []).length, 3);
   }
+});
+
+test("Daily and Practice remove examples after the first answer while keeping search and Browse", () => {
+  for (const mode of ["daily", "practice"] as const) {
+    let state = start(mode);
+    const first = questions.openingQuestionExamples(state.puzzle.movies)[0];
+    state = engine.gameReducer(state, {type: "ask", question: first});
+    assert.equal(state.history.length, 1);
+    const html = render(state);
+    assert.ok(!html.includes('class="suggestions"') && !html.includes("Example questions"));
+    assert.match(html, /role="combobox"/);
+    assert.match(html, /class="browse-questions"/);
+    assert.ok(!html.includes('class="browse-questions" disabled'));
+    assert.match(html, /Asked/);
+    assert.ok(!html.includes('class="search-popover"'));
+  }
+});
+
+test("no opening examples reappear on an early completed game", () => {
+  for (const mode of ["daily", "practice"] as const) {
+    const state = start(mode);
+    const html = render(engine.gameReducer(state, {type: "guess", movieId: state.puzzle.mysteryId}));
+    assert.ok(!html.includes('class="suggestions"') && !html.includes("Example questions"));
+  }
+});
+
+test("empty or filler-only searches never offer a fresh ranked recommendation list", () => {
+  const valid = questions.validQuestions(start("daily").puzzle.movies);
+  for (const query of ["", "   ", "is it a", "the film?", "movie"]) assert.deepEqual(questions.searchQuestions(valid, query), []);
+  assert.ok(questions.searchQuestions(valid, "genre").length > 0);
 });
 
 test("the existing single first-use hint explains browsing without repeatedly prompting returning players", () => {

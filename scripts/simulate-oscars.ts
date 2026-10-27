@@ -1,4 +1,4 @@
-/** Real Practice generation/history; ordinary suggestions, never awards-targeted selection. */
+/** Real Practice generation/history; opening examples, then neutral simulated player choices. */
 import assert from "node:assert/strict";
 import { writeFileSync } from "node:fs";
 import { PRACTICE_CATALOGUE } from "../lib/data/catalogue.ts";
@@ -6,7 +6,7 @@ import { OSCAR_KEYS } from "../lib/data/awards.ts";
 import { createPracticePuzzle, franchiseKeys } from "../lib/game/practice-selection.ts";
 import { emptyPracticeHistory, rememberPracticePuzzle } from "../lib/game/practice-history.ts";
 import { initialState, activeMovies, gameReducer } from "../lib/game/engine.ts";
-import { validQuestions, suggestedQuestions, evaluateQuestion } from "../lib/game/questions.ts";
+import { validQuestions, openingQuestionExamples, evaluateQuestion } from "../lib/game/questions.ts";
 import type { OscarQuestionKey, RankedQuestion } from "../lib/game/types.ts";
 
 const count=Math.max(1000,Math.min(5000,Number(process.argv[2])||1000));
@@ -60,11 +60,11 @@ for(let i=0;i<count;i++) {
     for(const group of offeredGroups(questions)) {
       gameGroups.add(group);if(!turn)initial[group]=(initial[group]??0)+1;
     }
-    const suggestions=suggestedQuestions(questions);
+    const suggestions=openingQuestionExamples(puzzle.movies,state.history.map(h=>h.question.id));
     for(const group of offeredGroups(suggestions)) {
       suggestedGroups.add(group);if(!turn)suggestedInitial[group]=(suggestedInitial[group]??0)+1;
     }
-    const q=suggestions[0];
+    const q=turn===0?suggestions[0]:questions[(i+turn)%questions.length];
     if(!q)break;
     state=gameReducer(state,{type:"ask",question:q});
     assert.ok(state.activeIds.includes(puzzle.mysteryId));assert.ok(state.history.length<=5);
