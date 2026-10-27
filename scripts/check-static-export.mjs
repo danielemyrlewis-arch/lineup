@@ -19,13 +19,36 @@ if (!existsSync(path.join(root, "CNAME")) ||
     readFileSync(path.join(root, "CNAME"), "utf8") !== `${site.hostname}\n`)
   throw Error("CNAME must contain only dailylineup.co.uk and a final newline");
 const sitemap = readFileSync(path.join(root, "sitemap.xml"), "utf8");
-if (JSON.stringify([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1])) !== JSON.stringify([site.href]))
-  throw Error("The sitemap must advertise the custom-domain root");
+if (JSON.stringify([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1])) !== JSON.stringify([site.href, `${site.href}privacy/`]))
+  throw Error("The sitemap must advertise only the custom-domain homepage and privacy page");
 const robots = readFileSync(path.join(root, "robots.txt"), "utf8");
 if (!/^User-agent: \*$/m.test(robots) || !/^Allow: \/$/m.test(robots) ||
     !robots.includes(`Sitemap: ${site.href}sitemap.xml`))
   throw Error("robots.txt must allow the root site and link its sitemap");
 const index = readFileSync(path.join(root, "index.html"), "utf8");
+const privacyPath = path.join(root, "privacy", "index.html");
+if (!existsSync(privacyPath)) throw Error("Missing static privacy page");
+const privacy = readFileSync(privacyPath, "utf8");
+if (!privacy.includes(`rel="canonical" href="${site.href}privacy/"`) ||
+    !/<title>[^<]*Privacy[^<]*LINEUP[^<]*<\/title>/i.test(privacy) ||
+    !/<meta name="description" content="[^"]+"/.test(privacy))
+  throw Error("Privacy page must have its own canonical URL, title and description");
+for (const [label, html] of [["Homepage", index], ["Privacy page", privacy]]) {
+  if (/<meta[^>]+name="robots"[^>]+content="[^"]*noindex/i.test(html))
+    throw Error(`${label} must remain indexable`);
+}
+for (const content of ["How LINEUP works", "Daily LINEUP or Practice?", "Why question choice matters", "Is LINEUP free?", "Do you need an account?"])
+  if (!index.includes(content)) throw Error(`Missing crawlable homepage support: ${content}`);
+const jsonLd = index.match(/<script type="application\/ld\+json">([^<]+)<\/script>/)?.[1];
+let structured;
+try { structured = JSON.parse(jsonLd ?? ""); } catch { throw Error("Missing valid homepage game structured data"); }
+if (structured.url !== site.href || structured.name !== "LINEUP" || !structured["@type"]?.includes("VideoGame") ||
+    !structured["@type"]?.includes("WebApplication") || structured.isAccessibleForFree !== true ||
+    ["aggregateRating", "review", "offers", "award", "mysteryId"].some(key => key in structured))
+  throw Error("Homepage structured data must describe only the visible LINEUP game");
+const notFound = path.join(root, "404.html");
+if (!existsSync(notFound) || !/<meta name="robots" content="noindex"/.test(readFileSync(notFound, "utf8")))
+  throw Error("Static 404 page must exist and remain noindex");
 const publishedJs = files.filter(file => file.endsWith(".js")).map(file => readFileSync(file, "utf8")).join("\n");
 // Next inlines only these public browser values; never print their contents.
 const localEnv = existsSync(".env.local") ? readFileSync(".env.local", "utf8") : "";
@@ -33,6 +56,8 @@ const publicValue = name => process.env[name] ?? localEnv.match(new RegExp(`^${n
 const accountUrl = publicValue("NEXT_PUBLIC_SUPABASE_URL");
 const accountKey = publicValue("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY");
 const googleClientId = publicValue("NEXT_PUBLIC_GOOGLE_CLIENT_ID");
+const analyticsId = publicValue("NEXT_PUBLIC_GA_MEASUREMENT_ID");
+const analyticsConfigured = !!analyticsId;
 const accountsConfigured = !!(accountUrl && accountKey);
 if (accountsConfigured && (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(accountUrl) ||
     !/^sb_publishable_[A-Za-z0-9_-]+$/.test(accountKey) ||
@@ -42,6 +67,11 @@ if (accountsConfigured && (!googleClientId ||
     !/^\d+-[A-Za-z0-9_-]+\.apps\.googleusercontent\.com$/.test(googleClientId) ||
     !publishedJs.includes(googleClientId)))
   throw Error("The public Google Web Client ID is missing or invalid in the static browser build");
+if (analyticsConfigured && (!/^G-[A-Z0-9]{5,20}$/.test(analyticsId) || !publishedJs.includes(analyticsId)))
+  throw Error("Configured public GA4 Measurement ID is invalid or absent from the browser build");
+for (const html of [index, privacy])
+  if (/\b(?:src|href)="https:\/\/(?:www\.)?googletagmanager\.com\//.test(html))
+    throw Error("Analytics must not preload or load a Google tag before browser consent");
 for (const tag of [
   `rel="canonical" href="${site.href}"`,
   `property="og:url" content="${site.href}"`,
@@ -100,6 +130,10 @@ console.log(
     siteUrl: site.href,
     cnameVerified: true,
     metadataVerified: true,
+    supportingContentVerified: true,
+    privacyPageVerified: true,
+    structuredDataVerified: true,
+    notFoundVerified: true,
     files: files.length,
     megabytes: +(bytes / 1024 / 1024).toFixed(2),
     assetsVerified: true,
@@ -107,5 +141,8 @@ console.log(
     accountsConfigured,
     publicSupabaseConfigVerified: accountsConfigured,
     publicGoogleClientIdVerified: accountsConfigured,
+    analyticsConfigured,
+    publicAnalyticsConfigVerified: analyticsConfigured,
+    analyticsDeferredUntilConsent: true,
   }),
 );

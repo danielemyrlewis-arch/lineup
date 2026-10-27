@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { trackEvent } from "../analytics.ts";
 import { loadGoogleIdentity, type GoogleIdentityApi } from "./google-script.ts";
 import { createGoogleCredentialAttempt, generateGoogleNonce, type GoogleCredentialAttempt, type GoogleNonce } from "./google-token.ts";
 
@@ -88,6 +89,7 @@ export function createGoogleSignInController({
     if (current !== flow || view?.flow !== flow || result.status === "ignored") return;
     flow.phase = result.status === "signed-in" ? "signed-in" : "error";
     flow.error = result.error;
+    if (result.status === "signed-in") trackEvent("login", {method: "google"});
     publish(flow);
   };
   const render = (flow: Flow) => {

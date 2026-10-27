@@ -9,6 +9,7 @@ import {
 import { activeMovies, QUESTION_LIMIT } from "@/lib/game/engine";
 import type { GameState, Question } from "@/lib/game/types";
 import { QuestionBrowser } from "./question-browser";
+import { trackEvent } from "@/lib/analytics";
 export function QuestionPanel({
   state,
   busy,
@@ -223,6 +224,8 @@ export function QuestionPanel({
                 disabled={disabled || questions.length === 0}
                 aria-haspopup="dialog"
                 onClick={() => {
+                  if (disabled || questions.length === 0 || browseOpen) return;
+                  trackEvent("question_browse", {mode: state.puzzle.mode});
                   setFocused(false);
                   input.current?.blur();
                   setBrowseOpen(true);

@@ -19,7 +19,8 @@ test("the public share/canonical URL and raster preview use the custom domain ro
   assert.equal(image.pathname, "/social/lineup-og.png");
   assert.match(SITE_TITLE, /LINEUP.*Movie Guessing Game/);
   assert.match(SITE_DESCRIPTION, /five yes-or-no questions/);
-  assert.ok(!/today|daily|premium|subscription/i.test(SITE_DESCRIPTION));
+  assert.match(SITE_DESCRIPTION, /free daily movie guessing game/i);
+  assert.ok(!/premium|subscription/i.test(SITE_DESCRIPTION));
   assert.ok(SOCIAL_IMAGE.alt.includes("24 films"));
 });
 
@@ -30,10 +31,10 @@ test("the social preview is a real lightweight 1200 by 630 PNG and icons have th
   assert.ok(statSync(publicFile("social/lineup-og.png")).size < 100_000);
 });
 
-test("the single-page sitemap advertises only the real canonical game URL", () => {
+test("the sitemap advertises only the canonical homepage and useful privacy page", () => {
   const sitemap = readFileSync(publicFile("sitemap.xml"), "utf8");
   const urls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]);
-  assert.deepEqual(urls, [SITE_URL]);
+  assert.deepEqual(urls, [SITE_URL, `${SITE_URL}privacy/`]);
   assert.ok(!sitemap.includes("lastmod"), "Do not invent a content modification date");
 });
 

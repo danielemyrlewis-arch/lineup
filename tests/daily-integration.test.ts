@@ -44,6 +44,8 @@ const dependencies: Record<string, unknown> = {
   "@/lib/game/persistence": {recordResult: () => {}, readStats: () => null},
   "@/lib/game/practice-history": history,
   "@/lib/game/share": sharing,
+  "@/lib/analytics": {trackEvent: () => false},
+  "@/lib/game/analytics": {trackGameAction: () => {}},
   "./movie-board": {MovieBoard: () => React.createElement("section", {"data-test": "movie-board"})},
   "./question-panel": {QuestionPanel: ({state}: {state: GameState}) => React.createElement("section", {"data-test": "question-panel", "data-left": 5 - state.history.length})},
   "./info-dialogs": {HelpDialog: () => null, AboutDialog: () => null, StatsDialog: () => null},

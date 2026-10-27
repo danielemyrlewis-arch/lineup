@@ -1,5 +1,7 @@
 "use client";
 import type { ReactNode } from "react";
+import { SupportingContent } from "./supporting-content";
+import { AnalyticsPreferencesButton } from "@/components/analytics/analytics-consent";
 export function GameShell({
   children,
   onHelp,
@@ -58,6 +60,7 @@ export function GameShell({
           <p>{mode === "daily" && dailyIsCurrent ? "Five yes-or-no questions. Find today’s film." : "Ask up to five yes-or-no questions. Find the film."}</p>
         </section>
         {children}
+        <SupportingContent />
       </main>
       <footer className="site-footer">
         <div>
@@ -77,6 +80,9 @@ export function GameShell({
           <button type="button" onClick={onAbout} disabled={!onAbout}>
             About & credits
           </button>
+          {/* Native navigation keeps the static document and its canonical metadata together. */}
+          <a href="/privacy/">Privacy & cookies</a>
+          <AnalyticsPreferencesButton />
         </div>
       </footer>
     </div>

@@ -1,0 +1,63 @@
+/* Optional analytics stays in normal document flow and never covers game controls. */
+.analytics-consent {
+  max-width: 1328px;
+  margin: 0 auto 28px;
+  padding: 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px 32px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.analytics-consent-copy { max-width: 760px; }
+.analytics-consent h2 { font-size: 18px; line-height: 1.4; font-weight: 700; }
+.analytics-consent p { margin-top: 9px; color: var(--secondary); font-size: 13px; line-height: 1.7; }
+.analytics-consent a { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+.analytics-consent .analytics-consent-current { color: var(--text); }
+.analytics-consent-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; min-width: 300px; }
+.analytics-choice {
+  flex: 1 1 140px;
+  min-height: 44px;
+  padding: 10px 14px;
+  color: var(--text);
+  background: var(--elevated);
+  border: 1px solid var(--secondary);
+  border-radius: 3px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.analytics-choice:hover { border-color: var(--text); }
+.analytics-consent-close, .analytics-preferences-button { min-height: 44px; padding: 10px 0; background: none; color: var(--secondary); font-size: inherit; }
+.analytics-consent-close { flex-basis: 100%; font-size: 12px; }
+.analytics-consent-close:hover, .analytics-preferences-button:hover { color: var(--text); }
+
+.privacy-shell { max-width: 880px; margin: auto; padding: 0 40px 48px; }
+.privacy-header { min-height: 88px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+.privacy-header > a:last-child { color: var(--secondary); font-size: 13px; }
+.privacy-page { max-width: 720px; margin: 36px 0 60px; }
+.privacy-page h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 750; line-height: 1.15; letter-spacing: -0.035em; }
+.privacy-page .privacy-updated { color: var(--secondary); font-size: 12px; margin: 14px 0 30px; }
+.privacy-page h2 { margin: 34px 0 12px; font-size: 21px; line-height: 1.35; font-weight: 650; }
+.privacy-page p, .privacy-page li { color: var(--secondary); font-size: 14px; line-height: 1.85; }
+.privacy-page p + p { margin-top: 14px; }
+.privacy-page a { color: var(--text); text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.privacy-page ul { padding-left: 22px; margin: 14px 0; }
+.privacy-page li + li { margin-top: 10px; }
+.privacy-page code { font-size: 12px; overflow-wrap: anywhere; }
+.privacy-page .privacy-storage-name { color: var(--text); }
+.privacy-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding-top: 22px; border-top: 1px solid var(--border); color: var(--secondary); font-size: 13px; }
+@media (max-width: 1000px) {
+  .analytics-consent { margin-left: 24px; margin-right: 24px; flex-direction: column; }
+  .analytics-consent-actions { justify-content: flex-start; min-width: 0; width: 100%; max-width: 440px; }
+}
+@media (max-width: 600px) {
+  .analytics-consent { margin: 0 16px 20px; padding: 20px; gap: 18px; }
+  .analytics-consent-actions { gap: 10px; }
+  .analytics-choice { flex-basis: 100%; }
+  .privacy-shell { padding: 0 24px 32px; }
+  .privacy-header { min-height: 72px; }
+  .privacy-header .brand { font-size: 27px; }
+  .privacy-page { margin-top: 24px; }
+}

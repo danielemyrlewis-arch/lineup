@@ -12,6 +12,7 @@ const publicAccountKeys = [
   "NEXT_PUBLIC_SUPABASE_URL",
   "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
   "NEXT_PUBLIC_GOOGLE_CLIENT_ID",
+  "NEXT_PUBLIC_GA_MEASUREMENT_ID",
 ] as const;
 type AccountEnvironment = Partial<Record<typeof publicAccountKeys[number], string>>;
 const publicAccountFixture = {
@@ -20,22 +21,27 @@ const publicAccountFixture = {
   NEXT_PUBLIC_GOOGLE_CLIENT_ID: "123456789012-fixture_web_client.apps.googleusercontent.com",
 };
 const compiledAccountFixture = JSON.stringify(publicAccountFixture);
+const support = '<h2>How LINEUP works</h2><h3>Daily LINEUP or Practice?</h3><h3>Why question choice matters</h3><p>Is LINEUP free?</p><p>Do you need an account?</p>';
+const structured = JSON.stringify({"@type": ["VideoGame", "WebApplication"], name: "LINEUP", url: origin, isAccessibleForFree: true});
 const html = `<!doctype html><html><head>
 <link rel="canonical" href="${origin}"/>
 <meta property="og:url" content="${origin}"/>
 <meta property="og:image" content="${origin}social/lineup-og.png"/>
 <meta name="twitter:image" content="${origin}social/lineup-og.png"/>
 <link rel="stylesheet" href="/_next/static/app.css"/>
-</head><body><img src="/posters/27205.jpg"/><script src="/_next/static/app.js"></script></body></html>`;
+</head><body>${support}<script type="application/ld+json">${structured}</script><img src="/posters/27205.jpg"/><script src="/_next/static/app.js"></script></body></html>`;
 
 function checkFixture(changes: Record<string, string | null> = {}, staleBase = "", accountEnvironment: AccountEnvironment = {}) {
   const directory = mkdtempSync(path.join(tmpdir(), "lineup-domain-export-"));
   const files: Record<string, string | null> = {
     "index.html": html,
+    "privacy/index.html": `<!doctype html><html><head><title>Privacy &amp; cookies — LINEUP</title><meta name="description" content="How LINEUP handles data and cookies."/><link rel="canonical" href="${origin}privacy/"/></head><body>Privacy &amp; cookies</body></html>`,
+    "404.html": '<html><head><meta name="robots" content="noindex"/></head><body>Not found</body></html>',
+
     ".nojekyll": "",
     "CNAME": "dailylineup.co.uk\n",
     "robots.txt": `User-agent: *\nAllow: /\nSitemap: ${origin}sitemap.xml\n`,
-    "sitemap.xml": `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${origin}</loc></url></urlset>`,
+    "sitemap.xml": `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${origin}</loc></url><url><loc>${origin}privacy/</loc></url></urlset>`,
     "_next/static/app.css": 'body { background: url("/posters/27205.jpg"); }',
     "_next/static/app.js": 'const poster = "/posters/27205.jpg";',
     "posters/27205.jpg": "fixture image",
@@ -146,4 +152,55 @@ test("account-enabled exports reject a Google Web Client ID omitted from compile
   const result = checkFixture({ "_next/static/app.js": compiledWithoutGoogle }, "", publicAccountFixture);
   assert.notEqual(result.status, 0);
   assert.match(result.output, /Google Web Client ID/);
+});
+
+
+test("only the real homepage and privacy page can appear in the sitemap", () => {
+  for (const sitemap of [
+    `<urlset><url><loc>${origin}</loc></url></urlset>`,
+    `<urlset><url><loc>${origin}</loc></url><url><loc>${origin}privacy/</loc></url><url><loc>${origin}daily/tomorrow/</loc></url></urlset>`,
+  ]) {
+    const result = checkFixture({"sitemap.xml": sitemap});
+    assert.notEqual(result.status, 0); assert.match(result.output, /sitemap/);
+  }
+});
+
+test("the privacy page needs its own canonical metadata and both public pages must stay indexable", () => {
+  const scenarios: Record<string, string | null>[] = [
+    {"privacy/index.html": null},
+    {"privacy/index.html": '<html><head><title>LINEUP</title></head><body>Privacy</body></html>'},
+    {"index.html": html.replace('<head>', '<head><meta name="robots" content="noindex"/>')},
+  ];
+  for (const changes of scenarios) {
+    const result = checkFixture(changes);
+    assert.notEqual(result.status, 0); assert.match(result.output, /privacy|indexable/i);
+  }
+});
+
+test("homepage support and honest game structured data must reach the static HTML", () => {
+  for (const index of [html.replace(support, ''), html.replace(structured, '{bad json}'), html.replace(structured, JSON.stringify({...JSON.parse(structured), aggregateRating: {ratingValue: 5}}))]) {
+    const result = checkFixture({"index.html": index});
+    assert.notEqual(result.status, 0); assert.match(result.output, /support|structured/i);
+  }
+});
+
+test("the static 404 stays non-indexable", () => {
+  for (const value of [null, '<html><body>Not found</body></html>']) {
+    const result = checkFixture({"404.html": value});
+    assert.notEqual(result.status, 0); assert.match(result.output, /404/);
+  }
+});
+
+
+test("a configured analytics export contains its public ID but no pre-consent Google tag", () => {
+  const id = "G-TEST123456";
+  const settings = {NEXT_PUBLIC_GA_MEASUREMENT_ID: id};
+  const valid = checkFixture({"_next/static/app.js": JSON.stringify({measurementId: id})}, "", settings);
+  assert.equal(valid.status, 0, valid.output);
+  assert.equal(JSON.parse(valid.output.trim()).publicAnalyticsConfigVerified, true);
+  assert.notEqual(checkFixture({}, "", settings).status, 0);
+  assert.notEqual(checkFixture({}, "", {NEXT_PUBLIC_GA_MEASUREMENT_ID: "not-an-id"}).status, 0);
+  const eager = checkFixture({"_next/static/app.js": JSON.stringify({measurementId: id}),
+    "index.html": html.replace("</head>", '<script src="https://www.googletagmanager.com/gtag/js?id=G-TEST123456"></script></head>')}, "", settings);
+  assert.notEqual(eager.status, 0); assert.match(eager.output, /consent/);
 });

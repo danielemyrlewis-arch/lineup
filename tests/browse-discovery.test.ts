@@ -16,6 +16,7 @@ const compiled = ts.transpileModule(readFileSync(new URL("../components/game/que
 });
 runInNewContext(compiled.outputText, { React, exports, require: (name: string) => {
   if (name === "react") return React;
+  if (name === "@/lib/analytics") return {trackEvent: () => false};
   if (name === "@/lib/game/engine") return engine;
   if (name === "@/lib/game/questions") return questions;
   if (name === "./question-browser") return { QuestionBrowser: () => null };

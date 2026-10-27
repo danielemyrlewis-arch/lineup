@@ -108,7 +108,7 @@ export function Lineup() {
   const beforeLaunch = unavailable && dailyDate! < DAILY_SCHEDULE[0].date;
   return (
     <GameShell mode={mode} onModeChange={changeMode} accountControl={<AccountControl />}>
-      <section className="game-loading" aria-live="polite" aria-busy={!error && !unavailable}>
+      <section id="lineup" tabIndex={-1} className="game-loading" aria-live="polite" aria-busy={!error && !unavailable}>
         <p>{error ? "The film catalogue couldn’t load. Please reload to try again."
           : dailyFailed ? "The Daily film data couldn’t be loaded. Practice is still available."
           : unavailable ? beforeLaunch

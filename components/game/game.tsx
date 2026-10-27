@@ -11,6 +11,8 @@ import {
   writePracticeHistory,
 } from "@/lib/game/practice-history";
 import { copyText, gameUrl, shareResult, shareText } from "@/lib/game/share";
+import { trackEvent } from "@/lib/analytics";
+import { trackGameAction } from "@/lib/game/analytics";
 import { MovieBoard } from "./movie-board";
 import { QuestionPanel } from "./question-panel";
 
@@ -158,6 +160,7 @@ export function Game({
     const result = advance({ type: "ask", question });
     if (!result?.accepted) return;
     const next = result.state;
+    trackGameAction(state, next, "ask", catalogue);
     setShowStrategyHint(false);
     dismissStrategyHint();
     actionLock.current = true;
@@ -172,6 +175,7 @@ export function Game({
     if (!selected || busy) return;
     const result = advance({ type: "guess", movieId: selected.id });
     if (!result?.accepted) return;
+    trackGameAction(state, result.state, "guess", catalogue);
     if (!daily) recordResult(result.state);
     else onDailyComplete?.(result.state);
     setSelected(null);
@@ -224,6 +228,7 @@ export function Game({
     setShareFallback(null);
     try {
       const result = await shareResult(state);
+      if (result === "shared" || result === "copied") trackEvent("share_result", {mode: state.puzzle.mode, share_method: result === "shared" ? "native" : "copy_result"});
       if (result === "manual") {
         setShareFallback({ text: shareText(state), label: "Spoiler-free result to copy" });
         setShareStatus("Automatic sharing isn’t available. Select and copy your result below.");
@@ -247,6 +252,7 @@ export function Game({
     try {
       const result = await copyText(text);
       if (result === "copied") {
+        trackEvent("share_result", {mode: state.puzzle.mode, share_method: kind === "link" ? "copy_link" : "copy_result"});
         setShareStatus(kind === "link" ? "Game link copied." : "Result copied. No spoilers.");
       } else {
         setShareFallback({ text, label });
@@ -373,6 +379,7 @@ export function Game({
       {sheet === "result" && (
         <ResultDialog
           state={state}
+          dailyReminder={daily && dailyIsCurrent && hasNextDaily ? "Tomorrow’s LINEUP brings a new mystery film at midnight UK time." : undefined}
           error={error}
           newLoading={newLoading}
           shareStatus={shareStatus}

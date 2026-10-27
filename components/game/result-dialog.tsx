@@ -19,6 +19,7 @@ export function ResultDialog({
   onCopyLink,
   onClose,
   accountAction,
+  dailyReminder,
 }: {
   state: GameState;
   error: string;
@@ -31,6 +32,7 @@ export function ResultDialog({
   onCopyResult: () => void;
   onCopyLink: () => void;
   onClose: () => void;
+  dailyReminder?: string;
   accountAction?: {label: string; message: string; onClick: () => void};
 }) {
   const movie = state.puzzle.movies.find(
@@ -76,6 +78,7 @@ export function ResultDialog({
           </li>
         ))}
       </ol>
+      {dailyLabel && dailyReminder && <p className="result-context">{dailyReminder}</p>}
       <p className="result-context">
         {won ? "Correct" : "Incorrect"} guess with {remaining} film{remaining === 1 ? "" : "s"} remaining.
       </p>

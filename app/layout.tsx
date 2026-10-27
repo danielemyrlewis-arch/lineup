@@ -1,8 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import { AnalyticsConsent } from "@/components/analytics/analytics-consent";
 import { SITE_URL, SITE_TITLE, SITE_DESCRIPTION, SOCIAL_IMAGE } from "@/lib/site";
 import "./globals.css";
 import "../components/account/account.css";
+import "../components/game/supporting-content.css";
+import "../components/analytics/analytics-consent.css";
 const libreFranklin = localFont({
   src: "../public/fonts/libre-franklin-latin.woff2",
   variable: "--font-libre-franklin",
@@ -18,15 +21,15 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_GB",
     siteName: "LINEUP",
-    title: "LINEUP — Find the film.",
-    description: "24 films. One answer. Ask up to five yes-or-no questions to find the mystery film.",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     url: SITE_URL,
     images: [SOCIAL_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
-    title: "LINEUP — Find the film.",
-    description: "24 films. One answer. Five questions to find the film.",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     images: [{ url: SOCIAL_IMAGE.url, alt: SOCIAL_IMAGE.alt }],
   },
   icons: {
@@ -47,7 +50,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={libreFranklin.variable}>
-      <body>{children}</body>
+      <body>{children}<AnalyticsConsent /></body>
     </html>
   );
 }

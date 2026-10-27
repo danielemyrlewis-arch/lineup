@@ -15,11 +15,11 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. Guest play needs no environment configuration. For optional accounts, copy `.env.example` to ignored `.env.local` and set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and `NEXT_PUBLIC_GOOGLE_CLIENT_ID` to the project's public browser values. Use the existing Google OAuth Web Client ID, ending in `.apps.googleusercontent.com`. The production build inlines all three values. Never use a Google Client Secret, Supabase secret/service-role key or database password. Development uses Next's local development server; production does not.
+Open http://localhost:3000. Guest play needs no environment configuration. For optional accounts, copy `.env.example` to ignored `.env.local` and set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and `NEXT_PUBLIC_GOOGLE_CLIENT_ID` to the project's public browser values. Use the existing Google OAuth Web Client ID, ending in `.apps.googleusercontent.com`. The production build inlines all three account values. Optional GA4 uses a fourth public value, `NEXT_PUBLIC_GA_MEASUREMENT_ID=G-4923ZXESXM`; leave it blank to disable Analytics. GA4 is loaded only after analytics consent. Never use a Google Client Secret, Supabase secret/service-role key or database password. Development uses Next's local development server; production does not.
 
 ### Publish directly from main /docs
 
-The complete publishable site is committed in **`docs/`**, including `docs/.nojekyll` so GitHub Pages serves Next.js's `_next` assets directly, and `docs/CNAME` for **dailylineup.co.uk**. There is no custom deployment workflow, build service, token or custom secret to configure.
+The complete publishable site is committed in **`docs/`**, including `docs/.nojekyll` so GitHub Pages serves Next.js's `_next` assets directly, and `docs/CNAME` for **dailylineup.co.uk**. There is no custom deployment workflow, build service, token or custom secret to configure. The existing LINEUP installation is already configured: future updates need only a local rebuild, commit and **Push origin**. Steps 2–5 below are initial-setup reference, not a requirement to change hosting or DNS for Analytics. Search Console verification adds only its supplied TXT record.
 
 1. Push the committed `main` branch using GitHub Desktop's **Push origin**.
 2. In the repository, open **Settings → Pages → Build and deployment**.
@@ -35,7 +35,7 @@ GitHub serves the files already present in `docs/`; it does not build Next.js. F
 npm run build:pages
 ```
 
-This runs the existing `next build --webpack` static export and its asset checks, then replaces `docs/` with the complete verified `out/` output. Development and production both use the **domain root**, with no repository prefix. Scripts, CSS, fonts, posters, images and internal links use root-compatible paths; canonical and sharing URLs use **https://dailylineup.co.uk/**. `public/CNAME`, `public/robots.txt`, `public/sitemap.xml` and `.nojekyll` are copied into each export automatically. The account-enabled build needs all three public account variables in `.env.local` at build time; GitHub Pages needs no environment settings. Rebuild whenever those public values change.
+This runs the existing `next build --webpack` static export and its asset checks, then replaces `docs/` with the complete verified `out/` output. Development and production both use the **domain root**, with no repository prefix. Scripts, CSS, fonts, posters, images and internal links use root-compatible paths; canonical and sharing URLs use **https://dailylineup.co.uk/**. `public/CNAME`, `public/robots.txt`, `public/sitemap.xml` and `.nojekyll` are copied into each export automatically. The account-enabled build needs all three public account variables in `.env.local` at build time; GitHub Pages needs no environment settings. For optional Analytics, include `NEXT_PUBLIC_GA_MEASUREMENT_ID` at build time too. Rebuild whenever those public values change.
 
 The lower-level `npm run build` command exports to `out/` at the same domain root. The old `PAGES_BASE_PATH` override is no longer used, so a stale environment value cannot reintroduce the repository prefix. Do not run `next start`; the published site has no application server.
 
@@ -59,13 +59,23 @@ npm run audit:public
 npm run build:pages
 ```
 
-`postbuild` verifies root HTML/CSS asset paths, the custom-domain CNAME, canonical/social metadata, robots/sitemap, `.nojekyll`, export size and the absence of old repository/runtime film API references or secret credentials in publication files. For an account-enabled build it also verifies that the two public Supabase values and a valid Google Web Client ID reached the browser bundle, without printing their values. The home page contains every game, sheet and result, so refreshing the root or a mode query URL works directly. Only generated publication files belong in `docs/`.
+`postbuild` verifies root HTML/CSS asset paths, the custom-domain CNAME, canonical/social metadata, robots/sitemap, `.nojekyll`, export size and the absence of old repository/runtime film API references or secret credentials in publication files. For an account-enabled build it also verifies that the two public Supabase values and a valid Google Web Client ID reached the browser bundle, without printing their values. It also verifies the homepage’s pre-rendered support, honest game structured data, the privacy page’s own metadata, the two-page sitemap and noindex 404. The home page contains every game, sheet and result, so refreshing the root or a mode query URL works directly. Only generated publication files belong in `docs/`.
 
 ## Optional accounts
 
 Google sign-in uses Google's official browser-rendered button and a popup credential callback. Supabase validates the Google ID token with nonce protection and maintains the existing persistent account session; the new flow does not send players through the hosted Supabase OAuth redirect. See [the current Google sign-in setup and manual test guide](notes/google-native-sign-in.md). The [original account implementation report](notes/player-accounts.md) remains a historical record of the account database, private Daily statistics/streaks and explicit guest-result saving; its hosted-OAuth instructions describe the previous flow.
 
 Existing installations keep their users, results and database policies. For a new installation only, manually review and run [the complete SQL migration](supabase/migrations/20261026_daily_player_results.sql) before testing account saves; do not rerun it or replace an existing table to enable the new login. Google Cloud's authorized JavaScript origins and Supabase's enabled Google provider must accept the existing Web Client ID as described in the current guide. No migration or remote settings change is performed by the application. Daily and Practice remain playable when configuration, the migration, Google or Supabase is unavailable. Practice never enters account Daily statistics.
+
+## Optional Analytics, privacy and discovery
+
+GA4 uses a lightweight browser Google tag behind explicit opt-in consent. Before consent or after rejection, no GA script, requests or cookies are created. Accept and Reject have equal prominence, and the footer reopens Analytics preferences. Withdrawal stops collection and removes accessible GA cookies without clearing game progress or the account session. Missing/blocked Analytics does not block play. No advertising, Google signals, remarketing or GA User-ID is added.
+
+The event hooks measure accepted game actions, successful sharing, actual Browse Questions use, successful explicit Google login and reliably observed local Daily returns. They send broad counts/categories, never account identifiers, tokens, question subjects or mystery films. Restoring a game/session does not fabricate a start, completion or login. `sign_up` is intentionally absent because this Google ID-token flow does not reliably distinguish new accounts. See [the event definitions, consent limits and exact GA4/Search Console handoff](notes/analytics-seo-handoff.md).
+
+The homepage title and social metadata describe the free Daily movie guessing game. Short rules, Daily/Practice guidance, question strategy and useful FAQs are pre-rendered below the game. The only supporting page is `/privacy/`; the sitemap contains the canonical homepage and privacy page, with no future puzzles or generated film pages. Accurate VideoGame/WebApplication structured data makes no rich-result or ranking promise.
+
+Before publishing, manually disable the GA stream’s Enhanced Measurement, keep advertising/user-provided-data features off, choose the documented retention settings and review [the privacy owner checklist](notes/analytics-privacy-owner-review.md). Daniel Lewis operates LINEUP as an independent online game. Confirm that **privacy@dailylineup.co.uk** forwards successfully and is monitored before publishing the public contact. No external account, DNS or hosting settings are changed by the application.
 
 ## Daily LINEUP
 
@@ -75,7 +85,7 @@ Use `npm run check:daily` to validate the frozen schedule; `npm run generate:dai
 
 ## Product refinement
 
-The [design refinement report](notes/design-refinement.md) documents the compact mobile layout, canonical question browser, accurate results/sharing, static social preview, responsive checks and deliberate deferrals. [Design research](notes/design-research.md) records the bounded gallery review and future product/measurement recommendations. No tracking or new runtime service was added.
+The [design refinement report](notes/design-refinement.md) documents the compact mobile layout, canonical question browser, accurate results/sharing, static social preview, responsive checks and deliberate deferrals. [Design research](notes/design-research.md) records the bounded gallery review and future product/measurement recommendations. Those earlier design changes added no tracking; the current optional, consent-based Analytics implementation is documented above.
 
 ## Static catalogue and future updates
 
@@ -113,7 +123,7 @@ Browser storage belongs to an origin: moving from `danielemyrlewis-arch.github.i
 
 ## Public source and attribution
 
-`.env`, `.env.local`, `.dev.vars`, keys, dependency/build folders and local editor/hosting caches are ignored. `.env.example` documents only the three optional public browser variables. `.env.local` stays ignored; its public values deliberately appear in the static account-enabled bundle. No private key belongs in either the browser or public source. `npm run audit:public` reports credential/private-metadata locations without printing their values. The one-time `node scripts/audit-public-source.mjs --history` check also scans historical source blobs; the clean release archive deliberately omits all Git history and local state.
+`.env`, `.env.local`, `.dev.vars`, keys, dependency/build folders and local editor/hosting caches are ignored. `.env.example` documents the three optional public account variables and the optional public GA4 measurement ID. `.env.local` stays ignored; its public values deliberately appear in the static account-enabled bundle. No private key belongs in either the browser or public source. `npm run audit:public` reports credential/private-metadata locations without printing their values. The one-time `node scripts/audit-public-source.mjs --history` check also scans historical source blobs; the clean release archive deliberately omits all Git history and local state.
 
 LINEUP retains its editorial black/cobalt identity and locally hosted **Libre Franklin** under the SIL Open Font License (`public/licenses/Libre-Franklin-OFL.txt`). Film metadata/artwork remain credited to [TMDB](https://www.themoviedb.org). About & credits retains the TMDB logo and notice: **This product uses the TMDB API but is not endorsed or certified by TMDB.** Static metadata was originally obtained from TMDB; the published beta makes no live metadata API requests.
 
