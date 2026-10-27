@@ -1,11 +1,11 @@
-/** Real Practice generation/history; opening examples, then neutral simulated player choices. */
+/** Real Practice generation/history; one original suggestion, then neutral simulated player choices. */
 import assert from "node:assert/strict";
 import { writeFileSync } from "node:fs";
 import { PRACTICE_CATALOGUE } from "../lib/data/catalogue.ts";
 import { OSCAR_KEYS } from "../lib/data/awards.ts";
 import { createPracticePuzzle, franchiseKeys } from "../lib/game/practice-selection.ts";
 import { emptyPracticeHistory, rememberPracticePuzzle } from "../lib/game/practice-history.ts";
-import { initialState, activeMovies, gameReducer } from "../lib/game/engine.ts";
+import { initialState, activeMovies, gameReducer, hasUsedSuggestion } from "../lib/game/engine.ts";
 import { validQuestions, openingQuestionExamples, evaluateQuestion } from "../lib/game/questions.ts";
 import type { OscarQuestionKey, RankedQuestion } from "../lib/game/types.ts";
 
@@ -60,13 +60,14 @@ for(let i=0;i<count;i++) {
     for(const group of offeredGroups(questions)) {
       gameGroups.add(group);if(!turn)initial[group]=(initial[group]??0)+1;
     }
-    const suggestions=openingQuestionExamples(puzzle.movies,state.history.map(h=>h.question.id));
+    const suggestions=hasUsedSuggestion(state)?[]:openingQuestionExamples(puzzle.movies)
+      .filter(example=>questions.some(question=>question.id===example.id));
     for(const group of offeredGroups(suggestions)) {
       suggestedGroups.add(group);if(!turn)suggestedInitial[group]=(suggestedInitial[group]??0)+1;
     }
     const q=turn===0?suggestions[0]:questions[(i+turn)%questions.length];
     if(!q)break;
-    state=gameReducer(state,{type:"ask",question:q});
+    state=gameReducer(state,{type:"ask",question:q,...(turn===0?{suggested:true as const}:{})});
     assert.ok(state.activeIds.includes(puzzle.mysteryId));assert.ok(state.history.length<=5);
   }
   for(const group of gameGroups)playable[group]=(playable[group]??0)+1;
@@ -79,7 +80,7 @@ for(let i=0;i<count;i++) {
 const percent=(n:number)=>Number((100*n/count).toFixed(2));
 const summary=(counts:Record<string,number>)=>Object.fromEntries(Object.keys(groups).map(key=>[key,{games:counts[key]??0,percent:percent(counts[key]??0)}]));
 const result={lineups:count,seedStart,selectionAndMysteryUnchanged:unchangedSelections,
-  strategy:"First ordinary suggestion per turn; no awards preference, pool filtering or mystery-aware selection",
+  strategy:"One original suggestion on the first turn, then neutral player choices; no awards preference, pool filtering or mystery-aware selection",
   initial:summary(initial),playableDuringGame:summary(playable),
   visibleInSuggestions:{initial:summary(suggestedInitial),duringGame:summary(suggestedDuring)},
   perQuestion:Object.fromEntries(OSCAR_KEYS.map(key=>[key,{...perQuestion[key],initialPercent:percent(perQuestion[key].initialGames),playablePercent:percent(perQuestion[key].playableGames)}])),

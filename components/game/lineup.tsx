@@ -4,6 +4,7 @@ import type { GameState, Movie, Puzzle } from "@/lib/game/types";
 import { initialState } from "@/lib/game/engine";
 import { createPracticePuzzle } from "@/lib/game/practice-selection";
 import { readPracticeHistory } from "@/lib/game/practice-history";
+import { readPracticeProgress, writePracticeProgress } from "@/lib/game/practice-persistence";
 import { londonDate, nextLondonMidnight, formatDailyDate, addCalendarDays } from "@/lib/game/daily-date";
 import { DAILY_SCHEDULE, getDailyEntry, resolveDailyPuzzle } from "@/lib/game/daily-schedule";
 import { Game } from "./game";
@@ -11,6 +12,15 @@ import { GameShell } from "./game-shell";
 import { AccountControl, usePlayerAccount } from "@/components/account/player-provider";
 
 type Mode = Puzzle["mode"];
+
+/** An unfinished Practice keeps its exact board, questions and assistance allowance. */
+function resumeOrCreatePractice(catalogue: Movie[]): GameState {
+  const saved = readPracticeProgress(catalogue);
+  if (saved.kind === "saved" && saved.state) return saved.state;
+  const fresh = initialState(createPracticePuzzle(catalogue, crypto.getRandomValues(new Uint32Array(1))[0], "demo", readPracticeHistory()));
+  writePracticeProgress(fresh);
+  return fresh;
+}
 
 /** Modes share one cached local catalogue. Only Practice generates puzzles in the browser. */
 export function Lineup() {
@@ -51,7 +61,7 @@ export function Lineup() {
       const nextMode = new URL(window.location.href).searchParams.get("mode") === "practice" ? "practice" : "daily";
       setMode(nextMode);
       if (nextMode === "practice" && catalogue) {
-        setPractice(previous => previous ?? initialState(createPracticePuzzle(catalogue, crypto.getRandomValues(new Uint32Array(1))[0], "demo", readPracticeHistory())));
+        setPractice(previous => previous ?? resumeOrCreatePractice(catalogue));
       }
       if (nextMode === "daily") setDailyDate(londonDate());
     };
@@ -75,7 +85,7 @@ export function Lineup() {
     const url = new URL(window.location.href);
     if (next === "practice") {
       url.searchParams.set("mode", "practice");
-      if (catalogue) setPractice(previous => previous ?? initialState(createPracticePuzzle(catalogue, crypto.getRandomValues(new Uint32Array(1))[0], "demo", readPracticeHistory())));
+      if (catalogue) setPractice(previous => previous ?? resumeOrCreatePractice(catalogue));
     }
     else { url.searchParams.delete("mode"); setDailyDate(londonDate()); }
     window.history.replaceState(null, "", url);

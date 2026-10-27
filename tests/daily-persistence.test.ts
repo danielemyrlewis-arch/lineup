@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { DEMO_MOVIES } from "../lib/data/demo.ts";
-import { activeMovies, createPuzzle, deductionPath, gameReducer, initialState } from "../lib/game/engine.ts";
-import { evaluateQuestion, validQuestions } from "../lib/game/questions.ts";
+import { activeMovies, createPuzzle, deductionPath, gameReducer, hasUsedSuggestion, initialState } from "../lib/game/engine.ts";
+import { evaluateQuestion, openingQuestionExamples, validQuestions } from "../lib/game/questions.ts";
 import { advanceDailyProgress, DAILY_PROGRESS_PREFIX, dailyProgressKey, readDailyProgress, reconcileDailyProgress } from "../lib/game/daily-persistence.ts";
 import type { GameAction, GameState, Puzzle } from "../lib/game/types.ts";
 
@@ -229,4 +229,40 @@ test("Daily cache reconciliation never merges a different puzzle, version or fil
   ];
   for (const state of wrong) assert.equal(reconcileDailyProgress(state, today), today.state);
   assert.equal(reconcileDailyProgress(cached, {kind: "invalid", state: today.state}), today.state);
+});
+
+test("Daily suggestion provenance survives replay while legacy unmarked questions keep their allowance", () => {
+  const storage = new MemoryStorage(), start = initialState(puzzle());
+  const example = openingQuestionExamples(start.puzzle.movies)[0];
+  const accepted = advanceDailyProgress(start, {type: "ask", question: example, suggested: true}, storage);
+  assert.equal(accepted.accepted, true);
+  assert.equal(hasUsedSuggestion(accepted.state), true);
+  const restored = readDailyProgress(start.puzzle, storage);
+  assert.equal(restored.kind, "saved"); assert.equal(hasUsedSuggestion(restored.state), true);
+  assert.deepEqual(restored.state, accepted.state);
+  const key = dailyProgressKey(start.puzzle.daily!.date);
+  const saved = JSON.parse(storage.getItem(key)!);
+  assert.equal(saved.schema, 1);
+  delete saved.questions[0].suggested;
+  storage.setItem(key, JSON.stringify(saved));
+  const legacy = readDailyProgress(start.puzzle, storage);
+  assert.equal(legacy.kind, "saved"); assert.equal(hasUsedSuggestion(legacy.state), false);
+  assert.equal(legacy.state.history.length, 1);
+  const alreadyAsked = advanceDailyProgress(legacy.state, {type: "ask", question: example, suggested: true}, storage);
+  assert.equal(alreadyAsked.accepted, false); assert.equal(hasUsedSuggestion(alreadyAsked.state), false);
+});
+
+test("Daily rejects invalid suggestion metadata without resetting an existing attempt", () => {
+  const storage = new MemoryStorage(), start = initialState(puzzle());
+  const example = openingQuestionExamples(start.puzzle.movies)[0];
+  advanceDailyProgress(start, {type: "ask", question: example, suggested: true}, storage);
+  const key = dailyProgressKey(start.puzzle.daily!.date);
+  const good = JSON.parse(storage.getItem(key)!);
+  for (const marker of [false, "true", 1, null]) {
+    const bad = structuredClone(good); bad.questions[0].suggested = marker;
+    const raw = JSON.stringify(bad); storage.setItem(key, raw);
+    assert.equal(readDailyProgress(start.puzzle, storage).kind, "invalid");
+    assert.equal(advanceDailyProgress(start, ask(start), storage).accepted, false);
+    assert.equal(storage.getItem(key), raw);
+  }
 });

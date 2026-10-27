@@ -21,6 +21,7 @@ import { PickDialog, RestartDialog } from "./pick-dialogs";
 import { ResultDialog } from "./result-dialog";
 import { GameShell } from "./game-shell";
 import { createPracticePuzzle } from "@/lib/game/practice-selection";
+import { writePracticeProgress } from "@/lib/game/practice-persistence";
 import { dismissStrategyHint, shouldShowStrategyHint } from "@/lib/game/onboarding";
 import { advanceDailyProgress, dailyProgressKey, readDailyProgress, reconcileDailyProgress } from "@/lib/game/daily-persistence";
 import { formatDailyDate } from "@/lib/game/daily-date";
@@ -143,6 +144,7 @@ export function Game({
     if (blocked) return null;
     if (!daily) {
       const next = gameReducer(state, action);
+      if (next !== state) writePracticeProgress(next);
       setState(next);
       return { state: next, accepted: next !== state };
     }
@@ -155,9 +157,9 @@ export function Game({
     }
     return result;
   };
-  const ask = (question: Question) => {
+  const ask = (question: Question, suggested?: true) => {
     if (actionLock.current || state.status !== "playing") return;
-    const result = advance({ type: "ask", question });
+    const result = advance({ type: "ask", question, ...(suggested ? {suggested: true as const} : {}) });
     if (!result?.accepted) return;
     const next = result.state;
     trackGameAction(state, next, "ask", catalogue);
@@ -195,6 +197,7 @@ export function Game({
         practiceHistory.current,
       );
       const fresh = initialState(puzzle);
+      writePracticeProgress(fresh);
       practiceHistory.current = rememberPracticePuzzle(
         practiceHistory.current,
         fresh.puzzle,

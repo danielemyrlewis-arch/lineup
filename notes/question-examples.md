@@ -1,5 +1,7 @@
 # Opening question examples — 27 October 2026
 
+Historical report: the opening-only timing below was subsequently replaced by [one suggested question per game](one-suggestion.md). The neutral category-varied selector and hidden-answer safeguards are retained.
+
 This finishes the interrupted suggestion task on top of the committed account implementation `6f04bc3`. Before resuming, only `tests/opening-examples.test.ts` and a revised suggestion assertion in `tests/game.test.ts` had been saved. Those edits were retained. The production selector and panel still had their old behavior; no completed production change was overwritten.
 
 ## Cause and hidden-answer audit

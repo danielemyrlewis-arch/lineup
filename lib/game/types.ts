@@ -129,6 +129,8 @@ export interface Answer {
   answer: boolean;
   remaining: number;
   eliminatedIds: string[];
+  /** Present only when the game's single suggested-question allowance was submitted. */
+  suggested?: true;
 }
 export interface GameState {
   puzzle: Puzzle;
@@ -138,6 +140,6 @@ export interface GameState {
   guessId: string | null;
 }
 export type GameAction =
-  | { type: "ask"; question: Question }
+  | { type: "ask"; question: Question; suggested?: true }
   | { type: "guess"; movieId: string }
   | { type: "new"; puzzle: Puzzle };

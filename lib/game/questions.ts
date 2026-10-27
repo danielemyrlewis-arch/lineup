@@ -465,9 +465,10 @@ export function suggestedQuestions(
   return selected;
 }
 
-/** Only a fresh board gets examples. The API cannot accept a mystery ID or answers. */
+/** The original three are board-only and stable for the whole game; no mystery or answers enter this API. */
 export function openingQuestionExamples(movies: Movie[], askedIds: string[] = [], count = 3): RankedQuestion[] {
-  if (askedIds.length) return [];
+  // Retain the legacy argument for callers; history cannot change or replace the original examples.
+  void askedIds;
   const seed = movies.map(movie => movie.id).sort().join("|");
   return suggestedQuestions(validQuestions(movies), count, seed);
 }

@@ -6,7 +6,7 @@ import {
   openingQuestionExamples,
   validQuestions,
 } from "@/lib/game/questions";
-import { activeMovies, QUESTION_LIMIT } from "@/lib/game/engine";
+import { activeMovies, hasUsedSuggestion, QUESTION_LIMIT } from "@/lib/game/engine";
 import type { GameState, Question } from "@/lib/game/types";
 import { QuestionBrowser } from "./question-browser";
 import { trackEvent } from "@/lib/analytics";
@@ -18,7 +18,7 @@ export function QuestionPanel({
 }: {
   state: GameState;
   busy: boolean;
-  onAsk: (q: Question) => void;
+  onAsk: (q: Question, suggested?: true) => void;
   showStrategyHint?: boolean;
 }) {
   const [query, setQuery] = useState("");
@@ -26,6 +26,8 @@ export function QuestionPanel({
   const [highlighted, setHighlighted] = useState(0);
   const [historyOpen, setHistoryOpen] = useState(true);
   const [browseOpen, setBrowseOpen] = useState(false);
+  const [pendingSuggestionId, setPendingSuggestionId] = useState<string | null>(null);
+  const pendingSuggestion = useRef<string | null>(null);
   const budget = useRef<HTMLParagraphElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const left = QUESTION_LIMIT - state.history.length;
@@ -37,13 +39,17 @@ export function QuestionPanel({
       ),
     [state],
   );
-  const examples = useMemo(() => state.status === "playing"
-    ? openingQuestionExamples(state.puzzle.movies, state.history.map(h => h.question.id))
-    : [], [state.puzzle.movies, state.history, state.status]);
+  // Always select from the original board, never the current answer-dependent subset.
+  const examples = useMemo(() => openingQuestionExamples(state.puzzle.movies), [state.puzzle.movies]);
+  const suggestionUsed = hasUsedSuggestion(state);
+  const availableExampleIds = new Set(questions.map(question => question.id));
+  const showSuggestions = state.status === "playing" && !suggestionUsed && examples.some(question => availableExampleIds.has(question.id));
+  const selectedSuggestion = !suggestionUsed && examples.some(question => question.id === pendingSuggestionId)
+    ? questions.find(question => question.id === pendingSuggestionId) : undefined;
   const matches = searchQuestions(questions, query);
   const finalPick = left === 0 || state.activeIds.length === 1;
   const disabled = busy || state.status !== "playing" || finalPick;
-  const open = focused && !disabled && query.trim().length > 0;
+  const open = focused && !disabled && !pendingSuggestionId && query.trim().length > 0;
   const latest = state.history.at(-1);
   useEffect(() => {
     if (open)
@@ -51,14 +57,20 @@ export function QuestionPanel({
         .getElementById(`option-${highlighted}`)
         ?.scrollIntoView({ block: "nearest" });
   }, [highlighted, open, query, matches.length]);
-  const ask = (q: Question) => {
+  const clearSuggestion = () => { pendingSuggestion.current = null; setPendingSuggestionId(null); };
+  const ask = (q: Question, suggested?: true) => {
     if (disabled) return;
+    const canonical = questions.find(question => question.id === q.id);
+    if (!canonical || (suggested && (suggestionUsed || pendingSuggestion.current !== q.id || !examples.some(question => question.id === q.id)))) return;
+    // Clear synchronously before the parent updates, so a double click cannot submit twice.
+    clearSuggestion();
     // Dismiss a touch keyboard while retaining desktop keyboard focus.
     if (window.matchMedia("(pointer: coarse)").matches) input.current?.blur();
     setQuery("");
     setFocused(false);
     setHighlighted(0);
-    onAsk(q);
+    onAsk(canonical, suggested);
+    if (suggested) requestAnimationFrame(() => budget.current?.focus());
   };
   return (
     <aside className="question-column">
@@ -126,12 +138,14 @@ export function QuestionPanel({
                   disabled={disabled}
                   onFocus={() => setFocused(true)}
                   onChange={(e) => {
+                    clearSuggestion();
                     setQuery(e.target.value);
                     setHighlighted(0);
                     setFocused(true);
                   }}
                   onKeyDown={(e) => {
                     if (e.key === "Escape") {
+                      clearSuggestion();
                       setFocused(false);
                       input.current?.blur();
                     }
@@ -146,7 +160,10 @@ export function QuestionPanel({
                       e.preventDefault();
                       setHighlighted((v) => Math.max(v - 1, 0));
                     }
-                    if (e.key === "Enter" && open && matches[highlighted]) {
+                    if (e.key === "Enter" && selectedSuggestion) {
+                      e.preventDefault();
+                      ask(selectedSuggestion, true);
+                    } else if (e.key === "Enter" && open && matches[highlighted]) {
                       e.preventDefault();
                       ask(matches[highlighted]);
                     }
@@ -158,6 +175,7 @@ export function QuestionPanel({
                     className="clear-search"
                     aria-label="Clear search"
                     onClick={() => {
+                      clearSuggestion();
                       setQuery("");
                       setHighlighted(0);
                       input.current?.focus();
@@ -226,6 +244,8 @@ export function QuestionPanel({
                 onClick={() => {
                   if (disabled || questions.length === 0 || browseOpen) return;
                   trackEvent("question_browse", {mode: state.puzzle.mode});
+                  if (pendingSuggestion.current) setQuery("");
+                  clearSuggestion();
                   setFocused(false);
                   input.current?.blur();
                   setBrowseOpen(true);
@@ -235,24 +255,38 @@ export function QuestionPanel({
                 <ArrowRight size={16} aria-hidden="true" />
               </button>
             </div>
-            {examples.length > 0 && (
+            {showSuggestions && (
               <>
-              <p className="suggestion-label">Example questions</p>
-              <div className="suggestions">
-                {examples.map((q) => (
-                  <button
+              <p className="suggestion-label">Need some inspiration?</p>
+              <p className="suggestion-allowance">1 suggested question available</p>
+              <div role="group" className="suggestions" aria-label="Suggested questions">
+                {examples.map((q) => {
+                  const available = availableExampleIds.has(q.id);
+                  const asked = state.history.some(answer => answer.question.id === q.id);
+                  return <button
                     type="button"
                     key={q.id}
-                    disabled={disabled}
+                    disabled={disabled || !available}
+                    aria-pressed={selectedSuggestion?.id === q.id}
+                    title={!available ? asked ? "Already asked" : "This question no longer narrows the lineup." : undefined}
                     onClick={() => {
-                      ask(q);
-                      requestAnimationFrame(() => budget.current?.focus());
+                      if (disabled || !available || suggestionUsed) return;
+                      pendingSuggestion.current = q.id;
+                      setPendingSuggestionId(q.id);
+                      setQuery(q.label);
+                      setFocused(false);
+                      setHighlighted(0);
+                      if (!window.matchMedia("(pointer: coarse)").matches) input.current?.focus();
                     }}
                   >
                     <span>{q.shortLabel}</span>
-                  </button>
-                ))}
+                  </button>;
+                })}
               </div>
+              {selectedSuggestion && <button type="button" className="browse-questions suggestion-submit"
+                disabled={disabled} onClick={() => ask(selectedSuggestion, true)}>
+                <span>Ask this question</span><ArrowRight size={16} aria-hidden="true" />
+              </button>}
               </>
             )}
           </>

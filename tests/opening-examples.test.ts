@@ -67,7 +67,7 @@ test("changing every possible hidden mystery leaves Daily and Practice opening e
   }
 });
 
-test("no new examples are returned after the first answer, for either YES or NO", () => {
+test("manual answers never regenerate or reorder the original board examples, for either YES or NO", () => {
   const question = validQuestions(firstDaily.movies).find(q => q.yesCount > 1 && q.noCount > 1)!;
   for (const answer of [true, false]) {
     const mystery = firstDaily.movies.find(movie => evaluateQuestion(movie, question) === answer)!;
@@ -75,9 +75,10 @@ test("no new examples are returned after the first answer, for either YES or NO"
     const state = gameReducer(initialState({...firstDaily, mysteryId: mystery.id}), {type: "ask", question});
     assert.equal(state.history.length, 1);
     assert.equal(state.history[0].answer, answer);
-    assert.deepEqual(openingQuestionExamples(activeMovies(state), state.history.map(row => row.question.id)), []);
+    assert.deepEqual(ids(openingQuestionExamples(state.puzzle.movies, state.history.map(row => row.question.id))),
+      ids(openingQuestionExamples(firstDaily.movies)));
     assert.ok(validQuestions(activeMovies(state), state.history.map(row => row.question.id)).length > 0,
-      "Removing recommendations must not remove the remaining question bank");
+      "Keeping the original suggestions must not remove the remaining question bank");
   }
 });
 

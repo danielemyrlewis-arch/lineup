@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { initialState, gameReducer, activeMovies } from "../lib/game/engine.ts";
-import { validQuestions } from "../lib/game/questions.ts";
+import { openingQuestionExamples, validQuestions } from "../lib/game/questions.ts";
 import { createPracticePuzzle } from "../lib/game/practice-selection.ts";
 import { PRACTICE_CATALOGUE } from "../lib/data/catalogue.ts";
 import { DAILY_SCHEDULE, resolveDailyPuzzle } from "../lib/game/daily-schedule.ts";
@@ -136,4 +136,27 @@ test("analytics failures cannot mutate or throw into an accepted game transition
     {...f.options, track: () => { throw new Error("analytics blocked"); }}));
   assert.equal(after.history.length, historyLength);
   assert.equal(after.status, "playing");
+});
+
+
+test("a suggested question emits the normal accepted-action events once, with no selection or provenance payload", () => {
+  for (const mode of ["daily", "practice"] as const) {
+    const before = start(mode), f = fixture();
+    const selected = openingQuestionExamples(before.puzzle.movies)[0];
+    assert.equal(f.events.length, 0, "Selection alone does not invoke the accepted-action tracker");
+    const after = gameReducer(before, {type: "ask", question: selected, suggested: true});
+    assert.equal(after.history[0].suggested, true);
+    trackGameAction(before, after, "ask", PRACTICE_CATALOGUE, f.options);
+    trackGameAction(before, after, "ask", PRACTICE_CATALOGUE, f.options);
+    const duplicate = gameReducer(after, {type: "ask", question: selected, suggested: true});
+    assert.equal(duplicate, after);
+    trackGameAction(after, duplicate, "ask", PRACTICE_CATALOGUE, f.options);
+    assert.deepEqual(f.events.map(event => event.name), ["game_start", "question_asked"]);
+    assert.equal(f.events[1].params.question_number, 1);
+    assert.ok(!JSON.stringify(f.events).includes("suggested"));
+    const completed = gameReducer(after, {type: "guess", movieId: after.puzzle.mysteryId});
+    trackGameAction(after, completed, "guess", PRACTICE_CATALOGUE, f.options);
+    trackGameAction(after, completed, "guess", PRACTICE_CATALOGUE, f.options);
+    assert.equal(f.events.filter(event => event.name === "game_complete").length, 1);
+  }
 });

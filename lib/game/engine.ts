@@ -1,5 +1,5 @@
 import type { GameAction, GameState, Movie, Puzzle } from "./types.ts";
-import { evaluateQuestion, validQuestions } from "./questions.ts";
+import { evaluateQuestion, openingQuestionExamples, validQuestions } from "./questions.ts";
 export const QUESTION_LIMIT = 5;
 export const LINEUP_SIZE = 24;
 
@@ -59,6 +59,10 @@ export function initialState(puzzle: Puzzle): GameState {
 export function activeMovies(state: GameState): Movie[] {
   return state.puzzle.movies.filter((m) => state.activeIds.includes(m.id));
 }
+/** A question selection alone has no state; only an accepted submitted answer spends this. */
+export function hasUsedSuggestion(state: GameState): boolean {
+  return state.history.some(answer => answer.suggested === true);
+}
 export function gameReducer(state: GameState, action: GameAction): GameState {
   if (action.type === "new") return initialState(action.puzzle);
   if (state.status !== "playing") return state;
@@ -71,6 +75,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     };
   }
   if (state.history.length >= QUESTION_LIMIT) return state;
+  if (action.suggested && (hasUsedSuggestion(state) ||
+      !openingQuestionExamples(state.puzzle.movies).some(question => question.id === action.question.id))) return state;
   // Resolve the canonical question by ID. UI-supplied labels/predicates cannot alter the rules.
   const question = validQuestions(
     activeMovies(state),
@@ -91,7 +97,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     activeIds,
     history: [
       ...state.history,
-      { question, answer, remaining: activeIds.length, eliminatedIds },
+      { question, answer, remaining: activeIds.length, eliminatedIds, ...(action.suggested ? {suggested: true as const} : {}) },
     ],
   };
 }

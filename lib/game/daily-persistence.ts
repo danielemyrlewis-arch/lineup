@@ -23,13 +23,9 @@ interface StoredQuestion {
   answer: boolean;
   remaining: number;
   eliminatedIds: string[];
+  suggested?: true;
 }
-interface StoredDailyProgress {
-  schema: number;
-  date: string;
-  puzzleId: string;
-  number: number;
-  catalogueVersion: string;
+export interface StoredGameProgress {
   questions: StoredQuestion[];
   activeIds: string[];
   questionsUsed: number;
@@ -38,6 +34,13 @@ interface StoredDailyProgress {
   guessId: string | null;
   status: GameState["status"];
   filmsRemainingAtGuess: number | null;
+}
+interface StoredDailyProgress extends StoredGameProgress {
+  schema: number;
+  date: string;
+  puzzleId: string;
+  number: number;
+  catalogueVersion: string;
 }
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 const object = (value: unknown): value is Record<string, unknown> =>
@@ -56,17 +59,12 @@ export function dailyProgressKey(date: string): string {
   return `${DAILY_PROGRESS_PREFIX}${date}`;
 }
 
-/** Compact facts are stored; movie objects and the hidden answer are not duplicated. */
-function encode(state: GameState): StoredDailyProgress {
-  const daily = dailyIdentity(state.puzzle)!;
+/** Compact engine facts shared by Daily and the single unfinished Practice snapshot. */
+export function encodeGameProgress(state: GameState): StoredGameProgress {
   return {
-    schema: SCHEMA,
-    date: daily.date,
-    puzzleId: state.puzzle.id,
-    number: daily.number,
-    catalogueVersion: daily.catalogueVersion,
     questions: state.history.map(h => ({ id: h.question.id, answer: h.answer,
-      remaining: h.remaining, eliminatedIds: h.eliminatedIds })),
+      remaining: h.remaining, eliminatedIds: h.eliminatedIds,
+      ...(h.suggested === true ? {suggested: true as const} : {}) })),
     activeIds: state.activeIds,
     questionsUsed: state.history.length,
     questionsLeft: QUESTION_LIMIT - state.history.length,
@@ -77,20 +75,18 @@ function encode(state: GameState): StoredDailyProgress {
   };
 }
 
-/** Rebuild only through the shared engine; stored answers/counts never become rules. */
-function decode(value: unknown, puzzle: Puzzle): GameState | null {
-  const daily = dailyIdentity(puzzle);
-  if (!daily || !object(value) || value.schema !== SCHEMA || value.date !== daily.date ||
-      value.puzzleId !== puzzle.id || value.number !== daily.number ||
-      value.catalogueVersion !== daily.catalogueVersion || !Array.isArray(value.questions) ||
-      value.questions.length > QUESTION_LIMIT) return null;
+/** Rebuild only through the canonical engine, including accepted suggestion provenance. */
+export function decodeGameProgress(value: unknown, puzzle: Puzzle): GameState | null {
+  if (!object(value) || !Array.isArray(value.questions) || value.questions.length > QUESTION_LIMIT) return null;
   let state = initialState(puzzle);
   for (const row of value.questions) {
-    if (!object(row) || !boundedId(row.id) || typeof row.answer !== "boolean") return null;
+    if (!object(row) || !boundedId(row.id) || typeof row.answer !== "boolean" ||
+        (row.suggested !== undefined && row.suggested !== true)) return null;
     const question = validQuestions(activeMovies(state), state.history.map(h => h.question.id))
       .find(q => q.id === row.id);
     if (!question) return null;
-    const next = gameReducer(state, { type: "ask", question });
+    const next = gameReducer(state, { type: "ask", question,
+      ...(row.suggested === true ? {suggested: true as const} : {}) });
     const answer = next.history.at(-1);
     if (next === state || !answer || row.answer !== answer.answer ||
         row.remaining !== answer.remaining || !same(row.eliminatedIds, answer.eliminatedIds)) return null;
@@ -102,11 +98,24 @@ function decode(value: unknown, puzzle: Puzzle): GameState | null {
     if (next === state) return null;
     state = next;
   } else if (value.finalGuessSubmitted !== false || value.guessId !== null) return null;
-  const expected = encode(state);
-  // This also verifies status, used/remaining budget, final remaining count and film order.
-  for (const key of Object.keys(expected) as (keyof StoredDailyProgress)[])
+  const expected = encodeGameProgress(state);
+  for (const key of Object.keys(expected) as (keyof StoredGameProgress)[])
     if (!same(value[key], expected[key])) return null;
   return state;
+}
+
+/** Existing schema/key remain readable; legacy rows without a marker are manual asks. */
+function encode(state: GameState): StoredDailyProgress {
+  const daily = dailyIdentity(state.puzzle)!;
+  return {schema: SCHEMA, date: daily.date, puzzleId: state.puzzle.id,
+    number: daily.number, catalogueVersion: daily.catalogueVersion, ...encodeGameProgress(state)};
+}
+function decode(value: unknown, puzzle: Puzzle): GameState | null {
+  const daily = dailyIdentity(puzzle);
+  if (!daily || !object(value) || value.schema !== SCHEMA || value.date !== daily.date ||
+      value.puzzleId !== puzzle.id || value.number !== daily.number ||
+      value.catalogueVersion !== daily.catalogueVersion) return null;
+  return decodeGameProgress(value, puzzle);
 }
 
 export function readDailyProgress(puzzle: Puzzle, storage?: StorageLike): DailyProgress {

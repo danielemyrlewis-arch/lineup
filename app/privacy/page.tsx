@@ -30,7 +30,8 @@ export default function PrivacyPage() {
         <h2 id="privacy-game-storage">Playing in this browser</h2>
         <p>LINEUP uses localStorage on your device to resume Daily progress, remember Practice history and statistics, and keep interface preferences. LINEUP does not upload these stored records to Google Analytics; optional Analytics only receives the limited events described below. Clearing website data removes your local progress and preferences.</p>
         <ul>
-          <li><span className="privacy-storage-name">Daily progress</span> — <code>lineup:daily:progress:v1:…</code> keeps each day’s questions, eliminations and completion in this browser.</li>
+          <li><span className="privacy-storage-name">Daily progress</span> — <code>lineup:daily:progress:v1:…</code> keeps each day’s questions, suggestion allowance, eliminations and completion in this browser.</li>
+          <li><span className="privacy-storage-name">Unfinished Practice</span> — <code>lineup:practice:progress:v1</code> keeps the current lineup, questions and suggestion allowance so an unfinished game can resume after reopening. It is replaced by a new lineup and removed when the game is completed.</li>
           <li><span className="privacy-storage-name">Practice and help</span> — <code>lineup:practice:v1</code>, <code>lineup:practice-films:v1</code>, <code>lineup:help-seen</code> and <code>lineup:strategy-hint-dismissed:v1</code> keep local statistics, recent lineups and help preferences.</li>
           <li><span className="privacy-storage-name">Results awaiting an account save</span> — <code>lineup:account:guest-results:v1</code> keeps completed Daily summaries locally. Signing in does not automatically import a restored guest result; you can choose Save to account.</li>
         </ul>

@@ -53,6 +53,7 @@ const dependencies: Record<string, unknown> = {
   "./result-dialog": {ResultDialog: ({state}: {state: GameState}) => React.createElement("section", {"data-test": "result", "data-status": state.status})},
   "./game-shell": {GameShell: ({children, mode}: {children: React.ReactNode; mode: string}) => React.createElement("main", {"data-mode": mode}, children)},
   "@/lib/game/practice-selection": {createPracticePuzzle},
+  "@/lib/game/practice-persistence": {writePracticeProgress: () => true},
   "@/lib/game/onboarding": {shouldShowStrategyHint: () => false, dismissStrategyHint: () => {}},
   "@/lib/game/daily-persistence": {...dailyStorage, readDailyProgress: (puzzle: Puzzle) => { dailyReads++; return dailyStorage.readDailyProgress(puzzle, storage); }},
   "@/lib/game/daily-date": dates,

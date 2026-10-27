@@ -22,7 +22,7 @@ export function SupportingContent() {
       <section aria-labelledby="question-choice-heading">
         <h3 id="question-choice-heading">Why question choice matters</h3>
         <p>Five questions go quickly. Compare the films still in play before choosing what to ask. A detail shared by several films can be more useful than a fact about just one.</p>
-        <p>The opening examples show what you can ask. After that, use search or <strong>Browse questions</strong> to choose your own route through the lineup.</p>
+        <p>Need some inspiration? You can submit one of the three suggested questions at any point. It counts towards your five. Search and <strong>Browse questions</strong> stay available throughout the game.</p>
       </section>
     </div>
     <section className="lineup-faq" id="lineup-faq" aria-labelledby="lineup-faq-heading">
