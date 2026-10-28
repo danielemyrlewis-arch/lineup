@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { PRACTICE_CATALOGUE } from "../lib/data/catalogue.ts";
 import { activeMovies, gameReducer, hasUsedSuggestion, initialState } from "../lib/game/engine.ts";
 import { createPracticePuzzle } from "../lib/game/practice-selection.ts";
-import { openingQuestionExamples, validQuestions } from "../lib/game/questions.ts";
+import { recommendedQuestions, validQuestions } from "../lib/game/questions.ts";
 import { PRACTICE_PROGRESS_KEY, readPracticeProgress, writePracticeProgress } from "../lib/game/practice-persistence.ts";
 import { advanceDailyProgress, dailyProgressKey, encodeGameProgress } from "../lib/game/daily-persistence.ts";
 import { DAILY_SCHEDULE, resolveDailyPuzzle } from "../lib/game/daily-schedule.ts";
@@ -23,7 +23,7 @@ test("Practice stores the exact unfinished board and restores its accepted sugge
   const storage = new MemoryStorage();
   let state = fresh();
   assert.equal(readPracticeProgress(PRACTICE_CATALOGUE, storage).kind, "missing");
-  const example = openingQuestionExamples(state.puzzle.movies)[0];
+  const example = recommendedQuestions(state.puzzle.movies)[0];
   state = gameReducer(state, {type: "ask", question: example, suggested: true});
   state = gameReducer(state, {type: "ask", question: manualQuestion(state)});
   assert.equal(writePracticeProgress(state, storage), true);
@@ -103,7 +103,7 @@ test("malformed, obsolete and incompatible Practice snapshots cannot replace can
 test("Practice replay rejects forged suggestion markers and duplicate question submissions", () => {
   const storage = new MemoryStorage();
   let state = fresh();
-  const example = openingQuestionExamples(state.puzzle.movies)[0];
+  const example = recommendedQuestions(state.puzzle.movies)[0];
   state = gameReducer(state, {type: "ask", question: example, suggested: true});
   writePracticeProgress(state, storage);
   const good = JSON.parse(storage.getItem(PRACTICE_PROGRESS_KEY)!);
@@ -121,7 +121,7 @@ test("Practice replay rejects forged suggestion markers and duplicate question s
 test("Daily and Practice use independent snapshots and suggestion allowances", () => {
   const storage = new MemoryStorage();
   const daily = initialState(resolveDailyPuzzle(DAILY_SCHEDULE[0], PRACTICE_CATALOGUE));
-  const dailyExample = openingQuestionExamples(daily.puzzle.movies)[0];
+  const dailyExample = recommendedQuestions(daily.puzzle.movies)[0];
   const progressed = advanceDailyProgress(daily, {type: "ask", question: dailyExample, suggested: true}, storage);
   const dailyRaw = storage.getItem(dailyProgressKey(daily.puzzle.daily!.date));
   const practice = fresh(); writePracticeProgress(practice, storage);
@@ -146,7 +146,7 @@ test("Practice replay cannot restore two consumed suggestion allowances", () => 
   const storage = new MemoryStorage();
   let state: GameState | null = null;
   for (let seed = 1; seed < 20 && !state; seed++) {
-    const initial = fresh(seed), examples = openingQuestionExamples(initial.puzzle.movies);
+    const initial = fresh(seed), examples = recommendedQuestions(initial.puzzle.movies);
     for (const first of examples) {
       const once = gameReducer(initial, {type: "ask", question: first, suggested: true});
       const valid = validQuestions(activeMovies(once), once.history.map(row => row.question.id));
@@ -154,10 +154,48 @@ test("Practice replay cannot restore two consumed suggestion allowances", () => 
       if (second) { state = gameReducer(once, {type: "ask", question: second}); break; }
     }
   }
-  assert.ok(state, "A board with a second still-valid fixed example must exist");
+  assert.ok(state, "A board with a second still-valid question must exist");
   assert.equal(writePracticeProgress(state, storage), true);
   const snapshot = JSON.parse(storage.getItem(PRACTICE_PROGRESS_KEY)!);
   snapshot.progress.questions[1].suggested = true;
   storage.setItem(PRACTICE_PROGRESS_KEY, JSON.stringify(snapshot));
   assert.equal(readPracticeProgress(PRACTICE_CATALOGUE, storage).kind, "invalid");
+});
+
+test("an old neutral Practice suggestion keeps its exact board and spent allowance after ranking changes", () => {
+  const storage = new MemoryStorage();
+  // Frozen unfinished snapshot from the previous neutral selector, commit 92ccd9b.
+  const saved = {schema: 1,
+    puzzle: {id: "practice-91", mode: "practice", seed: 91,
+      movieIds: ["37686", "85", "296524", "1593", "654", "11322", "3035", "406", "1542", "691", "354912", "422", "2789", "146", "8290", "16859", "100", "771", "77338", "12477", "962", "103", "1924", "653"],
+      mysteryId: "2789", source: "demo", createdAt: "2026-10-27T12:00:00.000Z"},
+    progress: {questions: [{id: "director:F.W. Murnau", answer: false, remaining: 23,
+      eliminatedIds: ["653"], suggested: true}],
+    activeIds: ["37686", "85", "296524", "1593", "654", "11322", "3035", "406", "1542", "691", "354912", "422", "2789", "146", "8290", "16859", "100", "771", "77338", "12477", "962", "103", "1924"],
+    questionsUsed: 1, questionsLeft: 4, finalGuessSubmitted: false,
+    guessId: null, status: "playing", filmsRemainingAtGuess: null},
+  };
+  const raw = JSON.stringify(saved);
+  storage.setItem(PRACTICE_PROGRESS_KEY, raw);
+  const restored = readPracticeProgress(PRACTICE_CATALOGUE, storage);
+  assert.equal(restored.kind, "saved");
+  const state = restored.state!;
+  assert.deepEqual(state.puzzle.movies.map(movie => movie.id), saved.puzzle.movieIds);
+  assert.equal(state.puzzle.mysteryId, saved.puzzle.mysteryId);
+  assert.equal(state.history[0].question.id, "director:F.W. Murnau");
+  assert.equal(state.history.length, 1);
+  assert.equal(state.activeIds.length, 23);
+  assert.equal(hasUsedSuggestion(state), true);
+  assert.ok(!recommendedQuestions(state.puzzle.movies).some(question => question.id === saved.progress.questions[0].id),
+    "The old one-film split must no longer be offered as a useful opening recommendation");
+  assert.equal(storage.getItem(PRACTICE_PROGRESS_KEY), raw, "Reading must not rewrite the legacy snapshot");
+  const offeredNow = recommendedQuestions(activeMovies(state), state.history.map(row => row.question.id))[0];
+  assert.equal(gameReducer(state, {type: "ask", question: offeredNow, suggested: true}), state);
+  const continued = gameReducer(state, {type: "ask", question: manualQuestion(state)});
+  assert.equal(continued.history.length, 2);
+  assert.equal(writePracticeProgress(continued, storage), true);
+  const reopened = readPracticeProgress(PRACTICE_CATALOGUE, storage);
+  assert.equal(reopened.kind, "saved");
+  assert.deepEqual(reopened.state, continued);
+  assert.equal(hasUsedSuggestion(reopened.state!), true);
 });

@@ -438,39 +438,43 @@ function categoryPriority(q: Question) {
   ].indexOf(q.category);
 }
 
-/** Stable teaching examples, independent of split strength and the hidden film. */
+/** Rank the current board's known splits. Category variety only breaks equal-quality ties. */
 export function suggestedQuestions(
   questions: readonly RankedQuestion[],
   count = 3,
-  exampleSeed = "lineup-examples-v1",
 ): RankedQuestion[] {
   if (!Number.isSafeInteger(count) || count <= 0) return [];
-  const hash = (value: string) => {
-    let result = 2166136261;
-    for (let i = 0; i < value.length; i++) result = Math.imul(result ^ value.charCodeAt(i), 16777619);
-    return result >>> 0;
-  };
-  const order = (a: string, b: string) => hash(`${exampleSeed}|${a}`) - hash(`${exampleSeed}|${b}`) || (a < b ? -1 : a > b ? 1 : 0);
-  const categories = groupQuestions(questions).sort((a, b) => order(a.id, b.id));
+  const strength = (question: RankedQuestion) => Math.min(question.yesCount, question.noCount);
+  const ranked = questions.filter(question =>
+    Number.isSafeInteger(question.yesCount) && question.yesCount > 0 &&
+    Number.isSafeInteger(question.noCount) && question.noCount > 0,
+  ).sort((a, b) => strength(b) - strength(a) ||
+    categoryPriority(a) - categoryPriority(b) || a.id.localeCompare(b.id));
+  const groups = new Map(groupQuestions(ranked).flatMap(group =>
+    group.questions.map(question => [question.id, group.id] as const)));
   const selected: RankedQuestion[] = [];
   const partitions = new Set<string>();
-  for (const category of categories) {
-    const question = category.questions.sort((a, b) => order(a.id, b.id))
-      .find(q => !partitions.has(q.partitionKey));
-    if (!question) continue;
+  const categories = new Set<string>();
+  const ids = new Set<string>();
+  while (selected.length < count) {
+    const available = ranked.filter(question => !partitions.has(question.partitionKey) && !ids.has(question.id));
+    if (!available.length) break;
+    const best = available[0];
+    const groupOf = (question: RankedQuestion) => groups.get(question.id) ?? question.category;
+    // Never promote a weaker question just to show a different category.
+    const question = available.find(candidate => strength(candidate) === strength(best) &&
+      !categories.has(groupOf(candidate))) ?? best;
     selected.push(question);
     partitions.add(question.partitionKey);
-    if (selected.length === count) break;
+    categories.add(groupOf(question));
+    ids.add(question.id);
   }
   return selected;
 }
 
-/** The original three are board-only and stable for the whole game; no mystery or answers enter this API. */
-export function openingQuestionExamples(movies: Movie[], askedIds: string[] = [], count = 3): RankedQuestion[] {
-  // Retain the legacy argument for callers; history cannot change or replace the original examples.
-  void askedIds;
-  const seed = movies.map(movie => movie.id).sort().join("|");
-  return suggestedQuestions(validQuestions(movies), count, seed);
+/** Only remaining candidates and already-asked IDs enter this API; never a puzzle or mystery ID. */
+export function recommendedQuestions(movies: Movie[], askedIds: string[] = [], count = 3): RankedQuestion[] {
+  return suggestedQuestions(validQuestions(movies, askedIds), count);
 }
 const normalise = (s: string) =>
   s

@@ -75,22 +75,26 @@ export function encodeGameProgress(state: GameState): StoredGameProgress {
   };
 }
 
-/** Rebuild only through the canonical engine, including accepted suggestion provenance. */
+/** Rebuild canonical game facts while retaining the recommendation provenance used at the time. */
 export function decodeGameProgress(value: unknown, puzzle: Puzzle): GameState | null {
   if (!object(value) || !Array.isArray(value.questions) || value.questions.length > QUESTION_LIMIT) return null;
   let state = initialState(puzzle);
   for (const row of value.questions) {
     if (!object(row) || !boundedId(row.id) || typeof row.answer !== "boolean" ||
         (row.suggested !== undefined && row.suggested !== true)) return null;
+    if (row.suggested === true && state.history.some(answer => answer.suggested === true)) return null;
     const question = validQuestions(activeMovies(state), state.history.map(h => h.question.id))
       .find(q => q.id === row.id);
     if (!question) return null;
-    const next = gameReducer(state, { type: "ask", question,
-      ...(row.suggested === true ? {suggested: true as const} : {}) });
+    // Recommendations can change between releases. Their old membership is not a game fact:
+    // replay normal question evaluation, then restore the one accepted assistance marker.
+    const next = gameReducer(state, { type: "ask", question });
     const answer = next.history.at(-1);
     if (next === state || !answer || row.answer !== answer.answer ||
         row.remaining !== answer.remaining || !same(row.eliminatedIds, answer.eliminatedIds)) return null;
-    state = next;
+    state = row.suggested === true
+      ? {...next, history: [...next.history.slice(0, -1), {...answer, suggested: true}]}
+      : next;
   }
   if (value.finalGuessSubmitted === true) {
     if (!boundedId(value.guessId)) return null;

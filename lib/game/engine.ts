@@ -1,5 +1,5 @@
 import type { GameAction, GameState, Movie, Puzzle } from "./types.ts";
-import { evaluateQuestion, openingQuestionExamples, validQuestions } from "./questions.ts";
+import { evaluateQuestion, suggestedQuestions, validQuestions } from "./questions.ts";
 export const QUESTION_LIMIT = 5;
 export const LINEUP_SIZE = 24;
 
@@ -75,13 +75,14 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     };
   }
   if (state.history.length >= QUESTION_LIMIT) return state;
-  if (action.suggested && (hasUsedSuggestion(state) ||
-      !openingQuestionExamples(state.puzzle.movies).some(question => question.id === action.question.id))) return state;
+  if (action.suggested && hasUsedSuggestion(state)) return state;
   // Resolve the canonical question by ID. UI-supplied labels/predicates cannot alter the rules.
-  const question = validQuestions(
+  const available = validQuestions(
     activeMovies(state),
     state.history.map((h) => h.question.id),
-  ).find((q) => q.id === action.question.id);
+  );
+  if (action.suggested && !suggestedQuestions(available).some(question => question.id === action.question.id)) return state;
+  const question = available.find((q) => q.id === action.question.id);
   if (!question) return state;
   const mystery = state.puzzle.movies.find(
     (m) => m.id === state.puzzle.mysteryId,

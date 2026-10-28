@@ -247,7 +247,7 @@ test("real sequential lineups offer only known splits, keep the mystery and enfo
       }
       const suggestions=suggestedQuestions(questions);
       assert.equal(new Set(suggestions.map(q=>q.partitionKey)).size,suggestions.length);
-      assert.equal(new Set(suggestions.map(q=>q.category)).size,suggestions.length);
+      assert.equal(suggestions[0]?.balance,questions[0]?.balance, "The strongest split takes priority over category variety");
       assert.ok(suggestions.every(q=>questions.includes(q)));
       if(!questions.length) break;
       const question=questions[(seed+turn)%questions.length];

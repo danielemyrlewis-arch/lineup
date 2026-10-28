@@ -16,6 +16,7 @@ const jsx = await import("react/jsx-runtime");
 const compiled = ts.transpileModule(readFileSync(new URL("../components/game/question-panel.tsx", import.meta.url), "utf8"), {
   compilerOptions: {jsx: ts.JsxEmit.ReactJSX, module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2017},
 }).outputText;
+const recommendations = (state: GameState) => questions.recommendedQuestions(engine.activeMovies(state), state.history.map(answer => answer.question.id));
 const start = (mode: "daily" | "practice" = "daily", seed = 19) => engine.initialState(engine.createPuzzle(DEMO_MOVIES, seed, "demo", mode));
 function nodes(node: React.ReactNode): Element[] {
   if (!React.isValidElement<Record<string, unknown>>(node)) return [];
@@ -25,22 +26,33 @@ function nodes(node: React.ReactNode): Element[] {
 function fixture(initial = start(), accept = true) {
   let state = initial, busy = false, cursor = 0;
   let tree: React.ReactNode;
-  const hooks: {value: unknown}[] = [];
+  const hooks: {value: unknown; deps?: readonly unknown[]}[] = [];
+  let rankingCalls = 0;
   const asks: {question: Question; suggested?: true}[] = [];
   const events: unknown[] = [];
   const react = {
     useState(value: unknown) { const index = cursor++; hooks[index] ??= {value}; return [hooks[index].value, (next: unknown) => { hooks[index].value = typeof next === "function" ? (next as (value: unknown) => unknown)(hooks[index].value) : next; }]; },
     useRef(value: unknown) { const index = cursor++; hooks[index] ??= {value: {current: value}}; return hooks[index].value; },
-    useMemo: (run: () => unknown) => run(), useEffect: () => {},
+    useMemo(run: () => unknown, deps: readonly unknown[]) {
+      const index = cursor++, previous = hooks[index];
+      if (!previous || !previous.deps || previous.deps.length !== deps.length || deps.some((value, i) => !Object.is(value, previous.deps![i]))) {
+        hooks[index] = {value: run(), deps: [...deps]};
+      }
+      return hooks[index].value;
+    },
+    useEffect: () => {},
   };
   const exports = {} as {QuestionPanel: (props: PanelProps) => React.ReactNode};
   runInNewContext(compiled, {exports, require: (name: string) => {
     if (name === "react") return react;
     if (name === "react/jsx-runtime") return jsx;
     if (name === "@/lib/game/engine") return engine;
-    if (name === "@/lib/game/questions") return questions;
+    if (name === "@/lib/game/questions") return {...questions,
+      suggestedQuestions: (...args: Parameters<typeof questions.suggestedQuestions>) => { rankingCalls++; return questions.suggestedQuestions(...args); },
+      recommendedQuestions: (...args: Parameters<typeof questions.recommendedQuestions>) => { rankingCalls++; return questions.recommendedQuestions(...args); },
+    };
     if (name === "@/lib/analytics") return {trackEvent: (...args: unknown[]) => events.push(args)};
-    if (name === "./question-browser") return {QuestionBrowser: ({onAsk}: {onAsk: (q: Question) => void}) => React.createElement("button", {onClick: () => onAsk(questions.openingQuestionExamples(state.puzzle.movies)[0])}, "Browse fixture question")};
+    if (name === "./question-browser") return {QuestionBrowser: ({onAsk}: {onAsk: (q: Question) => void}) => React.createElement("button", {onClick: () => onAsk(recommendations(state)[0])}, "Browse fixture question")};
     assert.equal(name, "lucide-react");
     return {ArrowRight: () => null, ChevronDown: () => null, Search: () => null, X: () => null};
   }, window: {matchMedia: () => ({matches: false})}, requestAnimationFrame: (callback: () => void) => callback()});
@@ -63,44 +75,46 @@ function fixture(initial = start(), accept = true) {
     update(next: GameState) { state = next; render(); },
     setBusy(value: boolean) { busy = value; render(); },
     get state() { return state; },
+    get rankingCalls() { return rankingCalls; },
   };
 }
 
-/** Test-only paths retain a usable original question through the desired turn. */
+/** Test-only manual paths retain a usable board through the desired question turn. */
 function beforeTurn(turn: number, mode: "daily" | "practice" = "daily") {
-  const initial = start(mode);
-  const originals = questions.openingQuestionExamples(initial.puzzle.movies);
-  const ids = new Set(originals.map(question => question.id));
-  for (const target of originals) {
-    let state = initial;
-    for (let step = 1; step < turn; step++) {
-      const next = questions.validQuestions(engine.activeMovies(state), state.history.map(row => row.question.id))
-        .filter(question => !ids.has(question.id))
-        .map(question => engine.gameReducer(state, {type: "ask", question}))
-        .filter(next => questions.validQuestions(engine.activeMovies(next), next.history.map(row => row.question.id)).some(question => question.id === target.id))
-        .sort((a, b) => b.activeIds.length - a.activeIds.length)[0];
-      if (!next) break;
-      state = next;
-    }
-    if (state.history.length === turn - 1) return {state, target};
+  let state = start(mode);
+  for (let step = 1; step < turn; step++) {
+    const next = [...questions.validQuestions(engine.activeMovies(state), state.history.map(row => row.question.id))].reverse()
+      .map(question => () => engine.gameReducer(state, {type: "ask", question}))
+      .reduce<GameState | undefined>((chosen, ask) => {
+        if (chosen) return chosen;
+        const next = ask();
+        return next.activeIds.length > 1 && recommendations(next).length > 0 ? next : undefined;
+      }, undefined);
+    assert.ok(next, `No manual test path for turn ${turn}`);
+    state = next;
   }
-  throw new Error(`No test path for turn ${turn}`);
+  return {state, target: recommendations(state)[0]};
 }
+const suggestionLabels = (f: ReturnType<typeof fixture>) => f.suggestions().map(node => renderToStaticMarkup(node.props.children as React.ReactElement));
+const expectedLabels = (state: GameState) => recommendations(state).map(question => renderToStaticMarkup(React.createElement("span", {}, question.shortLabel)));
 
-test("three unchanged suggestions survive manual questions without replacing unavailable slots", () => {
+test("three useful suggestions adapt to accepted manual answers in both Daily and Practice", () => {
   for (const mode of ["daily", "practice"] as const) {
     const f = fixture(start(mode));
-    const original = f.suggestions().map(node => renderToStaticMarkup(node.props.children as React.ReactElement));
+    const original = suggestionLabels(f);
+    assert.equal(original.length, 3);
+    assert.deepEqual(original, expectedLabels(f.state));
     const later = beforeTurn(3, mode).state;
     f.update(later);
-    assert.deepEqual(f.suggestions().map(node => renderToStaticMarkup(node.props.children as React.ReactElement)), original);
+    assert.notDeepEqual(suggestionLabels(f), original);
+    assert.deepEqual(suggestionLabels(f), expectedLabels(later));
     assert.match(f.html(), /1 suggested question available/);
     assert.equal(f.asks.length, 0);
   }
 });
 
 test("selecting and changing a suggestion does not ask, consume budget or send analytics", () => {
-  const f = fixture(); f.select();
+  const f = fixture(); const original = suggestionLabels(f), calls = f.rankingCalls; f.select();
   assert.equal(f.state.history.length, 0); assert.equal(f.asks.length, 0); assert.equal(f.events.length, 0);
   assert.match(f.html(), /Ask this question/); assert.match(f.html(), /aria-pressed="true"/);
   assert.ok(!f.html().includes('class="search-popover"'));
@@ -108,12 +122,15 @@ test("selecting and changing a suggestion does not ask, consume budget or send a
   f.change("drama"); assert.ok(!f.html().includes("Ask this question")); assert.equal(f.asks.length, 0);
   f.select(); f.click(f.button("Clear search"));
   assert.ok(!f.html().includes("Ask this question")); assert.equal(f.state.history.length, 0);
+  f.setBusy(true); f.setBusy(false); f.render();
+  assert.deepEqual(suggestionLabels(f), original);
+  assert.equal(f.rankingCalls, calls, "Selection, typing, clearing and busy rerenders must not recompute recommendations");
 });
 
 test("one suggestion can be submitted on question 1, 3 or 5 and counts towards the normal limit", () => {
   for (const turn of [1, 3, 5]) for (const mode of ["daily", "practice"] as const) {
     const {state, target} = beforeTurn(turn, mode); const f = fixture(state);
-    const index = questions.openingQuestionExamples(state.puzzle.movies).findIndex(question => question.id === target.id);
+    const index = recommendations(state).findIndex(question => question.id === target.id);
     f.select(index); assert.equal(f.state.history.length, turn - 1);
     f.submit();
     assert.equal(f.asks.length, 1); assert.equal(f.asks[0].suggested, true);
@@ -133,18 +150,37 @@ test("Enter submits the selected question once and stale double-click handlers c
 });
 
 test("busy, stale and already manually asked suggestions cannot submit or consume assistance", () => {
-  const f = fixture(); const question = questions.openingQuestionExamples(f.state.puzzle.movies)[0];
+  const f = fixture(); const question = recommendations(f.state)[0];
   f.select(); f.setBusy(true); f.submit();
   assert.equal(f.asks.length, 0); assert.equal(engine.hasUsedSuggestion(f.state), false);
   f.setBusy(false);
   const manual = engine.gameReducer(f.state, {type: "ask", question});
   f.update(manual);
   assert.ok(!f.html().includes("Ask this question"));
-  if (f.html().includes('class="suggestions"')) {
-    assert.equal(f.suggestions()[0].props.disabled, true);
-    f.click(f.suggestions()[0]); assert.equal(f.asks.length, 0);
-  }
+  assert.deepEqual(suggestionLabels(f), expectedLabels(manual));
+  assert.ok(!f.suggestions().some(node => renderToStaticMarkup(node).includes(question.shortLabel)), "Already asked questions are replaced by current useful questions, never offered again");
   assert.equal(engine.hasUsedSuggestion(f.state), false);
+});
+
+test("a pending suggestion outside the updated top three is no longer submit-ready", () => {
+  const initial = start(), target = recommendations(initial)[0];
+  const later = questions.validQuestions(engine.activeMovies(initial))
+    .filter(question => question.id !== target.id)
+    .map(question => () => engine.gameReducer(initial, {type: "ask", question}))
+    .reduce<GameState | undefined>((chosen, ask) => {
+      if (chosen) return chosen;
+      const next = ask();
+      const stillValid = questions.validQuestions(engine.activeMovies(next), next.history.map(row => row.question.id)).some(question => question.id === target.id);
+      return stillValid && !recommendations(next).some(question => question.id === target.id) ? next : undefined;
+    }, undefined);
+  assert.ok(later, "The fixture must keep the old question valid while making other recommendations stronger");
+  const f = fixture(initial); f.select(); f.update(later);
+  assert.ok(!f.html().includes("Ask this question"));
+  assert.deepEqual(suggestionLabels(f), expectedLabels(later));
+  assert.equal(f.asks.length, 0);
+  assert.equal(engine.hasUsedSuggestion(f.state), false);
+  assert.equal(engine.gameReducer(later, {type: "ask", question: target, suggested: true}), later,
+    "A stale old recommendation must also fail the canonical live guard without spending assistance");
 });
 
 test("Browse cancels a pending selection and manual submission keeps its source manual", () => {
@@ -163,15 +199,15 @@ test("a rejected parent submission does not consume the persisted allowance", ()
   f.select(1); f.submit(); assert.equal(f.asks.length, 2);
 });
 
-test("no remaining useful original suggestions hides the section without offering replacements", () => {
-  let narrowed: GameState | undefined;
-  for (let seed = 19; seed < 35 && !narrowed; seed++) {
-    const initial = start("daily", seed), ids = new Set(questions.openingQuestionExamples(initial.puzzle.movies).map(question => question.id));
-    narrowed = questions.validQuestions(initial.puzzle.movies).map(question => engine.gameReducer(initial, {type: "ask", question}))
-      .find(next => next.activeIds.length > 1 && !questions.validQuestions(engine.activeMovies(next), next.history.map(row => row.question.id)).some(question => ids.has(question.id)));
-  }
-  assert.ok(narrowed);
+test("no useful split or a completed game hides suggestions gracefully", () => {
+  const initial = start(), question = questions.validQuestions(initial.puzzle.movies).find(question => question.yesCount === 1 || question.noCount === 1)!;
+  assert.ok(question);
+  const mystery = initial.puzzle.movies.find(movie => questions.evaluateQuestion(movie, question) === (question.yesCount === 1))!;
+  const narrowed = engine.gameReducer(engine.initialState({...initial.puzzle, mysteryId: mystery.id}), {type: "ask", question});
+  assert.equal(narrowed.activeIds.length, 1);
   const f = fixture(narrowed);
   assert.ok(!f.html().includes('class="suggestions"'));
-  assert.match(f.html(), /Browse questions/);
+  assert.match(f.html(), /One film standing/);
+  const completed = fixture(engine.gameReducer(initial, {type: "guess", movieId: initial.puzzle.mysteryId}));
+  assert.ok(!completed.html().includes('class="suggestions"'));
 });

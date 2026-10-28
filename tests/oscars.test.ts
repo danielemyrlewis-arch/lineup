@@ -202,7 +202,7 @@ test("Oscar splits use ordinary balance ranking and never duplicate a suggestion
   assert.equal(won.balance,0.5);
   const suggestions=suggestedQuestions(questions,100);
   assert.equal(new Set(suggestions.map(q=>q.partitionKey)).size,suggestions.length);
-  assert.equal(new Set(suggestions.map(q=>q.category)).size,suggestions.length);
+  assert.equal(suggestions[0]?.balance,questions[0]?.balance, "The strongest split takes priority over category variety");
   assert.ok(suggestions.every(q=>questions.includes(q)));
   assert.ok(!validQuestions(films,[won.id]).some(q=>q.id===won.id));
 });

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { initialState, gameReducer, activeMovies } from "../lib/game/engine.ts";
-import { openingQuestionExamples, validQuestions } from "../lib/game/questions.ts";
+import { recommendedQuestions, validQuestions } from "../lib/game/questions.ts";
 import { createPracticePuzzle } from "../lib/game/practice-selection.ts";
 import { PRACTICE_CATALOGUE } from "../lib/data/catalogue.ts";
 import { DAILY_SCHEDULE, resolveDailyPuzzle } from "../lib/game/daily-schedule.ts";
@@ -142,7 +142,7 @@ test("analytics failures cannot mutate or throw into an accepted game transition
 test("a suggested question emits the normal accepted-action events once, with no selection or provenance payload", () => {
   for (const mode of ["daily", "practice"] as const) {
     const before = start(mode), f = fixture();
-    const selected = openingQuestionExamples(before.puzzle.movies)[0];
+    const selected = recommendedQuestions(before.puzzle.movies)[0];
     assert.equal(f.events.length, 0, "Selection alone does not invoke the accepted-action tracker");
     const after = gameReducer(before, {type: "ask", question: selected, suggested: true});
     assert.equal(after.history[0].suggested, true);

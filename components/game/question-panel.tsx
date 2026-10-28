@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, ChevronDown, Search, X } from "lucide-react";
 import {
   searchQuestions,
-  openingQuestionExamples,
+  suggestedQuestions,
   validQuestions,
 } from "@/lib/game/questions";
 import { activeMovies, hasUsedSuggestion, QUESTION_LIMIT } from "@/lib/game/engine";
@@ -39,17 +39,16 @@ export function QuestionPanel({
       ),
     [state],
   );
-  // Always select from the original board, never the current answer-dependent subset.
-  const examples = useMemo(() => openingQuestionExamples(state.puzzle.movies), [state.puzzle.movies]);
   const suggestionUsed = hasUsedSuggestion(state);
-  const availableExampleIds = new Set(questions.map(question => question.id));
-  const showSuggestions = state.status === "playing" && !suggestionUsed && examples.some(question => availableExampleIds.has(question.id));
-  const selectedSuggestion = !suggestionUsed && examples.some(question => question.id === pendingSuggestionId)
-    ? questions.find(question => question.id === pendingSuggestionId) : undefined;
+  // Selecting or typing keeps the game state unchanged and never reranks these choices.
+  // Current candidates reflect earned answers; the hidden mystery never enters the selector.
+  const suggestions = useMemo(() => suggestionUsed ? [] : suggestedQuestions(questions), [questions, suggestionUsed]);
+  const showSuggestions = state.status === "playing" && suggestions.length > 0;
+  const selectedSuggestion = suggestions.find(question => question.id === pendingSuggestionId);
   const matches = searchQuestions(questions, query);
   const finalPick = left === 0 || state.activeIds.length === 1;
   const disabled = busy || state.status !== "playing" || finalPick;
-  const open = focused && !disabled && !pendingSuggestionId && query.trim().length > 0;
+  const open = focused && !disabled && !selectedSuggestion && query.trim().length > 0;
   const latest = state.history.at(-1);
   useEffect(() => {
     if (open)
@@ -61,7 +60,7 @@ export function QuestionPanel({
   const ask = (q: Question, suggested?: true) => {
     if (disabled) return;
     const canonical = questions.find(question => question.id === q.id);
-    if (!canonical || (suggested && (suggestionUsed || pendingSuggestion.current !== q.id || !examples.some(question => question.id === q.id)))) return;
+    if (!canonical || (suggested && (suggestionUsed || pendingSuggestion.current !== q.id || !suggestions.some(question => question.id === q.id)))) return;
     // Clear synchronously before the parent updates, so a double click cannot submit twice.
     clearSuggestion();
     // Dismiss a touch keyboard while retaining desktop keyboard focus.
@@ -260,17 +259,14 @@ export function QuestionPanel({
               <p className="suggestion-label">Need some inspiration?</p>
               <p className="suggestion-allowance">1 suggested question available</p>
               <div role="group" className="suggestions" aria-label="Suggested questions">
-                {examples.map((q) => {
-                  const available = availableExampleIds.has(q.id);
-                  const asked = state.history.some(answer => answer.question.id === q.id);
-                  return <button
+                {suggestions.map((q) => (
+                  <button
                     type="button"
                     key={q.id}
-                    disabled={disabled || !available}
+                    disabled={disabled}
                     aria-pressed={selectedSuggestion?.id === q.id}
-                    title={!available ? asked ? "Already asked" : "This question no longer narrows the lineup." : undefined}
                     onClick={() => {
-                      if (disabled || !available || suggestionUsed) return;
+                      if (disabled || suggestionUsed) return;
                       pendingSuggestion.current = q.id;
                       setPendingSuggestionId(q.id);
                       setQuery(q.label);
@@ -280,8 +276,8 @@ export function QuestionPanel({
                     }}
                   >
                     <span>{q.shortLabel}</span>
-                  </button>;
-                })}
+                  </button>
+                ))}
               </div>
               {selectedSuggestion && <button type="button" className="browse-questions suggestion-submit"
                 disabled={disabled} onClick={() => ask(selectedSuggestion, true)}>

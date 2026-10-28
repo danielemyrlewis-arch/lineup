@@ -1,0 +1,30 @@
+{
+  "baselineCommit": "92ccd9b",
+  "method": "All 365 frozen Daily opening boards; replay the previous board-seeded neutral selector exactly and compare to current recommendations. Split opportunities only: no mysteryId, secret answer, future puzzle path or actual-elimination claims are used or recorded.",
+  "openingBefore": {
+    "boards": 365,
+    "meanFirstWeakerSide": 3.0246575342465754,
+    "minimumFirstWeakerSide": 1,
+    "perfect12By12FirstSplit": 2,
+    "firstWeakerSideAtMost2": 212,
+    "meanWeakerSideAcrossAllThree": 3.130593607305936
+  },
+  "openingAfter": {
+    "boards": 365,
+    "meanFirstWeakerSide": 11.484931506849316,
+    "minimumFirstWeakerSide": 10,
+    "perfect12By12FirstSplit": 194,
+    "firstWeakerSideAtMost2": 0,
+    "meanWeakerSideAcrossAllThree": 10.765296803652967
+  },
+  "afterOneManualQuestion": {
+    "method": "For each board use over:120 when available, otherwise lexicographically first valid question, then evaluate BOTH possible earned answer branches. Compare first still-usable old original with first recomputed recommendation; no hidden answer is consulted.",
+    "branchesWithAtLeastOneUsefulQuestion": 730,
+    "branchesWithNoUsefulOldOriginal": 26,
+    "comparableBranches": 704,
+    "meanWeakerSideFractionBefore": 0.1838155799267561,
+    "meanWeakerSideFractionAfterOnSameBranches": 0.4682411275751738,
+    "meanWeakerSideFractionAfterAllBranches": 0.46804558608828273
+  },
+  "limitation": "These are metadata-based Yes/No splits among current candidates, not guaranteed elimination percentages, win rates or a claim of globally optimal play."
+}

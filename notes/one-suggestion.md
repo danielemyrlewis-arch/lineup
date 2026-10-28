@@ -1,5 +1,7 @@
 # One suggested question per game
 
+Historical implementation report: current-board balanced ranking now replaces the fixed neutral choices. The one-use allowance and saved-history provenance remain. See [useful one-time suggestions](useful-suggestions.md).
+
 This change builds on the completed analytics/SEO/privacy commit `615c3bb`. The original three category-varied examples now remain available until one is submitted, including on question five. They are selected from the original board using the existing stable hash and category/partition diversity rules. They never refresh, reorder or use the mystery ID/answers to choose replacements.
 
 Clicking a suggestion selects it and fills the search field. **Ask this question** or Enter submits it. Changing/clearing the search, opening Browse or selecting another suggestion cancels/replaces that pending choice without spending anything. Selection is transient UI state and is not persisted or tracked as a question.

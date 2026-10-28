@@ -30,7 +30,7 @@ function render(state: GameState, hint = false, busy = false) {
   return renderToStaticMarkup(React.createElement(exports.QuestionPanel, { state, busy, onAsk: () => {}, showStrategyHint: hint }));
 }
 
-test("both modes show Browse directly after search, followed by three stable suggestions", () => {
+test("both modes show Browse directly after search, followed by three useful suggestions", () => {
   for (const mode of ["daily", "practice"] as const) {
     const html = render(start(mode));
     assert.match(html, /<button[^>]*class="browse-questions"[^>]*aria-haspopup="dialog"/);
@@ -46,10 +46,10 @@ test("both modes show Browse directly after search, followed by three stable sug
   }
 });
 
-test("Daily and Practice retain the original suggestions after a manual answer while keeping search and Browse", () => {
+test("Daily and Practice update useful suggestions after a manual answer while keeping search and Browse", () => {
   for (const mode of ["daily", "practice"] as const) {
     let state = start(mode);
-    const originals = questions.openingQuestionExamples(state.puzzle.movies);
+    const originals = questions.recommendedQuestions(state.puzzle.movies);
     const originalIds = new Set(originals.map(question => question.id));
     const manual = questions.validQuestions(state.puzzle.movies).map(question => ({question, next: engine.gameReducer(state, {type: "ask", question})}))
       .find(({question, next}) => !originalIds.has(question.id) && next.activeIds.length > 1 && questions.validQuestions(engine.activeMovies(next), [question.id]).some(candidate => originalIds.has(candidate.id)))!;
@@ -57,7 +57,9 @@ test("Daily and Practice retain the original suggestions after a manual answer w
     assert.equal(state.history.length, 1);
     const html = render(state);
     assert.ok(html.includes('class="suggestions"'));
-    for (const original of originals) assert.ok(html.includes(original.shortLabel.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")));
+    const current = questions.recommendedQuestions(engine.activeMovies(state), state.history.map(row => row.question.id));
+    for (const recommendation of current) assert.ok(html.includes(recommendation.shortLabel.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")));
+    assert.ok(!current.some(question => question.id === manual.question.id));
     assert.match(html, /role="combobox"/);
     assert.match(html, /class="browse-questions"/);
     assert.ok(!html.includes('class="browse-questions" disabled'));
