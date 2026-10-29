@@ -476,44 +476,4 @@ export function suggestedQuestions(
 export function recommendedQuestions(movies: Movie[], askedIds: string[] = [], count = 3): RankedQuestion[] {
   return suggestedQuestions(validQuestions(movies, askedIds), count);
 }
-const normalise = (s: string) =>
-  s
-    .toLocaleLowerCase()
-    .replace(/½/g, ".5")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9 ]/g, " ")
-    .replace(/(\d)(?=(?:minutes?|mins?|hours?|hrs?)\b)/g, "$1 ")
-    .replace(/\bmins?\b/g, "minutes")
-    .replace(/\bhrs?\b/g, "hours")
-    .replace(/\s+/g, " ")
-    .trim();
-// Ignore grammatical filler, while preserving meaningful negation and numbers.
-const filler = new Set([
-  "is", "it", "a", "an", "the", "was", "were", "does", "do", "did",
-  "its", "of", "in", "than", "to", "for", "film", "films", "movie", "movies",
-]);
-export function searchQuestions(
-  questions: RankedQuestion[],
-  query: string,
-): RankedQuestion[] {
-  const phrase = normalise(query);
-  const tokens = phrase.split(" ").filter((token) => token && !filler.has(token));
-  if (!tokens.length) return [];
-  return [...new Map(questions.map((q) => [q.id, q])).values()]
-    .flatMap((q, index) => {
-      const haystack = normalise([q.label, q.category, ...q.aliases].join(" "));
-      const words = haystack.split(" ");
-      const matches = tokens.every((t) =>
-        ["male", "female", "man", "woman"].includes(t) || /^\d+$/.test(t)
-          ? words.includes(t)
-          : haystack.includes(t),
-      );
-      if (!matches) return [];
-      const exact = [q.label, ...q.aliases].some((text) => normalise(text) === phrase);
-      return [{ q, score: exact ? 1 : 0, index }];
-    })
-    .sort((a, b) => b.score - a.score || a.index - b.index)
-    .slice(0, 12)
-    .map(({ q }) => q);
-}
+export { searchQuestions } from "./question-search.ts";

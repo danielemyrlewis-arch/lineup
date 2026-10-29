@@ -211,3 +211,24 @@ test("no useful split or a completed game hides suggestions gracefully", () => {
   const completed = fixture(engine.gameReducer(initial, {type: "guess", movieId: initial.puzzle.mysteryId}));
   assert.ok(!completed.html().includes('class="suggestions"'));
 });
+
+test("autocomplete explores from one character and narrows to Animation without consuming a hint", () => {
+  for (const mode of ["daily", "practice"] as const) {
+    const f = fixture(start(mode));
+    for (const query of ["Y", "U", "a", "an", "ani", "anim"]) {
+      f.change(query);
+      assert.equal(f.input().props["aria-expanded"], true);
+      assert.ok(f.html().includes('class="search-popover"'), query);
+      assert.ok(!f.html().includes("No useful questions match."), query);
+      assert.equal(f.asks.length, 0);
+      assert.equal(engine.hasUsedSuggestion(f.state), false);
+    }
+    assert.match(f.html(), /Is it animated\?/);
+    f.enter();
+    assert.equal(f.state.history.length, 1);
+    assert.equal(f.state.history[0].question.id, "genre:Animation");
+    assert.equal(f.asks[0].suggested, undefined);
+    assert.equal(engine.hasUsedSuggestion(f.state), false);
+    assert.match(f.html(), /1 suggested question available/);
+  }
+});
